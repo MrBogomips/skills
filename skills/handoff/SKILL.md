@@ -81,7 +81,7 @@ handoff [--file] [--zip | --no-zip] [--patch | --no-patch] [free text]
 | Case | Result |
 |---|---|
 | Prompt (default) | copied to the clipboard; no file is written |
-| Prompt with `--file` | `<slug>-handoff.md` in the current directory, instead of the clipboard |
+| Prompt with `--file` | `<slug>-handoff.md` in the current directory or following the project rules if present, instead of the clipboard |
 | Zip | `<slug>-handoff.zip` in the current directory, with `HANDOFF.md` inside; the clipboard gets one line telling the recipient to extract it and follow `HANDOFF.md` |
 | No working clipboard tool | as with `--file`, and the report says so |
 
