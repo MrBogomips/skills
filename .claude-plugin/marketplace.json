@@ -9,5 +9,22 @@
     "description": "Simple, general-purpose agent skills, one plugin per skill",
     "version": "0.1.0"
   },
-  "plugins": []
+  "plugins": [
+    {
+      "name": "handoff",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/handoff"
+      ],
+      "description": "Prepare a handoff prompt for another agent session or a colleague: clipboard by default, a file on request, or a zip with a patch and the material the recipient cannot reach.",
+      "version": "1.0.0",
+      "category": "productivity",
+      "tags": [
+        "handoff",
+        "context",
+        "collaboration"
+      ]
+    }
+  ]
 }

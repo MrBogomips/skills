@@ -27,7 +27,9 @@ Each skill is its own plugin, so you install only the ones you want.
 
 ## Skills
 
-None published yet: the first one is on its way.
+| Skill | What it does |
+|---|---|
+| [`handoff`](skills/handoff/SKILL.md) | Prepares a handoff prompt so another agent session or a colleague can pick up the work. The prompt goes to the clipboard by default (`--file` writes `<topic>-handoff.md`). When the recipient could not reach some of the material, it becomes `<topic>-handoff.zip` with a patch and the missing files. Sensitive data is confirmed with you before anything leaves the machine. |
 
 ## Repository layout
 
