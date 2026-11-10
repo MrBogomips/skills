@@ -1,0 +1,22 @@
+name: Validate
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validator self-test
+        run: bash tests/selftest.sh
+
+      - name: Marketplace and skills agree
+        run: bash tests/validate.sh

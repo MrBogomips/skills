@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "mrbogomips-skills",
+  "owner": {
+    "name": "Mr Bogomips",
+    "url": "https://github.com/MrBogomips"
+  },
+  "metadata": {
+    "description": "Simple, general-purpose agent skills, one plugin per skill",
+    "version": "0.1.0"
+  },
+  "plugins": []
+}
