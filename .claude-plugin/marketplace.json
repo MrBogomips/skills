@@ -7,7 +7,7 @@
   },
   "metadata": {
     "description": "Simple, general-purpose agent skills, one plugin per skill",
-    "version": "0.2.0"
+    "version": "0.3.0"
   },
   "plugins": [
     {
@@ -24,6 +24,22 @@
         "handoff",
         "context",
         "collaboration"
+      ]
+    },
+    {
+      "name": "done",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/done"
+      ],
+      "description": "Check on evidence that a work session meets its Definition of Done (hierarchical DoD.md files or a generic default), then clean up: temporary files, merged branches, the integration branch, the session title.",
+      "version": "1.0.0",
+      "category": "productivity",
+      "tags": [
+        "done",
+        "definition-of-done",
+        "cleanup"
       ]
     },
     {
