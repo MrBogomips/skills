@@ -34,7 +34,7 @@
         "./skills/tldr"
       ],
       "description": "Summarize a reply in a few bullets (decisions, open questions, next actions) and optionally keep a TLDR footer on later replies.",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "category": "productivity",
       "tags": [
         "summary",
@@ -50,7 +50,7 @@
         "./skills/init-agents-md"
       ],
       "description": "Create a short, repository-specific AGENTS.md for coding agents and make CLAUDE.md a symlink to it.",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "category": "development",
       "tags": [
         "agents-md",
@@ -82,7 +82,7 @@
         "./skills/gemini-web-research"
       ],
       "description": "Delegate web research to parallel Gemini jobs through the agy CLI; a script checks every claim's quote against the pages each job actually read.",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "category": "research",
       "tags": [
         "research",
@@ -98,7 +98,7 @@
         "./skills/codex-image-gen"
       ],
       "description": "Generate or edit images through the codex CLI's built-in image tool, on the Codex login's quota and with no API key.",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "category": "media",
       "tags": [
         "image",
@@ -114,7 +114,7 @@
         "./skills/google-image-gen"
       ],
       "description": "Generate or edit images through the Google Gemini API with your own API key.",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "category": "media",
       "tags": [
         "image",

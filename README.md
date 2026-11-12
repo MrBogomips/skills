@@ -46,4 +46,4 @@ Each skill is its own plugin, so you install only the ones you want.
 
 ## License
 
-[MIT](LICENSE). `tldr`, `init-agents-md`, `gemini-web-research`, `codex-image-gen` and `google-image-gen` are adapted from [zazencodes/skills](https://github.com/zazencodes/skills) (MIT); each carries the original notice in `LICENSE-upstream`.
+[MIT](LICENSE)
