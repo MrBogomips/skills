@@ -20,3 +20,6 @@ jobs:
 
       - name: Marketplace and skills agree
         run: bash tests/validate.sh
+
+      - name: Bundled script tests
+        run: python3 -m unittest discover -s tests -p 'test_*.py'
