@@ -46,7 +46,7 @@ def trace_lines(response=json.dumps(GOOD_REPORT), status="SUCCESS", search=True,
     if search:
         events.append(tool_step("search_web", {"query": "python release"}, "results"))
     if read:
-        cmd = f"python3 {gr.READER} 'https://www.python.org/downloads/#top'"
+        cmd = f"python3 {gr.READER.name} 'https://www.python.org/downloads/#top'"
         events.append(tool_step("run_command", {"CommandLine": cmd}, f"x. {QUOTE}, and more."))
     events.append({"event": "result", "result": {"status": status, "response": response}})
     return "\n".join(["not json"] + [json.dumps(e) for e in events])
@@ -207,7 +207,7 @@ class Stall(unittest.TestCase):
         trace.with_suffix(".log").write_text(STALL_LOG)
         hint = gr.diagnose(trace)
         self.assertIn("connect: beta.", hint)
-        self.assertIn("agy mcp disable", hint)
+        self.assertIn("agy mcp remove", hint)
 
     def test_failed_job_carries_agy_error_and_hint(self):
         run_dir = make_tmpdir(self)
@@ -232,7 +232,20 @@ class Stall(unittest.TestCase):
         self.assertEqual(cmd[cmd.index("--print-timeout") + 1], "90s")
         self.assertEqual(cmd[cmd.index("--log-file") + 1], str(trace.with_suffix(".log")))
         self.assertEqual(cmd[-1], "--x")
+        self.assertIn("--disable-slash-commands", cmd)
+        settings = json.loads(cmd[cmd.index("--settings") + 1])
+        self.assertEqual(settings["toolPermission"], "always-proceed")
+        self.assertTrue({"mcp(*)", "write_file(*)", "command(curl)"} <= set(settings["permissions"]["deny"]))
+        self.assertNotIn("--sandbox", cmd)
         self.assertEqual(run.call_args.kwargs["timeout"], 90 + gr.BACKSTOP_SECONDS)
+
+    def test_job_prompt_names_the_reader_relative_to_the_workspace(self):
+        trace = make_tmpdir(self) / "job-1.jsonl"
+        with mock.patch.object(gr, "call_agy", return_value=0) as call:
+            gr.run_agy("q?", trace, trace.parent)
+        prompt = call.call_args.args[0]
+        self.assertIn("python3 read_page.py '<url>'", prompt)
+        self.assertNotIn(str(gr.READER.parent), prompt)
 
     def probe(self, returncode=0, lines="", side_effect=None):
         def fake_call(prompt, trace_path, cwd, timeout, extra=()):

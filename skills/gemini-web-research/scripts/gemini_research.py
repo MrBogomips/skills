@@ -4,7 +4,7 @@
 Usage: gemini_research.py '<question 1>' '<question 2>' ...
 
 Each job runs a Gemini model (default gemini-3.8-flash-high, override with the environment
-variable GEMINI_RESEARCH_MODEL) in agy print mode. Set GEMINI_RESEARCH_SANDBOX=1 to add agy --sandbox. The worker must search,
+variable GEMINI_RESEARCH_MODEL) in agy print mode. The worker must search,
 read the pages it cites with read_page.py, and back every claim with a verbatim quote. The script reads
 the job's trace and checks that:
   - the worker called search_web (a job with no search fails),
@@ -29,13 +29,24 @@ import time
 from pathlib import Path
 
 MODEL = os.environ.get("GEMINI_RESEARCH_MODEL") or "gemini-3.8-flash-high"
-SANDBOX = os.environ.get("GEMINI_RESEARCH_SANDBOX") == "1"
 JOB_TIMEOUT_SECONDS = 900
 PROBE_TIMEOUT_SECONDS = 90
 BACKSTOP_SECONDS = 60
 MAX_PAGES = 6
 MAX_SEARCHES = 8
 READER = Path(__file__).resolve().parent / "read_page.py"
+
+# Each agy turn runs with only what the job needs, whatever the user's own agy settings are:
+# no slash commands or skills, no MCP tools, no file writes, and no terminal command that fetches
+# pages behind the checker's back or changes the machine. Terminal commands must stay approved
+# without a prompt and outside agy's sandbox: print mode cannot ask, and the sandbox has no network.
+AGY_SETTINGS = {
+    "toolPermission": "always-proceed",
+    "permissions": {"deny": [
+        "mcp(*)", "write_file(*)",
+        "command(curl)", "command(wget)", "command(rm)", "command(sudo)", "command(ssh)", "command(git)",
+    ]},
+}
 
 SCHEMA = {
     "type": "object",
@@ -65,6 +76,7 @@ Question: {question}
 Rules:
 1. Call search_web before writing anything, at least twice and at most {max_searches} times, with different queries, even if you think you already know the answer. Your memory is not a source.
 2. Read pages only with this exact terminal command, one page per call: python3 {reader} '<url>'
+   Run it from the current directory, where the file is.
    Run no other terminal commands, do not use read_url_content, and use no browser. Read at most {max_pages} pages, each once, chosen from your search results. For a file in a GitHub repository, read its raw.githubusercontent.com URL. Prefer primary sources: official docs, the project's own repository, release notes, the original announcement or paper. Use blogs, forums and aggregators only for what primary sources do not cover.
 3. Every claim must come from a page you read in this session. Give the exact URL you read and a verbatim quote of 5 to 30 words from that page's output, copied character for character. Search result snippets are not quotable.
 4. Never guess a URL, repository owner, version, date, price or number. Anything you could not confirm on a page you read goes in "unconfirmed".
@@ -141,7 +153,8 @@ def call_agy(prompt, trace_path, cwd, timeout, extra=()):
     """
     cmd = [
         "agy", "-p", prompt, "--model", MODEL, "--output-format", "stream-json",
-        "--print-timeout", f"{timeout}s", "--log-file", str(trace_path.with_suffix(".log")), *extra,
+        "--print-timeout", f"{timeout}s", "--log-file", str(trace_path.with_suffix(".log")),
+        "--disable-slash-commands", "--settings", json.dumps(AGY_SETTINGS), *extra,
     ]
     with trace_path.open("w") as trace:
         proc = subprocess.run(
@@ -153,9 +166,8 @@ def call_agy(prompt, trace_path, cwd, timeout, extra=()):
 
 def run_agy(question, trace_path, cwd):
     """Run one research job. Return the exit code."""
-    prompt = PROMPT.format(question=question, max_pages=MAX_PAGES, max_searches=MAX_SEARCHES, reader=READER)
-    extra = ["--json-schema", json.dumps(SCHEMA)] + (["--sandbox"] if SANDBOX else [])
-    return call_agy(prompt, trace_path, cwd, JOB_TIMEOUT_SECONDS, extra)
+    prompt = PROMPT.format(question=question, max_pages=MAX_PAGES, max_searches=MAX_SEARCHES, reader=READER.name)
+    return call_agy(prompt, trace_path, cwd, JOB_TIMEOUT_SECONDS, ["--json-schema", json.dumps(SCHEMA)])
 
 
 def diagnose(trace_path):
@@ -167,7 +179,8 @@ def diagnose(trace_path):
     if not stalled:
         return ""
     return (f" agy was still waiting for MCP server(s) to connect: {stalled[-1].strip()}."
-            " A print-mode turn does not start until they do: repair them or run `agy mcp disable <name>`.")
+            " A print-mode turn does not start until they do: repair them or run `agy mcp remove <name>`"
+            " (`agy mcp disable` is not enough).")
 
 
 def probe(run_dir):
@@ -294,6 +307,7 @@ def main():
         sys.exit(2)
     stamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     run_dir = Path(tempfile.mkdtemp(prefix=f"gemini-research-{stamp}-"))
+    shutil.copy(READER, run_dir / READER.name)  # the workers' workspace holds the page reader and nothing else
     reason = probe(run_dir)
     if reason:
         print(f"gemini_research: agy cannot complete a turn, no job was started: {reason}\n"
