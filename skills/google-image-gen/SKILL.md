@@ -76,5 +76,3 @@ The script exits non-zero with one line and writes nothing.
 - **400**: bad request, often an unknown model or an aspect ratio the model lacks; the API's message is shown.
 - **5xx or timeout**: retried once, then reported.
 - **No image**: the model replied in text or the prompt was blocked; the reason is shown. Rephrase the prompt.
-
-Adapted from [zazencodes/skills](https://github.com/zazencodes/skills) (MIT, see LICENSE-upstream).

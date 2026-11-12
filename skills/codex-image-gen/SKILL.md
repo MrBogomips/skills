@@ -86,5 +86,3 @@ The script exits non-zero with one clear message and writes nothing.
 - **No image produced**: the model answered in text. Its reply is shown; re-run with a plainer picture request.
 - **Timed out**: raise `--timeout` (default 900 s) only if the run was merely slow.
 - **Pillow missing with `--fit`**: `pip install Pillow`, or drop `--fit`.
-
-Adapted from [zazencodes/skills](https://github.com/zazencodes/skills) (MIT, see LICENSE-upstream).

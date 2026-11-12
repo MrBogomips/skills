@@ -48,5 +48,3 @@ Example footer:
 - **Next:** Check account deletion on staging; unit tests passed.
 - **Decision:** Deleted accounts can be recovered for 30 days.
 - **Caution:** Final deletion is irreversible.
-
-Adapted from [zazencodes/skills](https://github.com/zazencodes/skills) (MIT, see LICENSE-upstream).

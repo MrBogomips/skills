@@ -76,5 +76,3 @@ counts:
 
 Give a synthesis, not the raw reports. Link each fact to the URL its [OK] claim came from. Say plainly what stayed
 unconfirmed.
-
-Adapted from [zazencodes/skills](https://github.com/zazencodes/skills) (MIT, see LICENSE-upstream).
