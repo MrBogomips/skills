@@ -30,6 +30,7 @@ Each skill is its own plugin, so you install only the ones you want.
 | Skill | What it does |
 |---|---|
 | [`handoff`](skills/handoff/SKILL.md) | Prepares a handoff prompt so another agent session or a colleague can pick up the work. The prompt goes to the clipboard by default (`--file` writes `<topic>-handoff.md`). When the recipient could not reach some of the material, it becomes `<topic>-handoff.zip` with a patch and the missing files. Sensitive data is confirmed with you before anything leaves the machine. |
+| [`done`](skills/done/SKILL.md) | Checks on evidence whether a work session meets its Definition of Done, then tidies up: temporary files, merged branches (local and remote), the local integration branch, the session title. The Definition of Done comes from `DoD.md` files, which can be nested per directory, or from a generic default. If something blocks, you get a short list of what is missing. |
 | [`tldr`](skills/tldr/SKILL.md) | Summarizes a reply in a few bullets: decisions, open questions, next actions. Once invoked, it keeps a short TLDR footer on later long replies until you say "stop TLDR". |
 | [`init-agents-md`](skills/init-agents-md/SKILL.md) | Creates a short, repository-specific `AGENTS.md` and makes `CLAUDE.md` a symlink to it, so every agent reads one instruction file. |
 | [`port-to-codex`](skills/port-to-codex/SKILL.md) | Ports a project's Claude Code setup to Codex: one shared `AGENTS.md` with `CLAUDE.md` linked to it, and skills, agents, MCP and hooks converted with rulesync, either committed or regenerated on setup. |
