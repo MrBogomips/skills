@@ -31,6 +31,8 @@ from pathlib import Path
 MODEL = os.environ.get("GEMINI_RESEARCH_MODEL") or "gemini-3.8-flash-high"
 SANDBOX = os.environ.get("GEMINI_RESEARCH_SANDBOX") == "1"
 JOB_TIMEOUT_SECONDS = 900
+PROBE_TIMEOUT_SECONDS = 90
+BACKSTOP_SECONDS = 60
 MAX_PAGES = 6
 MAX_SEARCHES = 8
 READER = Path(__file__).resolve().parent / "read_page.py"
@@ -76,6 +78,7 @@ Return JSON:
 """
 
 URL_RE = re.compile(r"https?://[^\s)\]>\"'`]+")
+STALL_RE = re.compile(r"MCP: \d+ server\(s\) still connecting after \S+: (.+)")
 SAVED_OUTPUT_RE = re.compile(r"file://(\S+?output\.txt)")
 
 
@@ -124,26 +127,60 @@ def read_trace(trace_path):
             result = event["result"]
             if result.get("status") != "SUCCESS":
                 error = f"agy result status {result.get('status')}"
+                if result.get("error"):
+                    error += f": {result['error']}"
             response = result.get("response")
     return searches, opened, normalize_text("\n".join(fetched)), response, error
 
 
-def run_agy(question, trace_path, cwd):
-    """Run one agy print-mode job, streaming its output to trace_path. Return the exit code."""
+def call_agy(prompt, trace_path, cwd, timeout, extra=()):
+    """Run one agy print-mode turn, streaming its output to trace_path. Return the exit code.
+
+    agy ends the turn itself after `timeout` seconds; the subprocess timeout is only a backstop.
+    agy's own log goes next to the trace, where diagnose() reads it.
+    """
     cmd = [
-        "agy", "-p", PROMPT.format(question=question, max_pages=MAX_PAGES, max_searches=MAX_SEARCHES, reader=READER),
-        "--model", MODEL,
-        "--output-format", "stream-json",
-        "--json-schema", json.dumps(SCHEMA),
+        "agy", "-p", prompt, "--model", MODEL, "--output-format", "stream-json",
+        "--print-timeout", f"{timeout}s", "--log-file", str(trace_path.with_suffix(".log")), *extra,
     ]
-    if SANDBOX:
-        cmd.append("--sandbox")
     with trace_path.open("w") as trace:
         proc = subprocess.run(
             cmd, cwd=cwd, stdin=subprocess.DEVNULL, stdout=trace, stderr=subprocess.STDOUT,
-            text=True, timeout=JOB_TIMEOUT_SECONDS,
+            text=True, timeout=timeout + BACKSTOP_SECONDS,
         )
     return proc.returncode
+
+
+def run_agy(question, trace_path, cwd):
+    """Run one research job. Return the exit code."""
+    prompt = PROMPT.format(question=question, max_pages=MAX_PAGES, max_searches=MAX_SEARCHES, reader=READER)
+    extra = ["--json-schema", json.dumps(SCHEMA)] + (["--sandbox"] if SANDBOX else [])
+    return call_agy(prompt, trace_path, cwd, JOB_TIMEOUT_SECONDS, extra)
+
+
+def diagnose(trace_path):
+    """Return a hint from agy's log about why the turn stalled, or an empty string."""
+    log_path = trace_path.with_suffix(".log")
+    if not log_path.is_file():
+        return ""
+    stalled = STALL_RE.findall(log_path.read_text(errors="replace"))
+    if not stalled:
+        return ""
+    return (f" agy was still waiting for MCP server(s) to connect: {stalled[-1].strip()}."
+            " A print-mode turn does not start until they do: repair them or run `agy mcp disable <name>`.")
+
+
+def probe(run_dir):
+    """Check that agy can complete a turn at all. Return None, or the reason it cannot."""
+    trace_path = run_dir / "probe.jsonl"
+    try:
+        returncode = call_agy("Reply with the single word: ok", trace_path, run_dir, PROBE_TIMEOUT_SECONDS)
+    except subprocess.TimeoutExpired:
+        return f"no reply within {PROBE_TIMEOUT_SECONDS}s.{diagnose(trace_path)}"
+    error = read_trace(trace_path)[4]
+    if returncode == 0 and not error:
+        return None
+    return f"{error or f'agy exited {returncode}'}.{diagnose(trace_path)}"
 
 
 def parse_report(response):
@@ -210,10 +247,10 @@ def render_report(report, opened, fetched):
 
 def trace_failure(returncode, error, searches, opened, response):
     """Return why a job's trace disqualifies it, or None."""
-    if returncode != 0:
-        return f"agy exited {returncode}"
     if error:
         return error
+    if returncode != 0:
+        return f"agy exited {returncode}"
     if searches == 0:
         return "the worker ran no web search, so its answer came from memory"
     if not opened:
@@ -243,7 +280,7 @@ def run_job(index, question, run_dir):
     except Exception as exc:  # one bad job must not abort the round
         failure, header = f"unexpected {type(exc).__name__}: {exc}", f"trace {trace_path}"
     if failure:
-        return False, "\n".join(lines + [f"FAILED: {failure}. {header}", ""])
+        return False, "\n".join(lines + [f"FAILED: {failure}.{diagnose(trace_path)} {header}", ""])
     body, _ = render_report(report, opened, fetched)
     return True, "\n".join(lines + [header, ""] + body)
 
@@ -257,6 +294,11 @@ def main():
         sys.exit(2)
     stamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     run_dir = Path(tempfile.mkdtemp(prefix=f"gemini-research-{stamp}-"))
+    reason = probe(run_dir)
+    if reason:
+        print(f"gemini_research: agy cannot complete a turn, no job was started: {reason}\n"
+              f"Trace and log: {run_dir}", file=sys.stderr)
+        sys.exit(2)
     print(f"# Gemini research round: {len(questions)} jobs, {MODEL}\nRun directory: {run_dir}\n", flush=True)
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=len(questions)) as pool:

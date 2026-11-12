@@ -192,7 +192,79 @@ class ReadPage(unittest.TestCase):
         self.assertEqual(str(ctx.exception), "read_page: cannot fetch https://example.com: down")
 
 
+STALL_LOG = (
+    "I1 mcp_manager.go:988] MCP: 2 server(s) still connecting after 30s: alpha, beta\n"
+    "I1 mcp_manager.go:988] MCP: 1 server(s) still connecting after 1m0s: beta\n"
+)
+
+
+class Stall(unittest.TestCase):
+    def test_diagnose_names_the_servers_still_connecting(self):
+        trace = make_tmpdir(self) / "job-1.jsonl"
+        self.assertEqual(gr.diagnose(trace), "")
+        trace.with_suffix(".log").write_text("nothing relevant\n")
+        self.assertEqual(gr.diagnose(trace), "")
+        trace.with_suffix(".log").write_text(STALL_LOG)
+        hint = gr.diagnose(trace)
+        self.assertIn("connect: beta.", hint)
+        self.assertIn("agy mcp disable", hint)
+
+    def test_failed_job_carries_agy_error_and_hint(self):
+        run_dir = make_tmpdir(self)
+        line = json.dumps({"event": "result", "result": {"status": "ERROR", "error": "print timeout after 15m0s"}})
+
+        def fake_agy(question, trace_path, cwd):
+            trace_path.write_text(line + "\n")
+            trace_path.with_suffix(".log").write_text(STALL_LOG)
+            return 3
+
+        with mock.patch.object(gr, "run_agy", fake_agy):
+            ok, text = gr.run_job(1, "q", run_dir)
+        self.assertFalse(ok)
+        self.assertIn("agy result status ERROR: print timeout after 15m0s", text)
+        self.assertIn("connect: beta.", text)
+
+    def test_call_agy_bounds_the_turn_and_writes_a_log(self):
+        trace = make_tmpdir(self) / "job-1.jsonl"
+        with mock.patch.object(gr.subprocess, "run", return_value=mock.Mock(returncode=0)) as run:
+            self.assertEqual(gr.call_agy("p", trace, trace.parent, 90, ["--x"]), 0)
+        cmd = run.call_args.args[0]
+        self.assertEqual(cmd[cmd.index("--print-timeout") + 1], "90s")
+        self.assertEqual(cmd[cmd.index("--log-file") + 1], str(trace.with_suffix(".log")))
+        self.assertEqual(cmd[-1], "--x")
+        self.assertEqual(run.call_args.kwargs["timeout"], 90 + gr.BACKSTOP_SECONDS)
+
+    def probe(self, returncode=0, lines="", side_effect=None):
+        def fake_call(prompt, trace_path, cwd, timeout, extra=()):
+            trace_path.with_suffix(".log").write_text(STALL_LOG)
+            if side_effect:
+                raise side_effect
+            trace_path.write_text(lines)
+            return returncode
+
+        with mock.patch.object(gr, "call_agy", fake_call):
+            return gr.probe(make_tmpdir(self))
+
+    def test_probe(self):
+        ok_line = json.dumps({"event": "result", "result": {"status": "SUCCESS", "response": "ok"}})
+        bad_line = json.dumps({"event": "result", "result": {"status": "ERROR", "error": "print timeout after 1m30s"}})
+        self.assertIsNone(self.probe(lines=ok_line))
+        self.assertIn("print timeout after 1m30s", self.probe(returncode=3, lines=bad_line))
+        self.assertIn("agy exited 4", self.probe(returncode=4))
+        reason = self.probe(side_effect=subprocess.TimeoutExpired("agy", 1))
+        self.assertIn("no reply within", reason)
+        self.assertIn("connect: beta.", reason)
+
+
 class Main(unittest.TestCase):
+    def test_failed_probe_exits_2_and_starts_no_job(self):
+        with mock.patch.object(sys, "argv", ["x", "q"]), mock.patch.object(gr.shutil, "which", return_value="/bin/agy"), \
+                mock.patch.object(gr, "probe", return_value="no reply"), mock.patch.object(gr, "run_job") as run_job, \
+                mock.patch.object(sys, "stderr"), self.assertRaises(SystemExit) as ctx:
+            gr.main()
+        self.assertEqual(ctx.exception.code, 2)
+        run_job.assert_not_called()
+
     def test_missing_agy_exits_2_before_launching(self):
         with mock.patch.object(sys, "argv", ["x", "q"]), mock.patch.object(gr.shutil, "which", return_value=None), \
                 mock.patch.object(gr.subprocess, "run") as run, mock.patch.object(sys, "stderr"), \

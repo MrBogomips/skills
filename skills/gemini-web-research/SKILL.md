@@ -24,8 +24,12 @@ python3 scripts/gemini_research.py '<question 1>' '<question 2>' '<question 3>'
 
 The script path is relative to this skill's directory. One call is one round: each question becomes an independent
 `agy` job, all running in parallel. A round takes 3 to 6 minutes. Run it in the background if your harness can;
-otherwise run it in the foreground with a timeout of at least 10 minutes. If `agy` is not on PATH the script exits
-with status 2 and says so.
+otherwise run it in the foreground with a timeout of at least 20 minutes, the most a round can take.
+
+Before starting the jobs the script sends `agy` one trivial prompt. If `agy` is missing, or cannot complete that
+turn within 90 seconds, the script exits with status 2, starts no job and prints the reason: most often an MCP
+server configured in `agy` that never connects, which blocks every print-mode turn. Do not retry. Report the
+message to the user: repairing or disabling that server is their decision.
 
 Each worker must search the web, read the pages it cites and back every claim with a verbatim quote. The script
 checks every job against its trace and prints one report per question:
