@@ -37,7 +37,7 @@ Highest priority first:
 3. Done criteria in the project instructions (`AGENTS.md`, `CLAUDE.md` or equivalent) or agreed in the conversation.
 4. The generic DoD in [references/default-dod.md](references/default-dod.md).
 
-A `DoD.md` at the repository root replaces levels 3 and 4: its *Definition of Done* section replaces their
+A `DoD.md` at the repository root replaces levels 3 and 4: its *Requirements* section replaces their
 quality, delivery and hygiene criteria, and its *On Done* section adjusts the default treatments (adds,
 authorizes, switches off). With no root `DoD.md`, levels 3 and 4 merged (3 wins) act as the topmost level.
 

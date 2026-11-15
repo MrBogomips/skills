@@ -1,6 +1,6 @@
 # Definition of Done
 
-## Definition of Done
+## Requirements
 
 - [ ] Validator self-tests pass: `bash tests/selftest.sh`
 - [ ] `marketplace.json` and `skills/` agree: `bash tests/validate.sh`

@@ -34,7 +34,7 @@
         "./skills/done"
       ],
       "description": "Check on evidence that a work session meets its Definition of Done (hierarchical DoD.md files or a generic default), then clean up: temporary files, merged branches, the integration branch, the session title.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "category": "productivity",
       "tags": [
         "done",

@@ -25,9 +25,10 @@ Two sections with fixed headings; the content is free Markdown.
 - Run: `scripts/dod_ondone.sh`
 ```
 
-**Definition of Done** is a checklist. An item with a command in backticks is satisfied when the command exits
+**Requirements** is a checklist. An item with a command in backticks is satisfied when the command exits
 with status 0. An item without a command is judged with evidence, like the generic criteria. The checkboxes
 are never ticked in the file: the result goes in the report.
+A file written before this name may title the section `## Definition of Done`: read it as *Requirements*.
 
 **On Done** lists treatments and authorizations, in plain sentences. The ones with a defined meaning:
 
