@@ -25,6 +25,7 @@ Run this skill only on an explicit request to port or sync to Codex. Every chang
    - whether `CLAUDE.md` is a symlink to `AGENTS.md`, a regular file or an `@AGENTS.md` import, and whether `AGENTS.md` is written by hand or by an earlier run (first line `<!-- Generated from CLAUDE.md by codex-port`);
    - whether anyone checks the project out on Windows (`core.symlinks`);
    - the other sources: `.claude/skills/`, `.claude/agents/`, `.claude/commands/`, `.claude/settings.json`, `.mcp.json`;
+   - shared skills: entries of `.claude/skills/` that are symbolic links to a folder in `.agents/skills/`, which another tool (OpenSpec 2, for one) writes for every agent. Codex reads them already; they are not ported, and git must keep them (`references/setup-strategies.md`, "Shared skills");
    - the generated Codex files (`.agents/`, `.codex/`): tracked or ignored;
    - an earlier record (a "Codex interop" section, `# >>> codex-port >>>` in a script);
    - a spec-driven framework and the tooling it generates.
@@ -38,11 +39,12 @@ Run this skill only on an explicit request to port or sync to Codex. Every chang
    Give the trade-off in one line each: static works on clone and needs nothing installed, but nothing regenerates it, so it is re-run by hand after a source changes; dynamic keeps git clean and current, but needs a setup step on every checkout and CI host.
 4. **Wire.** Follow `references/setup-strategies.md`: the ignore check in every mode (git must ignore none of `AGENTS.md`, `CLAUDE.md` and `.claude/CLAUDE.md`), then the steps of the chosen mode.
    - **static**: wire nothing. Leave setup scripts, CI and build files alone, even when the project has them.
-   - **dynamic**: ignore rules, `git rm --cached`, and the setup strategy. The deterministic core is `templates/codex-port-block.sh`. Vendor it **verbatim** between its markers: replace an existing block in place, never edit it by hand. The entry point forwards `--dry-run`, `--check` and `--force` to `codex_port`, as `templates/setup.sh` does.
+   - **dynamic**: ignore rules (with shared skills, never `/.agents/` whole), `git rm --cached`, and the setup strategy. The deterministic core is `templates/codex-port-block.sh`. Vendor it **verbatim** between its markers: replace an existing block in place, never edit it by hand. The entry point forwards `--dry-run`, `--check` and `--force` to `codex_port`, as `templates/setup.sh` does.
 5. **Record**, before the port, because the record lives in a source. Add or update a short "Codex interop" section in `AGENTS.md`, so every agent sees it (`CLAUDE.local.md` for a personal setup). It holds:
    - that `AGENTS.md` is the shared instruction file, edited there; `CLAUDE.md` is a symlink to it, and Claude Code's own lines are in `.claude/CLAUDE.md`; on Windows, `core.symlinks` must be on;
    - the mode, if there are generated files;
    - the source → Codex table;
+   - the shared skills, if any, and the tool that owns them: committed, kept current by that tool, never ported;
    - that rulesync runs at latest (the version of the last run is on the first line of `.codex/codex-port.manifest`);
    - how to regenerate, and when: after editing `.claude/` or `.mcp.json`, or regenerating framework tooling; in dynamic mode also after pulling and in every new checkout or worktree. In static mode, by re-running the port-to-codex skill in static mode and committing the output with the source change; the record names no script or check, because the project has none. Editing `AGENTS.md` needs no regeneration;
    - what is not carried (`references/rulesync-gaps.md`).
@@ -55,7 +57,7 @@ Run this skill only on an explicit request to port or sync to Codex. Every chang
    - It stops while `CLAUDE.md` is not a symlink to `AGENTS.md`, while `AGENTS.md` has an `@` line or is still the output of an earlier run: finish step 2 first.
    - It refuses a hand-written `.codex/config.toml` or other file of the same name. Fold that file into the sources first, then remove it. Use `--force` only for output of an earlier manual rulesync run, after you have read it.
 7. **Verify.**
-   - Run `--check` the same way as the port (no network). It fails when `CLAUDE.md` is not a symlink to `AGENTS.md` (or arrived as a text file on a checkout without symlinks), when `AGENTS.md` holds an `@` import or is still generated output, or when a skill or agent is missing.
+   - Run `--check` the same way as the port (no network). It fails when `CLAUDE.md` is not a symlink to `AGENTS.md` (or arrived as a text file on a checkout without symlinks), when `AGENTS.md` holds an `@` import or is still generated output, when a skill or agent is missing, or when a shared skill dangles or git ignores it.
    - `git ls-files -s CLAUDE.md` shows mode `120000` once committed.
    - In dynamic mode, `git status` shows no generated file. In static mode, it shows them as changes to commit, and `git status --ignored --porcelain -- AGENTS.md CLAUDE.md .claude/CLAUDE.md .agents .codex` has no `!!` line; if the user declined the `.gitignore` change, say that the files stay ignored.
    - The project's own checks pass.
@@ -73,5 +75,6 @@ Run this skill only on an explicit request to port or sync to Codex. Every chang
 | "Static mode, but the project has a setup or bootstrap script: put the block there" | Static wires nothing: no script, no CI step, no vendored block. Only dynamic mode touches setup. |
 | "Pin rulesync for reproducibility" | Always `@latest`. The block's checks catch a breaking release, and the manifest records the version. |
 | "Just run `rulesync convert --features '*'`" | It overwrites `AGENTS.md` with a copy of `CLAUDE.md` and invents a Codex approval policy. Run the block. |
+| "`.agents/` is codex-port's output: ignore it whole, and untrack it" | Shared skills linked from `.claude/skills/` live there too, committed by their owner. Ignore only codex-port's files, or every clone gets dangling links. |
 | "Patch the generated `.toml`" | The next run overwrites it. Change the source, or record the gap. |
 | "Convert the project's commands to skills while I'm here" | Offer it (`references/rulesync-gaps.md`); never do it unasked. |
