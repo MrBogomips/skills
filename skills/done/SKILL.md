@@ -125,7 +125,8 @@ Write it in the conversation's language, verdict first, short:
 - NOT DONE: the failing criteria only, each with its source (`packages/api/DoD.md`, default), evidence and
   next action.
 - DONE: treatments run, treatments skipped and why, residual items, not-verifiable criteria.
-- DONE, closable: the same, plus the new session title, or the command to set it.
+- DONE, closable: the same, plus the session title: set, pending (with when it applies), or the exact command
+  with the real title, on its own last line.
 
 After a run whose first snapshot showed `dod_files: 0`, offer once per session to save the criteria just used
 as `DoD.md`.
@@ -142,3 +143,4 @@ as `DoD.md`.
 | Merging an approved pull request to reach "closable" | only when the root `DoD.md` authorizes it, or the user says yes |
 | Setting up `DoD.md` before giving a verdict | evaluate with the defaults first, offer the file afterwards |
 | A full criteria table in the report | the verdict and what needs attention |
+| `/rename DONE-<current title>` with the placeholder left in, or "title updated" when nothing confirmed it | fill in the real title; report a marker or a printed command as pending |

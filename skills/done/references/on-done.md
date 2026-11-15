@@ -77,8 +77,18 @@ delete them unasked.
 Only for "DONE, closable": prefix the session title with `DONE` (`DONE-<current title>`), so the session can be
 recognized as safe to close.
 
-- If the harness or the project instructions give the agent a way to set the title, use it.
-- Otherwise print the command for the user. In Claude Code: `/rename DONE-<title>`.
+- **Current title.** Take it from the conversation: a title the user set (in Claude Code a `/rename`, shown as
+  "The user named this session …") or one set through a hook (the marker line written earlier in the session).
+  Use it verbatim. If the session has no known title, say so and suggest one; never write a placeholder such
+  as `<current title>`.
+- **Set it yourself** when the harness has a tool for it, or when the instructions in effect (project or user
+  level) describe a mechanism, such as a marker line that a hook reads. Follow that mechanism exactly and say
+  when it takes effect (for example "applied at your next message").
+- **Otherwise give the user the exact command**, on its own line at the end of the report. In Claude Code an
+  agent cannot run slash commands: only the user, or a `UserPromptSubmit` or `SessionStart` hook, can set the
+  title. The command is `/rename DONE-<current title>`, with the real title filled in.
+- Never report the title as changed unless a tool confirmed it; a marker or a printed command is reported as
+  pending.
 
 ## 7. Handoff
 
