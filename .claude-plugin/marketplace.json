@@ -82,7 +82,7 @@
         "./skills/port-to-codex"
       ],
       "description": "Port a project's Claude Code setup to Codex: one shared AGENTS.md with CLAUDE.md linked to it, and skills, agents, MCP and hooks converted with rulesync, committed or regenerated on setup.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "category": "development",
       "tags": [
         "codex",

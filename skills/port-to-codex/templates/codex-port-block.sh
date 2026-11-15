@@ -10,14 +10,19 @@
 #   from .claude/ and .mcp.json with the latest rulesync. It converts a copy of the sources in
 #   a temporary folder and checks the result there, so a failed or surprising conversion leaves
 #   the files as they were. It records what it wrote in .codex/codex-port.manifest and removes
-#   what an earlier run wrote for a source that is gone.
+#   what an earlier run wrote for a source that is gone. A skill in .claude/skills/ that is a
+#   symbolic link to a skill folder in .agents/skills/ is shared: another tool (OpenSpec 2, for
+#   one) wrote it there for every agent, and Codex already reads it. It is not ported, and its
+#   files are never removed or overwritten; git must keep them, or the link dangles in a clone.
 #   --dry-run  list what it would write; change nothing
 #   --check    check the files against the sources, without the network: the instruction
-#              files, and every skill and agent has its Codex file
+#              files, every skill and agent has its Codex file, no shared skill dangles or
+#              is ignored by git
 #   --force    overwrite a file of the same name that codex-port did not write
 #   Call it as a plain command, never as `codex_port || ...`, which turns off its error checks.
 codex_port() (
   set -eu
+  unset CDPATH
   cp_dry=0 cp_check=0 cp_force=0
   for cp_arg in "$@"; do
     case $cp_arg in
@@ -34,6 +39,44 @@ codex_port() (
     echo "codex-port: .agents or .codex is a symbolic link; it writes through neither" >&2
     return 1
   fi
+
+  # cp_linked <skill>: .claude/skills/<skill> is a symbolic link to a folder in .agents/skills/.
+  cp_shared_dir=
+  if [ -d .agents/skills ]; then cp_shared_dir=$(cd -P .agents/skills && pwd -P); fi
+  cp_linked() {
+    [ -n "$cp_shared_dir" ] && [ -L ".claude/skills/$1" ] && [ -d ".claude/skills/$1" ] &&
+      [ "$(cd -P ".claude/skills/$1" && cd .. && pwd -P)" = "$cp_shared_dir" ]
+  }
+  # cp_target <skill>: the folder in .agents/skills/ that a linked skill points to.
+  cp_target() {
+    echo ".agents/skills/$(basename "$(cd -P ".claude/skills/$1" && pwd -P)")"
+  }
+  # cp_owned <folder>: .agents/skills/<folder> is the target of a linked skill.
+  cp_owned() {
+    for cp_link in .claude/skills/*; do
+      cp_linked "${cp_link#.claude/skills/}" || continue
+      if [ "$(cp_target "${cp_link#.claude/skills/}")" = ".agents/skills/$1" ]; then return 0; fi
+    done
+    return 1
+  }
+  # cp_shared_kept [<prefix>]: no skill link dangles, and git ignores no linked skill's files.
+  cp_shared_kept() {
+    cp_fail=0
+    for cp_link in .claude/skills/*; do
+      if [ -L "$cp_link" ] && [ ! -e "$cp_link" ]; then
+        echo "codex-port: ${1:-}$cp_link links to '$(readlink "$cp_link")', which is missing: if another tool owns it, run that tool or commit its files where git keeps them" >&2
+        cp_fail=1
+        continue
+      fi
+      cp_linked "${cp_link#.claude/skills/}" || continue
+      cp_dir=$(cp_target "${cp_link#.claude/skills/}")
+      if git check-ignore -q "$cp_dir/SKILL.md" 2>/dev/null; then
+        echo "codex-port: ${1:-}$cp_link links to $cp_dir, which git ignores: un-ignore it, or the link dangles in every other clone" >&2
+        cp_fail=1
+      fi
+    done
+    return $cp_fail
+  }
 
   # cp_instructions: AGENTS.md is the real file, CLAUDE.md a symlink to it.
   cp_instructions() {
@@ -80,6 +123,7 @@ codex_port() (
     for cp_src in .claude/skills/*/SKILL.md; do
       [ -f "$cp_src" ] || continue
       cp_name=$(basename "$(dirname "$cp_src")")
+      if cp_linked "$cp_name"; then continue; fi
       cp_skills=$((cp_skills + 1))
       [ -f "$1/.agents/skills/$cp_name/SKILL.md" ] ||
         { echo "codex-port: skill '$cp_name' is not ported" >&2; cp_fail=1; }
@@ -98,18 +142,23 @@ codex_port() (
     cp_bad=0
     cp_instructions || cp_bad=1
     cp_outputs . || cp_bad=1
+    cp_shared_kept || cp_bad=1
     if [ "$cp_bad" = 1 ]; then return 1; fi
     echo "codex-port: the instruction files and the Codex files are up to date ($cp_skills skills, $cp_agents agents)"
     return 0
   fi
   cp_instructions
+  cp_shared_kept "warning: " || true
 
   # Only the features the sources have: rulesync writes a Codex approval policy into
   # .codex/config.toml for permissions it was never given. Never `rules`: it would overwrite
   # AGENTS.md with a copy of CLAUDE.md.
   cp_features=
   cp_feature() { cp_features=${cp_features:+$cp_features,}$1; }
-  if ls .claude/skills/*/SKILL.md >/dev/null 2>&1; then cp_feature skills; fi
+  for cp_src in .claude/skills/*/SKILL.md; do
+    [ -f "$cp_src" ] || continue
+    if ! cp_linked "$(basename "$(dirname "$cp_src")")"; then cp_feature skills; break; fi
+  done
   if ls .claude/agents/*.md >/dev/null 2>&1; then cp_feature subagents; fi
   if [ -f .mcp.json ]; then cp_feature mcp; fi
   if grep -qs '"hooks"' .claude/settings.json; then cp_feature hooks; fi
@@ -127,6 +176,12 @@ codex_port() (
         [ -e "$cp_src" ] || continue
         case ${cp_src#.claude/} in worktrees | settings.local.json | CLAUDE.local.md | CLAUDE.md | rules) continue ;; esac
         cp -R "$cp_src" "$cp_tmp/.claude/"
+      done
+      # Neither a shared skill nor a dangling link reaches rulesync: a copied link dangles there.
+      for cp_src in .claude/skills/*; do
+        if cp_linked "${cp_src#.claude/skills/}" || { [ -L "$cp_src" ] && [ ! -e "$cp_src" ]; }; then
+          rm -f "$cp_tmp/$cp_src"
+        fi
       done
     fi
     # Package install scripts never run (npm_config_ignore_scripts).
@@ -179,11 +234,15 @@ codex_port() (
   done
 
   # Remove what the previous run wrote, so outputs whose source is gone disappear. An older
-  # manifest may list AGENTS.md: it is a source now, and stays.
+  # manifest may list AGENTS.md: it is a source now, and stays; or a skill another tool has
+  # since taken over and linked: its files stay too.
   if [ -f "$cp_manifest" ]; then
     while IFS= read -r cp_path; do
       case $cp_path in
         *..*) ;;
+        .agents/skills/*/*)
+          cp_name=${cp_path#.agents/skills/}
+          cp_owned "${cp_name%%/*}" || rm -f "$cp_path" ;;
         .agents/* | .codex/*) rm -f "$cp_path" ;;
       esac
     done <"$cp_manifest"
