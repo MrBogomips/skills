@@ -10,7 +10,7 @@ Two sections with fixed headings; the content is free Markdown.
 ```markdown
 # Definition of Done
 
-## Definition of Done
+## Requirements
 
 - [ ] Tests pass: `npm test`
 - [ ] Lint is clean: `npm run lint`
