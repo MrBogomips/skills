@@ -45,6 +45,7 @@ After any change, run from the repo root (requires `jq`):
 ```bash
 bash tests/validate.sh                             # marketplace.json and skills/ agree (CI runs this)
 python3 -m unittest discover -s tests -p 'test_*.py'  # unit tests of bundled scripts (CI runs this)
+CODEX_PORT_SH=dash python3 -m unittest discover -s tests -p 'test_codex_port_block.py'  # the POSIX block under dash too
 claude plugin validate . --strict                  # marketplace.json schema; fails while there are no plugins
 DISABLE_TELEMETRY=1 npx -y skills add ./ --list    # what the skills CLI discovers (Node >= 22.20)
 ```
