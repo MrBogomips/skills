@@ -1,5 +1,5 @@
 ---
-name: port-to-codex
+name: port-to-agents
 description: >-
   Ports a project's Claude Code setup (CLAUDE.md, skills, agents, MCP, hooks) to Codex: AGENTS.md becomes the
   shared instruction file with CLAUDE.md as a symlink to it, and Codex's .agents/skills/ and .codex/ are generated
@@ -46,7 +46,7 @@ Run this skill only on an explicit request to port or sync to Codex. Every chang
    - the source → Codex table;
    - the shared skills, if any, and the tool that owns them: committed, kept current by that tool, never ported;
    - that rulesync runs at latest (the version of the last run is on the first line of `.codex/codex-port.manifest`);
-   - how to regenerate, and when: after editing `.claude/` or `.mcp.json`, or regenerating framework tooling; in dynamic mode also after pulling and in every new checkout or worktree. In static mode, by re-running the port-to-codex skill in static mode and committing the output with the source change; the record names no script or check, because the project has none. Editing `AGENTS.md` needs no regeneration;
+   - how to regenerate, and when: after editing `.claude/` or `.mcp.json`, or regenerating framework tooling; in dynamic mode also after pulling and in every new checkout or worktree. In static mode, by re-running the port-to-agents skill in static mode and committing the output with the source change; the record names no script or check, because the project has none. Editing `AGENTS.md` needs no regeneration;
    - what is not carried (`references/rulesync-gaps.md`).
 
    Follow the project's conventions for recording (working-documents table, change history).

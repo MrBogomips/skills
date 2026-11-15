@@ -1,4 +1,4 @@
-"""Behaviour of skills/port-to-codex/templates/codex-port-block.sh with a stub npx (no network)."""
+"""Behaviour of skills/port-to-agents/templates/codex-port-block.sh with a stub npx (no network)."""
 import os
 import shutil
 import subprocess
@@ -8,7 +8,7 @@ from pathlib import Path
 
 # CODEX_PORT_SH picks the shell, e.g. dash, to check the block stays POSIX.
 SHELL = os.environ.get("CODEX_PORT_SH", "sh")
-BLOCK = Path(__file__).resolve().parent.parent / "skills/port-to-codex/templates/codex-port-block.sh"
+BLOCK = Path(__file__).resolve().parent.parent / "skills/port-to-agents/templates/codex-port-block.sh"
 
 # Mirrors rulesync's layout (skills -> .agents/skills, agents -> .codex/agents/*.toml) and fails
 # when a skill linked into .agents/skills reaches the conversion.

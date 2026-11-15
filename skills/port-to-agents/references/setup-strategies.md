@@ -15,7 +15,7 @@ Static mode is a one-off generation whose output goes into the repository. The p
    - A match: warn the user, naming the rule's file and line, and offer to change `.gitignore` so the Codex files are committed for good. Remove the rule when it covers only these paths (for example the ignore block of an earlier dynamic run); otherwise add negations at the end of the root `.gitignore`: `!/.agents/`, `!/.codex/`. A negation in `.gitignore` also overrides `info/exclude` and `core.excludesFile`.
    - Change `.gitignore` only on approval. If the user declines, port anyway, and report that the files stay ignored and will not be committed.
 2. **Port** with the block from this skill, never a copy in the project: `sh -c '. <skill dir>/templates/codex-port-block.sh; codex_port'`. Commit `.agents/skills/` and `.codex/`, including `.codex/codex-port.manifest`, which the next run reads, together with the source change. Shared skills (above) are committed already, by their owner; the manifest never lists them.
-3. **Record** that the files are generated on demand: re-run the port-to-codex skill in static mode after changing `.claude/` or `.mcp.json`, and commit the output with the source change. The record names no script and no check, because the project has none.
+3. **Record** that the files are generated on demand: re-run the port-to-agents skill in static mode after changing `.claude/` or `.mcp.json`, and commit the output with the source change. The record names no script and no check, because the project has none.
 4. **Switching from dynamic:** the checks above find the old ignore block. Offer, separately, to remove the setup wiring the earlier run added (the vendored block and its `codex_port` call); otherwise every setup would regenerate the committed files.
 
 ## Dynamic: the Codex files are gitignored
@@ -56,7 +56,7 @@ Static mode is a one-off generation whose output goes into the repository. The p
 
 3. If there is none, recommend in this order, and let the user choose:
    - **(a) A deterministic `setup.sh`** (`templates/setup.sh`). Recommended when the project has CI, more than one contributor, or worktrees. Fill in its dependency command from the lockfile: `bun.lock` → `bun install`, frozen `--frozen-lockfile`; `package-lock.json` → `npm install`, frozen `npm ci`; `pnpm-lock.yaml` → `pnpm install`, frozen `--frozen-lockfile`; `yarn.lock` → `yarn install`, frozen `--immutable`; `uv.lock` → `uv sync`, frozen `--locked`; nothing → leave it out. Wire CI to call `./setup.sh --ci`.
-   - **(b) An instruction in `AGENTS.md`** (shared): "When `.agents/` or `.codex/` is missing, or older than its source, run the port-to-codex skill (or the block)." Nothing deterministic runs on CI or for a contributor whose agent lacks the skill; both tools read the instruction.
+   - **(b) An instruction in `AGENTS.md`** (shared): "When `.agents/` or `.codex/` is missing, or older than its source, run the port-to-agents skill (or the block)." Nothing deterministic runs on CI or for a contributor whose agent lacks the skill; both tools read the instruction.
    - **(c) The same instruction in `CLAUDE.local.md`** (personal). Nothing shared changes except the ignore rules, so pair it with the local `info/exclude`.
 
 ## The vendored block (dynamic mode)

@@ -55,4 +55,4 @@ Name sections after what the repository really has. A common shape, using only t
 
 Prefer specific names where the repository has clear topics, for example `Styling System`, `Path Aliases` or `Admin Scripts`.
 
-To also port skills, agents, MCP servers and hooks from a Claude Code setup to Codex, use the `port-to-codex` skill instead.
+To also port skills, agents, MCP servers and hooks from a Claude Code setup to Codex, use the `port-to-agents` skill instead.
