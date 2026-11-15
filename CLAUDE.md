@@ -19,6 +19,7 @@ There is no build step. The repository is Markdown skills plus one JSON manifest
 The `skills` CLI discovers skills in `skills/` and also reads the skill paths declared in `marketplace.json`. When a skill is found both ways, it is listed once.
 
 - `tests/`: `validate.sh` (repository checks) and `selftest.sh` (the validator's own tests), both run by `.github/workflows/validate.yml` on pushes and pull requests to `main`.
+- `DoD.md`: the Definition of Done that the `done` skill checks a session against.
 - `README.md` keeps the public skill list and install instructions; update it whenever a skill is added, renamed or removed.
 
 ## Portability rules
