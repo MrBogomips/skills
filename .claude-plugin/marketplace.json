@@ -66,7 +66,7 @@
         "./skills/init-agents-md"
       ],
       "description": "Create a short, repository-specific AGENTS.md for coding agents and make CLAUDE.md a symlink to it.",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "category": "development",
       "tags": [
         "agents-md",
@@ -75,14 +75,14 @@
       ]
     },
     {
-      "name": "port-to-codex",
+      "name": "port-to-agents",
       "source": "./",
       "strict": false,
       "skills": [
-        "./skills/port-to-codex"
+        "./skills/port-to-agents"
       ],
       "description": "Port a project's Claude Code setup to Codex: one shared AGENTS.md with CLAUDE.md linked to it, and skills, agents, MCP and hooks converted with rulesync, committed or regenerated on setup.",
-      "version": "1.1.0",
+      "version": "2.0.0",
       "category": "development",
       "tags": [
         "codex",

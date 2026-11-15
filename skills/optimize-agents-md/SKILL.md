@@ -6,7 +6,7 @@ description: >-
   conflicts with the project's skills, keeps the root file small, and moves detail that only some folders or tasks
   need into files that load on demand in every harness. Use when the user asks to optimize, slim, shrink, clean up,
   restructure, split or modularize CLAUDE.md or AGENTS.md, or says the instruction file is too long. Not for
-  creating a first AGENTS.md (init-agents-md) or porting a Claude Code setup to Codex (port-to-codex).
+  creating a first AGENTS.md (init-agents-md) or porting a Claude Code setup to Codex (port-to-agents).
 license: MIT
 compatibility: >-
   Any agent harness with a shell and file access. scripts/inventory.sh needs bash and standard BSD/GNU tools; git is
@@ -40,8 +40,8 @@ optimize-agents-md [--check] [--threshold N] [path]
    the first question; until it is answered, project the case the signals indicate and give the other in one line.
    - Layout `symlink`: the layer is done; say so.
    - Several harnesses and any other layout: the target is one real `AGENTS.md`, `CLAUDE.md` a relative symlink
-     to it, Claude Code-only lines in `.claude/CLAUDE.md`. Recommend the `port-to-codex` skill to get there; if it
-     is not installed, give `npx skills add MrBogomips/skills --skill port-to-codex`. Do not redo its work here
+     to it, Claude Code-only lines in `.claude/CLAUDE.md`. Recommend the `port-to-agents` skill to get there; if it
+     is not installed, give `npx skills add MrBogomips/skills --skill port-to-agents`. Do not redo its work here
      (that includes sharing `.claude/skills/` with other agents): classify the content as it will be after the
      merge. If the user declines, list the drift, ask which side is
      right, and treat `AGENTS.md` as primary, warning that the copies will keep drifting.

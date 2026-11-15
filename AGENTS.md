@@ -39,6 +39,14 @@ A skill has to work in every harness the `skills` CLI targets, not only in Claud
 - **Change**: bump the skill's `version` in its `marketplace.json` entry. Claude Code uses the version to decide whether an installed plugin needs updating.
 - **Rename or remove**: change the directory, the frontmatter `name` and the manifest entry together. Existing installs keep the old name.
 
+## The AGENTS.md skills must agree
+
+`init-agents-md` (create), `optimize-agents-md` (slim and restructure) and `port-to-agents` (port a Claude Code setup to Codex) work on the same files and must stay coherent. When you change one, check the other two in the same pull request:
+
+- **Instruction layer**: all three target one real `AGENTS.md`, `CLAUDE.md` as a relative symlink to it, and Claude Code-only lines in `.claude/CLAUDE.md`. None proposes an `@AGENTS.md` import or a generated copy.
+- **Loading facts**: how each harness loads instruction files and skills is written in `skills/port-to-agents/references/instruction-files.md` and `skills/optimize-agents-md/references/loading-and-limits.md`. A skill can't read another skill's files, so each keeps its own copy: update both copies together, with the date and versions checked.
+- **Scope and names**: each skill hands off to the others by their current names and never does their work.
+
 ## Verification
 
 After any change, run from the repo root (requires `jq`):
