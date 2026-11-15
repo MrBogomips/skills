@@ -9,7 +9,7 @@
 - [ ] The manifest schema is valid: `claude plugin validate . --strict`
 - [ ] Every changed skill has its `version` bumped in `.claude-plugin/marketplace.json`
 - [ ] The `README.md` skill list is updated when a skill is added, renamed or removed
-- [ ] Skills follow the portability rules of `CLAUDE.md`: frontmatter `name` equals the directory, bundled files by relative path, no personal paths, macOS/BSD-compatible scripts
+- [ ] Skills follow the portability rules of `AGENTS.md`: frontmatter `name` equals the directory, bundled files by relative path, no personal paths, macOS/BSD-compatible scripts
 - [ ] The pull request is merged into `main`, with the `validate` check green
 
 ## On Done
