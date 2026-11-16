@@ -7,7 +7,7 @@
   },
   "metadata": {
     "description": "Simple, general-purpose agent skills, one plugin per skill",
-    "version": "0.4.0"
+    "version": "0.5.0"
   },
   "plugins": [
     {
@@ -152,6 +152,22 @@
         "agents-md",
         "claude-md",
         "context"
+      ]
+    },
+    {
+      "name": "pause",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/pause"
+      ],
+      "description": "Pause agentic work safely and cheaply, then resume it hours later in the same session: stop what would run unattended, write a checkpoint, compact while the cache is warm.",
+      "version": "1.0.0",
+      "category": "productivity",
+      "tags": [
+        "pause",
+        "resume",
+        "cost"
       ]
     }
   ]
