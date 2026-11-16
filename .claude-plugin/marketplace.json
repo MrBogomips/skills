@@ -98,7 +98,7 @@
         "./skills/gemini-web-research"
       ],
       "description": "Delegate web research to parallel Gemini jobs through the agy CLI; a script checks every claim's quote against the pages each job actually read.",
-      "version": "1.0.1",
+      "version": "1.1.0",
       "category": "research",
       "tags": [
         "research",

@@ -26,10 +26,15 @@ The script path is relative to this skill's directory. One call is one round: ea
 `agy` job, all running in parallel. A round takes 3 to 6 minutes. Run it in the background if your harness can;
 otherwise run it in the foreground with a timeout of at least 20 minutes, the most a round can take.
 
-Before starting the jobs the script sends `agy` one trivial prompt. If `agy` is missing, or cannot complete that
-turn within 90 seconds, the script exits with status 2, starts no job and prints the reason: most often an MCP
-server configured in `agy` that never connects, which blocks every print-mode turn. Do not retry. Report the
-message to the user: repairing or removing that server is their decision.
+Launch the round directly: do not check first whether `agy` is installed, logged in or working. The script
+reports that itself:
+
+- **Exit 0**: every job produced a report.
+- **Exit 1**: some jobs FAILED; their reports say why. Handle them as in "Read the results".
+- **Exit 2**: `agy` is not installed, or no job could even start its turn (a job whose turn has not started
+  within 90 seconds is stopped). No report is printed; stderr gives the reason, most often an MCP server
+  configured in `agy` that never connects, which blocks every print-mode turn, and names it. Do not retry. Report
+  the message to the user: repairing `agy` or removing that server is their decision.
 
 Workers run with a minimal `agy` configuration, whatever the user's own settings are: an empty workspace that
 holds only the page reader, no slash commands or skills, no MCP tools, no file writes, and no `curl`, `wget`,
