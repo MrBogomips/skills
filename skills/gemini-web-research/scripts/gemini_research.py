@@ -13,7 +13,14 @@ the job's trace and checks that:
   - each claim's quote appears in the text of the pages it read,
   - every URL in the answer was read.
 Prints one checked report per question. Traces are kept in the run directory printed
-at the top. Exits 1 if any job failed, 2 if agy is not installed.
+at the top.
+
+There is no separate test call to agy: each job watches its own turn. A turn that has not
+started within START_TIMEOUT_SECONDS (most often an MCP server configured in agy that never
+connects) is killed. A job whose turn never started failed on agy's setup, not on the research.
+
+Exit status: 0 all jobs succeeded; 1 some jobs failed; 2 agy is not installed, or every job
+failed on agy's setup (the reason goes to stderr, no report is printed).
 """
 
 import concurrent.futures
@@ -22,16 +29,19 @@ import json
 import os
 import re
 import shutil
+import signal
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 from pathlib import Path
 
 MODEL = os.environ.get("GEMINI_RESEARCH_MODEL") or "gemini-3.8-flash-high"
 JOB_TIMEOUT_SECONDS = 900
-PROBE_TIMEOUT_SECONDS = 90
+START_TIMEOUT_SECONDS = 90
 BACKSTOP_SECONDS = 60
+POLL_SECONDS = 2
 MAX_PAGES = 6
 MAX_SEARCHES = 8
 READER = Path(__file__).resolve().parent / "read_page.py"
@@ -89,6 +99,22 @@ Return JSON:
 - "unconfirmed": things the question asks about that you could not confirm.
 """
 
+OK, FAILED, SETUP = "ok", "failed", "setup"  # job outcomes; SETUP: agy never started the turn
+
+
+LIVE = set()  # agy processes still running; they are in their own process groups, so main() stops them
+LIVE_LOCK = threading.Lock()  # guards LIVE and STOPPING, so no agy can start after kill_all()
+STOPPING = threading.Event()
+
+
+class TurnNotStarted(Exception):
+    """agy did not start the turn within START_TIMEOUT_SECONDS and was killed."""
+
+
+class RoundStopped(Exception):
+    """The round was interrupted before this job launched agy."""
+
+
 URL_RE = re.compile(r"https?://[^\s)\]>\"'`]+")
 STALL_RE = re.compile(r"MCP: \d+ server\(s\) still connecting after \S+: (.+)")
 SAVED_OUTPUT_RE = re.compile(r"file://(\S+?output\.txt)")
@@ -145,23 +171,88 @@ def read_trace(trace_path):
     return searches, opened, normalize_text("\n".join(fetched)), response, error
 
 
+def turn_started(trace_path):
+    """Return True once agy's trace shows a step: the turn has started."""
+    if not trace_path.is_file():
+        return False
+    for line in trace_path.read_text(errors="replace").splitlines():
+        try:
+            event = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(event, dict) and "step_update" in event:
+            return True
+    return False
+
+
 def call_agy(prompt, trace_path, cwd, timeout, extra=()):
     """Run one agy print-mode turn, streaming its output to trace_path. Return the exit code.
 
-    agy ends the turn itself after `timeout` seconds; the subprocess timeout is only a backstop.
-    agy's own log goes next to the trace, where diagnose() reads it.
+    agy ends the turn itself after `timeout` seconds; the backstop kills it a little later
+    (subprocess.TimeoutExpired). A turn that has not started within START_TIMEOUT_SECONDS
+    is killed (TurnNotStarted). agy's own log goes next to the trace, where diagnose() reads it.
     """
     cmd = [
         "agy", "-p", prompt, "--model", MODEL, "--output-format", "stream-json",
         "--print-timeout", f"{timeout}s", "--log-file", str(trace_path.with_suffix(".log")),
         "--disable-slash-commands", "--settings", json.dumps(AGY_SETTINGS), *extra,
     ]
+    started_at = time.monotonic()
     with trace_path.open("w") as trace:
-        proc = subprocess.run(
-            cmd, cwd=cwd, stdin=subprocess.DEVNULL, stdout=trace, stderr=subprocess.STDOUT,
-            text=True, timeout=timeout + BACKSTOP_SECONDS,
-        )
-    return proc.returncode
+        with LIVE_LOCK:  # launch and register in one step, so kill_all() never misses a process
+            if STOPPING.is_set():
+                raise RoundStopped()
+            proc = subprocess.Popen(
+                cmd, cwd=cwd, stdin=subprocess.DEVNULL, stdout=trace, stderr=subprocess.STDOUT, text=True,
+                start_new_session=True,  # its own process group, so kill() also stops the MCP servers it spawned
+            )
+            LIVE.add(proc)
+        try:
+            return watch(proc, trace_path, timeout, started_at)
+        except BaseException:  # the watchdog fired, or the watcher itself failed: never leave agy running
+            kill(proc)
+            raise
+        finally:
+            with LIVE_LOCK:
+                LIVE.discard(proc)
+
+
+def watch(proc, trace_path, timeout, started_at):
+    """Wait for agy to exit, killing it if the turn never starts or outlives its timeout."""
+    started = False
+    while True:
+        try:
+            return proc.wait(timeout=POLL_SECONDS)
+        except subprocess.TimeoutExpired:
+            pass
+        elapsed = time.monotonic() - started_at
+        started = started or turn_started(trace_path)
+        if not started and elapsed > START_TIMEOUT_SECONDS:
+            raise TurnNotStarted()
+        if elapsed > timeout + BACKSTOP_SECONDS:
+            raise subprocess.TimeoutExpired("agy", timeout + BACKSTOP_SECONDS)
+
+
+def kill(proc):
+    """Kill agy and every process in its group."""
+    try:
+        os.killpg(proc.pid, signal.SIGKILL)
+    except (ProcessLookupError, PermissionError):
+        proc.kill()
+    proc.wait()
+
+
+def kill_all():
+    """Kill every agy process still running, with its children, and launch no more."""
+    with LIVE_LOCK:
+        STOPPING.set()
+        procs = list(LIVE)
+    for proc in procs:
+        kill(proc)
+
+
+def on_signal(signum, frame):
+    raise SystemExit(128 + signum)
 
 
 def run_agy(question, trace_path, cwd):
@@ -181,19 +272,6 @@ def diagnose(trace_path):
     return (f" agy was still waiting for MCP server(s) to connect: {stalled[-1].strip()}."
             " A print-mode turn does not start until they do: repair them or run `agy mcp remove <name>`"
             " (`agy mcp disable` is not enough).")
-
-
-def probe(run_dir):
-    """Check that agy can complete a turn at all. Return None, or the reason it cannot."""
-    trace_path = run_dir / "probe.jsonl"
-    try:
-        returncode = call_agy("Reply with the single word: ok", trace_path, run_dir, PROBE_TIMEOUT_SECONDS)
-    except subprocess.TimeoutExpired:
-        return f"no reply within {PROBE_TIMEOUT_SECONDS}s.{diagnose(trace_path)}"
-    error = read_trace(trace_path)[4]
-    if returncode == 0 and not error:
-        return None
-    return f"{error or f'agy exited {returncode}'}.{diagnose(trace_path)}"
 
 
 def parse_report(response):
@@ -274,7 +352,7 @@ def trace_failure(returncode, error, searches, opened, response):
 
 
 def run_job(index, question, run_dir):
-    """Run and check one job. Never raises: any problem becomes a FAILED report."""
+    """Run and check one job. Return (OK | FAILED | SETUP, report text). Never raises."""
     trace_path = run_dir / f"job-{index}.jsonl"
     started = time.monotonic()
     lines = [f"## Job {index}: {question}", ""]
@@ -286,6 +364,8 @@ def run_job(index, question, run_dir):
         failure = trace_failure(returncode, error, searches, opened, response)
         if failure is None:
             report = parse_report(response)
+    except TurnNotStarted:
+        failure, header = f"the agy turn did not start within {START_TIMEOUT_SECONDS}s", f"trace {trace_path}"
     except subprocess.TimeoutExpired:
         failure, header = f"agy did not finish within {JOB_TIMEOUT_SECONDS}s", f"trace {trace_path}"
     except ValueError as exc:
@@ -293,9 +373,10 @@ def run_job(index, question, run_dir):
     except Exception as exc:  # one bad job must not abort the round
         failure, header = f"unexpected {type(exc).__name__}: {exc}", f"trace {trace_path}"
     if failure:
-        return False, "\n".join(lines + [f"FAILED: {failure}.{diagnose(trace_path)} {header}", ""])
+        status = FAILED if turn_started(trace_path) else SETUP
+        return status, "\n".join(lines + [f"FAILED: {failure}.{diagnose(trace_path)} {header}", ""])
     body, _ = render_report(report, opened, fetched)
-    return True, "\n".join(lines + [header, ""] + body)
+    return OK, "\n".join(lines + [header, ""] + body)
 
 
 def main():
@@ -308,20 +389,28 @@ def main():
     stamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     run_dir = Path(tempfile.mkdtemp(prefix=f"gemini-research-{stamp}-"))
     shutil.copy(READER, run_dir / READER.name)  # the workers' workspace holds the page reader and nothing else
-    reason = probe(run_dir)
-    if reason:
-        print(f"gemini_research: agy cannot complete a turn, no job was started: {reason}\n"
-              f"Trace and log: {run_dir}", file=sys.stderr)
-        sys.exit(2)
     print(f"# Gemini research round: {len(questions)} jobs, {MODEL}\nRun directory: {run_dir}\n", flush=True)
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=len(questions)) as pool:
+    for signum in (signal.SIGTERM, signal.SIGHUP):  # the jobs no longer get these from the terminal
+        signal.signal(signum, on_signal)
+    pool = concurrent.futures.ThreadPoolExecutor(max_workers=len(questions))
+    try:
         jobs = [pool.submit(run_job, i, q, run_dir) for i, q in enumerate(questions, 1)]
         results = [job.result() for job in jobs]
+    finally:  # interrupted or terminated: the jobs are in their own process groups, so stop them here
+        kill_all()
+        pool.shutdown(cancel_futures=True)
 
+    if all(status == SETUP for status, _ in results):
+        reason = results[0][1].split("FAILED: ", 1)[-1].strip()
+        reason = reason[:1].upper() + reason[1:]
+        print(f"gemini_research: agy could not start a turn, so no research was done. {reason}\n"
+              "This is a problem with agy's installation or configuration: do not retry the round,"
+              f" report it to the user. Traces and logs: {run_dir}", file=sys.stderr)
+        sys.exit(2)
     for _, text in results:
         print(text)
-    failed = sum(1 for ok, _ in results if not ok)
+    failed = sum(1 for status, _ in results if status != OK)
     if failed:
         print(f"{failed} of {len(questions)} jobs FAILED.")
         sys.exit(1)
