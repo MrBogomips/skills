@@ -18,7 +18,7 @@ jobs:
       - name: Validator self-test
         run: bash tests/selftest.sh
 
-      - name: Marketplace and skills agree
+      - name: Plugin and skills agree
         run: bash tests/validate.sh
 
       - name: Bundled script tests
