@@ -1,0 +1,11 @@
+{
+  "name": "kaizen",
+  "version": "2.0.0",
+  "description": "Session retrospective — links the errors, reworks and ambiguities of a session to the skills, rules, CLAUDE.md, memory, hooks and settings behind them, and applies only explicitly authorized, reviewed fixes to the project's own files",
+  "author": {
+    "name": "MrBogomips",
+    "url": "https://github.com/MrBogomips"
+  },
+  "license": "MIT",
+  "keywords": ["kaizen", "retrospective", "improvement", "skills", "claude-md", "hooks"]
+}

@@ -106,6 +106,36 @@ expect_fail "missing plugin.json" "$d" "missing .*plugin.json"
 d="$(new_repo badjson)"; printf '{ not json' > "$d/.claude-plugin/plugin.json"
 expect_fail "invalid plugin.json" "$d" "not valid JSON"
 
+# --- top-level plugin folders -----------------------------------------------
+
+write_subplugin() {
+    local dir="$1" folder="$2" name="${3:-$2}" extra="${4:-}"
+    mkdir -p "$dir/$folder/.claude-plugin"
+    printf '{"name":"%s","version":"1.0.0","description":"d"%s}\n' "$name" "$extra" \
+        > "$dir/$folder/.claude-plugin/plugin.json"
+}
+
+d="$(new_repo subvalid)"; write_plugin "$d"; write_skill "$d" alpha
+write_subplugin "$d" extra; write_skill "$d/extra" extra-skill
+expect_pass "root plugin plus a valid plugin folder" "$d"
+
+d="$(new_repo subname)"; write_plugin "$d"; write_subplugin "$d" extra other-name
+expect_fail "plugin folder named differently from its plugin" "$d" "PLUGIN NAME MISMATCH"
+
+d="$(new_repo subskill)"; write_plugin "$d"; write_subplugin "$d" extra; write_skill "$d/extra" alpha renamed
+expect_fail "plugin folder skill name differs from directory" "$d" "NAME MISMATCH ./extra/skills/alpha"
+
+d="$(new_repo subjson)"; write_plugin "$d"; mkdir -p "$d/extra/.claude-plugin"
+printf '{ not json' > "$d/extra/.claude-plugin/plugin.json"
+expect_fail "plugin folder with invalid plugin.json" "$d" "extra/.claude-plugin/plugin.json: not valid JSON"
+
+d="$(new_repo subfield)"; write_plugin "$d"; write_subplugin "$d" extra extra ',"skills":["./skills/x"]'
+expect_fail "plugin folder declares skills" "$d" "extra/.claude-plugin/plugin.json: remove the skills field"
+
+d="$(new_repo submarket)"; write_plugin "$d"; write_subplugin "$d" extra
+printf '{"name":"m","owner":{"name":"o"},"plugins":[]}\n' > "$d/extra/.claude-plugin/marketplace.json"
+expect_fail "marketplace.json inside a plugin folder" "$d" "STRAY marketplace.json next to extra"
+
 echo ""
 if [[ $FAILURES -gt 0 ]]; then
     echo "selftest: $FAILURES case(s) failed"
