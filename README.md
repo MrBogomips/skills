@@ -16,14 +16,16 @@ npx skills add MrBogomips/skills --list                # list the available skil
 npx skills add MrBogomips/skills --skill <name> -g     # one skill, for all your projects
 ```
 
-### Claude Code, as a plugin marketplace
+### Claude Code, as a plugin
+
+All the skills come as one plugin, `skills`, from the `mrbogomips` marketplace:
 
 ```text
-/plugin marketplace add MrBogomips/skills
-/plugin install <skill>@mrbogomips-skills
+/plugin marketplace add MrBogomips/claude-plugins
+/plugin install skills@mrbogomips
 ```
 
-Each skill is its own plugin, so you install only the ones you want.
+The plugin installs every skill, and you invoke them as `/skills:<name>` (for example `/skills:done`). To install only some skills, use the `skills` CLI above, which works in Claude Code too.
 
 ## Skills
 
@@ -43,8 +45,8 @@ Each skill is its own plugin, so you install only the ones you want.
 ## Repository layout
 
 - `skills/<name>/SKILL.md`: one directory per skill, with any supporting files next to it.
-- `.claude-plugin/marketplace.json`: the Claude Code marketplace, one plugin entry per skill.
-- `tests/validate.sh`: checks that the marketplace and `skills/` describe the same skills; CI runs it on every push and pull request.
+- `.claude-plugin/plugin.json`: the manifest of the Claude Code plugin `skills`, which loads every skill in `skills/`.
+- `tests/validate.sh`: checks the plugin manifest and every skill's frontmatter; CI runs it on every push and pull request.
 - `tests/test_*.py`: unit tests for the scripts bundled with skills (`python3 -m unittest discover -s tests -p 'test_*.py'`).
 
 ## License

@@ -1,14 +1,17 @@
 #!/usr/bin/env bash
-# Structural validation: .claude-plugin/marketplace.json and skills/ must describe
-# the same skills, one plugin per skill, with Agent Skills-compliant frontmatter.
-# Catches what `claude plugin validate --strict` does not: manifest paths without a
-# SKILL.md, frontmatter names that differ from their directory, unlisted skills.
+# Structural validation: .claude-plugin/plugin.json describes one plugin that ships
+# every skill under skills/, and each skill has Agent Skills-compliant frontmatter.
+# Catches what `claude plugin validate --strict` does not: a skill directory without
+# a SKILL.md, frontmatter names that differ from their directory, a `skills` field
+# that would stop Claude Code from loading all of skills/, a stray marketplace.json.
 #
 # Usage: bash tests/validate.sh [repo-root]    (requires jq; bash 3.2 compatible)
 set -euo pipefail
 
 ROOT="${1:-$(cd "$(dirname "$0")/.." && pwd)}"
-MANIFEST="$ROOT/.claude-plugin/marketplace.json"
+MANIFEST="$ROOT/.claude-plugin/plugin.json"
+MARKETPLACE="$ROOT/.claude-plugin/marketplace.json"
+RESERVED_PREFIX_RE='^(claude|anthropic|anthropics|cc-plugin)-'
 NAME_RE='^[a-z0-9]+(-[a-z0-9]+)*$'
 SEMVER_RE='^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$'
 MAX_NAME=64
@@ -58,63 +61,50 @@ check_skill() {
     fi
 }
 
-field() { jq -r ".plugins[$1].$2 // empty" "$MANIFEST"; }
+check_plugin() {
+    local name version
+    name="$(jq -r '.name // empty' "$MANIFEST")"
+    version="$(jq -r '.version // empty' "$MANIFEST")"
+    PLUGIN="$name@$version"
 
-check_entry() {
-    local i="$1" name source strict version skills
-    name="$(field "$i" name)"
-    source="$(field "$i" source)"
-    strict="$(jq -r ".plugins[$i].strict" "$MANIFEST")"
-    version="$(field "$i" version)"
-    skills="$(jq -c ".plugins[$i].skills // []" "$MANIFEST")"
-
-    if [[ -z "$name" ]]; then error "plugins[$i]: name missing"; return; fi
-    if ! [[ "$name" =~ $NAME_RE ]]; then error "$name: plugin name must be lowercase letters, digits and single hyphens"; fi
-    if printf '%s\n' "$SEEN" | grep -qxF "$name"; then error "$name: duplicate plugin name"; fi
-    SEEN="$(printf '%s\n%s' "$SEEN" "$name")"
-
-    if [[ "$source" != "./" ]]; then error "$name: source must be \"./\" (found \"$source\")"; fi
-    if [[ "$strict" != "false" ]]; then error "$name: strict must be false (found $strict)"; fi
-    if [[ -z "$(field "$i" description)" ]]; then error "$name: description missing"; fi
-    if ! [[ "$version" =~ $SEMVER_RE ]]; then error "$name: version '$version' is not semver"; fi
-    if [[ "$skills" != "[\"./skills/$name\"]" ]]; then
-        error "$name: skills must be [\"./skills/$name\"] (found $skills)"
+    if [[ -z "$name" ]]; then
+        error "plugin.json: name missing"
+    elif ! [[ "$name" =~ $NAME_RE ]]; then
+        error "plugin.json: name '$name' must be lowercase letters, digits and single hyphens"
+    elif [[ "$name" =~ $RESERVED_PREFIX_RE ]]; then
+        error "plugin.json: name '$name' starts with a reserved prefix (claude-, anthropic-, anthropics-, cc-plugin-)"
     fi
-
-    local path
-    for path in $(jq -r ".plugins[$i].skills[]?" "$MANIFEST"); do
-        check_skill "$ROOT/${path#./}" "$path"
-    done
+    if ! [[ "$version" =~ $SEMVER_RE ]]; then error "plugin.json: version '$version' is not semver"; fi
+    if [[ -z "$(jq -r '.description // empty' "$MANIFEST")" ]]; then error "plugin.json: description missing"; fi
+    if jq -e 'has("skills")' "$MANIFEST" >/dev/null; then
+        error "plugin.json: remove the skills field, so Claude Code loads every skill under skills/"
+    fi
 }
 
-check_unlisted() {
-    local d rel
+check_skills() {
+    local d
+    COUNT=0
     for d in "$ROOT"/skills/*/; do
         [[ -d "$d" ]] || continue
-        rel="./skills/$(basename "$d")"
-        jq -e --arg p "$rel" '[.plugins[].skills[]?] | index($p) != null' "$MANIFEST" >/dev/null \
-            || error "UNLISTED $rel: not declared in marketplace.json"
+        d="${d%/}"
+        check_skill "$d" "./skills/$(basename "$d")"
+        COUNT=$((COUNT + 1))
     done
 }
 
 command -v jq >/dev/null 2>&1 || fatal "jq is required (brew install jq / apt-get install jq)"
 [[ -f "$MANIFEST" ]] || fatal "missing $MANIFEST"
-jq empty "$MANIFEST" 2>/dev/null || fatal "marketplace.json is not valid JSON"
-jq -e '.plugins | type == "array"' "$MANIFEST" >/dev/null || fatal "marketplace.json: plugins must be an array"
-[[ -n "$(jq -r '.name // empty' "$MANIFEST")" ]] || error "marketplace.json: name missing"
-[[ -n "$(jq -r '.owner.name // empty' "$MANIFEST")" ]] || error "marketplace.json: owner.name missing"
+jq empty "$MANIFEST" 2>/dev/null || fatal "plugin.json is not valid JSON"
+jq -e 'type == "object"' "$MANIFEST" >/dev/null || fatal "plugin.json must be a JSON object"
+if [[ -e "$MARKETPLACE" ]]; then
+    error "STRAY marketplace.json: the marketplace lives in its own repository, this one ships only the plugin"
+fi
 
-SEEN=""
-COUNT="$(jq '.plugins | length' "$MANIFEST")"
-i=0
-while [[ $i -lt $COUNT ]]; do
-    check_entry "$i"
-    i=$((i + 1))
-done
-check_unlisted
+check_plugin
+check_skills
 
 if [[ $ERRORS -gt 0 ]]; then
     echo "FAILED: $ERRORS error(s)"
     exit 1
 fi
-echo "OK: $COUNT skill(s); marketplace.json and skills/ agree"
+echo "OK: $COUNT skill(s) in plugin $PLUGIN"
