@@ -37,8 +37,8 @@ For each authorized item, in number order:
      drops the `project:` tags from the sources it carries: the store
      identifies the project, and no absolute path is written into it.
    - Any item whose destination is a project store that does not exist yet
-     (a MOVE, or a promotion with "scope: project"): first run the store
-     format's Project store initialization. If the author chooses Skip, skip
+     (a MOVE, or a promotion with "scope: project"): first run the Project
+     store initialization (`shared/project-store-init.md`). If the author chooses Skip, skip
      the item and say so.
    - Edited text or a changed scope from the reply replaces the proposal's.
 3. Keep every rule file at 50 rules or fewer. If an applied promotion would

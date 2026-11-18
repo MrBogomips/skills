@@ -28,7 +28,8 @@ at the project root the store format defines, not in the working directory:
 - It does not exist and the author declined it earlier in this session → drop
   the trait.
 - Otherwise → record the global traits first, then offer the project store as
-  the store format's Project store initialization describes. Record the
+  the Project store initialization (`shared/project-store-init.md`)
+  describes. Record the
   project traits only if the author creates it.
 
 Never send a trait from a personal text to the project store.

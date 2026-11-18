@@ -1,13 +1,12 @@
 ---
 name: spawn-session
 description: >-
-  Starts an independent child agent session in each repository that a piece of work touches, from a master
-  session opened in a workspace hub (a folder holding several git repositories as subfolders or submodules). Each
-  child runs with the repository as its working directory, so it loads that repository's own instructions, skills
-  and agents, and starts from a handoff prompt with a channel back to the master; the user can talk to each child
-  directly. Works in the Claude desktop app, in Herdr, in tmux, in a terminal with Claude Code background sessions,
-  and elsewhere by handing the user the commands. Use when the user asks to start, spawn, open, launch or dispatch a
-  session, agent or "lavorazione" in a subrepository, or one per repository, from the hub.
+  Starts an independent child agent session in each repository that a piece of work touches, from a master session
+  opened in a workspace hub (a folder holding several git repositories as subfolders or submodules). Each child
+  runs in its repository, so it loads that repository's own instructions, skills and agents, and reports back to
+  the master; works in the Claude desktop app, Herdr, tmux or a terminal. Use when the user asks to start, spawn,
+  open, launch or dispatch a session, agent or "lavorazione" in a subrepository, or one per repository, from the
+  hub.
 license: MIT
 compatibility: >-
   Any agent harness with a shell and git. Starts children by itself with the Claude desktop app's session tool,
@@ -61,10 +60,11 @@ directory or repository and don't load the subrepository's `.claude/agents` and 
    ask: which layout, and whether to save it as the hub's default. Details in
    [references/hub-config.md](references/hub-config.md).
 8. **Handoff.** Write one prompt per child following [references/child-prompt.md](references/child-prompt.md).
-9. **Start** each child as [references/environments.md](references/environments.md) says for the environment.
-   Start the children in parallel; with stacked panes, make the panes one after another first, since each
-   split needs the previous pane. A shared interface is settled through the master, not by waiting. The first
-   child in a repository may stop at the folder-trust check: follow *First run in a repository* in that file.
+9. **Start** each child as [references/environments.md](references/environments.md) and the environment's own file it
+   points to say. Start the children in parallel; with stacked panes, make the panes one after another first,
+   since each split needs the previous pane. A shared interface is settled through the master, not by waiting.
+   The first child in a repository may stop at the folder-trust check: follow *First run in a repository* in
+   `environments.md`.
 10. **Report** in a few lines, per child: name, repository, environment, how the user opens it, how it reports
     back. Add the channel caveats from [references/environments.md](references/environments.md) that apply. If
     the hub has rules that were not carried into the handoffs, say so in one line and offer to carry them. Don't

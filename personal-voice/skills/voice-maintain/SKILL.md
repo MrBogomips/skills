@@ -33,6 +33,9 @@ current — changing only what the author approves, item by item.
   same root.
 - **Format and routing**: `${CLAUDE_PLUGIN_ROOT}/shared/store-format.md`. Read
   it first.
+- **Project-store setup**: `${CLAUDE_PLUGIN_ROOT}/shared/project-store-init.md`.
+  Read it only when a project store has to be created or switched between
+  personal and versioned.
 
 If the global store path above is empty or still contains the text
 `user_config.store_dir`, tell the author to set **Voice store directory** in

@@ -1,11 +1,11 @@
 ---
 name: pause
 description: >-
-  Pauses agentic work safely and cheaply so it can be resumed hours later in the same session, then resumes it.
-  On pause it stops background work that would run or wake up unattended, writes a short checkpoint and
-  suggests compacting while the prompt cache is still warm. Use when the user has to stop for a while with work
-  in progress ("pause", "suspend", "I must go/leave/commute") or comes back to it ("resume",
-  "continue from the pause"). Not for moving work to another session or person (that is a handoff) or closing a session.
+  Pauses agentic work safely and cheaply so it can be resumed hours later in the same session, then resumes it:
+  stops unattended background work, writes a checkpoint, suggests compacting. Use when the user has to stop for a
+  while with work in progress ("pause", "suspend", "I must go/leave/commute") or comes back to it ("resume",
+  "continue from the pause"). Not for moving work to another session or person (that is a handoff) or closing a
+  session.
 license: MIT
 compatibility: >-
   Any agent harness. Uses git when the work is in a repository; the compact step needs a harness with a
