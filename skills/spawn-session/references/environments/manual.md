@@ -9,5 +9,6 @@ codex "Read and follow <file>"
 ```
 
 Use the start command of the child's agent kind. For a Claude child,
-`claude -n <name> --add-dir <handoff-dir> "Read and follow <file>"` keeps the messaging channel. With other
+`claude -n <name> --permission-mode <mode> --add-dir <handoff-dir> "Read and follow <file>"` keeps the messaging
+channel, with the permission mode the children inherit. With other
 kinds there is no automatic channel: the child's reports reach the master through the user.

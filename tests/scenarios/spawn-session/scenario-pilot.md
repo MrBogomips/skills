@@ -24,10 +24,21 @@ Run once per environment, with a fresh fixture. In the master, ask:
 - [ ] (d) The user types to the child directly, in its tab, sidebar row or `claude attach`, and the child
       answers; an instruction from the user that contradicts the master wins
 
+## Permission mode
+
+- [ ] Master not in bypass mode: the children start in its mode and nothing is asked about it
+- [ ] Master in bypass mode: at every start it asks to confirm the children's mode, its own first and recommended,
+      in the same ask as the layout when that is asked too; a second spawn in the same conversation asks again
+- [ ] Children started in the master's mode exchange messages with it in both directions with no approval prompt
+      (record the master's mode and the Claude Code version)
+- [ ] The child's command line carries `--permission-mode <mode>` (Herdr, tmux, `claude --bg`, manual)
+- [ ] Master in bypass mode, user picks a mode without bypass: the report warns that messages wait for approval
+
 ## Layout
 
-- [ ] Desktop app, Herdr and tmux: without a *Layout* key, the master asks once, in one ask, for the layout (tabs or
-      stacked panes) and whether to save it as the hub's default; `claude --bg` and manual skip the question
+- [ ] Desktop app, Herdr and tmux: without a *Layout* key, the master asks once, in the same ask as the permission
+      mode when that is asked, for the layout (tabs or stacked panes) and whether to save it as the hub's default; `claude --bg` and
+      manual skip the layout question
 - [ ] On "save", `- Layout: <value>` appears in the hub's `## Child sessions` section (created if missing); on "don't
       save", the hub is unchanged and a second spawn in the same conversation does not ask again
 - [ ] `panes` in Herdr and tmux: the first child to the right of the master, the next ones stacked below it, the

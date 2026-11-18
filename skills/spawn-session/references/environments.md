@@ -24,7 +24,8 @@ in the environment's commands. The file sits outside the child's repository: giv
 ## First run in a repository
 
 A repository where the user has never opened an agent may stop the child at a first-run prompt: folder trust, or
-for some agents an approval or sandbox mode. Those prompts are the user's: never answer them, by keys or
+for some agents an approval or sandbox mode, or the warning shown the first time a session starts in bypass
+mode. Those prompts are the user's: never answer them, by keys or
 otherwise.
 
 - **Desktop app:** the session tool can refuse to set up a worktree in a repository the app has never had a
@@ -44,7 +45,8 @@ Say the ones that apply in the report of step 10. Change no setting yourself: th
 - Cross-session messaging needs Claude Code 2.1.224 or later on macOS and Linux, 2.1.234 or later on Windows.
 - A message is plain text. It cannot approve a permission prompt, change configuration or run a command.
 - By default a message is delivered at once. When the sender and the receiver differ on bypassing permission
-  prompts, the receiver holds it for the user's approval and may let it expire (five minutes by default). The
+  prompts, the receiver holds it for the user's approval and may let it expire (five minutes by default): the
+  reason children start in the master's permission mode by default (see [hub-config.md](hub-config.md)). The
   `crossSessionInbound` setting (`accept`, `hold`, `refuse`) overrides this; for one background child, the user
   can choose `--settings '{"crossSessionInbound":"accept"}'`.
 - A send to a desktop app session reports nothing back when the message is held: silence is not an answer.

@@ -54,11 +54,14 @@ directory or repository and don't load the subrepository's `.claude/agents` and 
    checkout is clean and on its base branch; otherwise tell the user before starting. When children share an
    interface (an API contract, a file format), take it from the spec if one exists; otherwise name one child as
    its owner, who proposes it to the master before building on it.
-7. **Layout.** In the desktop app, Herdr and tmux, children open either as separate tabs or as panes stacked
-   beside the master. The user's request decides, then the configuration's *Layout*. When neither does, ask the
-   user once, with the harness's question tool if it has one (AskUserQuestion in Claude Code) or in chat, in one
-   ask: which layout, and whether to save it as the hub's default. Details in
-   [references/hub-config.md](references/hub-config.md).
+7. **Permission mode and layout.** Children start in the master's own permission mode: in Claude Code, messages
+   between two sessions that differ on bypassing permission prompts wait for the user's approval, so the same mode
+   keeps the channel free of prompts. Only when the master bypasses permission prompts, ask the user at every
+   start to confirm that mode for the children, with the master's mode as the recommended option. When neither
+   the user's request nor the configuration's *Layout* decides it, ask the layout (separate tabs or panes stacked
+   beside the master) and whether to save it as the hub's default, in the same ask as the mode when there is one.
+   Use the harness's question tool if it has one (AskUserQuestion in Claude Code), otherwise ask in chat. Details
+   in [references/hub-config.md](references/hub-config.md).
 8. **Handoff.** Write one prompt per child following [references/child-prompt.md](references/child-prompt.md).
 9. **Start** each child as [references/environments.md](references/environments.md) and the environment's own file it
    points to say. Start the children in parallel; with stacked panes, make the panes one after another first,
@@ -111,4 +114,5 @@ command is installed, otherwise in tmux when its command is installed, otherwise
 | Status files watched by the master | messages through the channel; no tracking files |
 | A second child for work a live session already follows | a message to that session |
 | Asking the layout again after the user chose it in this conversation | reuse the choice; ask again only if the user brings it up |
+| Starting children in the agent's default permission mode | the master's mode; when the master bypasses permission prompts, only after the user confirms it, at every start |
 | Answering a child's folder-trust prompt, or retrying a start the app refused for that reason | tell the user, who opens the folder once; retry when they say so |
