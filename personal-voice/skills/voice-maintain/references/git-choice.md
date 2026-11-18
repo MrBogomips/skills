@@ -9,8 +9,8 @@ it, or to make it personal again.
    file. Use that path in every step below. Then check the current state:
    `.personal-voice/` listed in the exclude file means personal; otherwise it
    is versioned (or not yet committed).
-2. Explain the implications again, with the store format's Project store
-   initialization text, and ask the author to confirm the switch. This is an
+2. Explain the implications again, with the Project store initialization
+   text (`shared/project-store-init.md`), and ask the author to confirm the switch. This is an
    item like any other: change nothing until they confirm.
 3. Apply:
    - **Personal → versioned**: remove the `.personal-voice/` line from the

@@ -1,11 +1,11 @@
 ---
 name: codex-image-gen
 description: >-
-  Generates or edits raster images (illustrations, photos, icons, textures, mockups, posters, logo concepts,
-  transparent cutouts, placeholder assets) by driving the codex CLI's built-in image tool, and saves them to a
-  path. Use by default whenever an image is to be generated or an existing one changed ("make the sky purple"),
-  and when the user names Codex, ChatGPT or OpenAI image generation. Runs on the Codex login's quota, with no
-  API key. For Google/Gemini image generation with an API key, use google-image-gen instead.
+  Generates or edits raster images (illustrations, photos, icons, mockups, logo concepts, transparent cutouts) by
+  driving the codex CLI's built-in image tool, and saves them to a path. Use by default whenever an image is to be
+  generated or an existing one changed ("make the sky purple"), and when the user names Codex, ChatGPT or OpenAI
+  image generation. Runs on the Codex login's quota, with no API key. For Google/Gemini image generation with an
+  API key, use google-image-gen instead.
 license: MIT
 compatibility: >-
   Needs the codex CLI on PATH and logged in (codex login), and Python 3.9+ (standard library; Pillow only for

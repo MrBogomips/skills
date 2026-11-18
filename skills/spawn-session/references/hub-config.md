@@ -73,7 +73,7 @@ A child that only reads (investigates, reviews, answers) works in the repository
 - `always`: always in a worktree.
 - `never`: in the repository's checkout, on a topic branch.
 
-How each environment gets the worktree is in [environments.md](environments.md).
+How each environment gets the worktree is in its own file, listed in [environments.md](environments.md).
 
 ## Template
 

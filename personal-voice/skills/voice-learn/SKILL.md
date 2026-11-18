@@ -21,7 +21,7 @@ work; never change a rule.
    habits. Never record corrected facts, figures, dates, names or scope.
 4. **Record, never rule.** Write only to `observations.md`, to `exemplars/`
    for own texts, and, after the author confirms, the project-store
-   initialization in the store format. Never edit `core.md`, language, topic,
+   initialization (`project-store-init.md`). Never edit `core.md`, language, topic,
    glossary or content-type files: promotion is the voice-maintain skill's job, with
    the author's approval.
 5. **Personal stays global.** Nothing from a personal text ever enters a
@@ -33,8 +33,10 @@ work; never change a rule.
 - **Project store**: `.personal-voice/` at the project root: the directory
   `git rev-parse --show-toplevel` prints, or the working directory outside git.
   Never create a store in a subdirectory of the repository.
-- **Format, routing and project-store setup**: `${CLAUDE_PLUGIN_ROOT}/shared/store-format.md`.
+- **Format and routing**: `${CLAUDE_PLUGIN_ROOT}/shared/store-format.md`.
   Read it before your first recording in the session.
+- **Project-store setup**: `${CLAUDE_PLUGIN_ROOT}/shared/project-store-init.md`.
+  Read it only when a project store has to be created.
 
 If the global store path above is empty or still contains the text
 `user_config.store_dir`, tell the author to set **Voice store directory** in

@@ -2,11 +2,11 @@
 name: optimize-agents-md
 description: >-
   Slims down and restructures a project's agent instruction files (AGENTS.md, CLAUDE.md, nested ones,
-  .claude/rules) without changing what they tell agents: removes repository history, resolves overlaps and
-  conflicts with the project's skills, keeps the root file small, and moves detail that only some folders or tasks
-  need into files that load on demand in every harness. Use when the user asks to optimize, slim, shrink, clean up,
-  restructure, split or modularize CLAUDE.md or AGENTS.md, or says the instruction file is too long. Not for
-  creating a first AGENTS.md (init-agents-md) or porting a Claude Code setup to Codex (port-to-agents).
+  .claude/rules) without changing what they tell agents: removes history, resolves conflicts with the project's
+  skills, and moves detail that only some folders or tasks need into files that load on demand. Use when the user
+  asks to optimize, slim, shrink, clean up, restructure, split or modularize CLAUDE.md or AGENTS.md, or says the
+  instruction file is too long. Not for creating a first AGENTS.md (init-agents-md) or porting a Claude Code setup
+  to Codex (port-to-agents).
 license: MIT
 compatibility: >-
   Any agent harness with a shell and file access. scripts/inventory.sh needs bash and standard BSD/GNU tools; git is

@@ -16,7 +16,7 @@ fail() {
   exit 1
 }
 
-# VENDOR: fill in from the lockfile (references/setup-strategies.md) and drop this comment;
+# VENDOR: fill in from the lockfile (references/setup-dynamic.md) and drop this comment;
 # with no lockfile, delete the function and its call in main.
 install_dependencies() {
   if [ "$1" = 1 ]; then INSTALL_FROZEN; else INSTALL; fi

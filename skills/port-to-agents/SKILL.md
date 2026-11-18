@@ -1,11 +1,11 @@
 ---
 name: port-to-agents
 description: >-
-  Ports a project's Claude Code setup (CLAUDE.md, skills, agents, MCP, hooks) to Codex: AGENTS.md becomes the
-  shared instruction file with CLAUDE.md as a symlink to it, and Codex's .agents/skills/ and .codex/ are generated
-  from .claude/ and .mcp.json with rulesync. Use when the user explicitly asks to port, re-port or sync a project
-  from Claude Code to Codex, to make Codex work in a Claude Code project, to share one instruction file between
-  the two, or to repair Codex files that rulesync overwrote or left stale. Not for creating a plain AGENTS.md.
+  Ports a project's Claude Code setup (CLAUDE.md, skills, agents, MCP, hooks) to Codex, with AGENTS.md as the
+  shared instruction file and CLAUDE.md as a symlink to it. Use when the user explicitly asks to port, re-port or
+  sync a project from Claude Code to Codex, to make Codex work in a Claude Code project, to share one instruction
+  file between the two, or to repair Codex files that rulesync overwrote or left stale. Not for creating a plain
+  AGENTS.md.
 license: MIT
 compatibility: >-
   Any agent harness with a shell. Needs git, a POSIX sh, and Node (npx) with network access to run rulesync,
