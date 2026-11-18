@@ -11,6 +11,7 @@
 - [ ] A pull request that changes a skill bumps `version` in the `plugin.json` of the plugin that ships it: `.claude-plugin/plugin.json` for `skills/`, `<plugin>/.claude-plugin/plugin.json` for a plugin folder (see `AGENTS.md` for patch, minor or major)
 - [ ] The `README.md` skill and plugin lists are updated when a skill or plugin is added, renamed or removed, and each plugin README still says correctly whether its skills install alone
 - [ ] Skills in `skills/` follow the portability rules of `AGENTS.md`: frontmatter `name` equals the directory, bundled files by relative path, no personal paths, macOS/BSD-compatible scripts; plugin folders follow its Plugins section
+- [ ] A pull request that adds or changes a skill has had its description and its context use reviewed with the `skill-creator` skill: the description is short and keeps every trigger phrase, and the body and its references load only what a run needs. The review changes no behavior and runs no evals. The pull request description says what was reviewed and what changed
 - [ ] The pull request is merged into `main`, with the `validate` check green
 
 ## On Done
