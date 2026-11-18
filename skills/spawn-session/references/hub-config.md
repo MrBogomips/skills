@@ -16,6 +16,7 @@ conversation prevails over these keys, and these keys over the defaults.
 | Propagate | hub rules, or sections of the hub's instruction file, to carry into every handoff | none |
 | Agent | the child's agent kind: `claude`, `codex`, … | `claude` |
 | Environment | `auto`, `desktop`, `herdr`, `tmux`, `cli` or `manual` | `auto` |
+| Layout | `tabs`, `panes` or `ask` | `ask` |
 | Worktrees | `repo`, `always` or `never`, for children that edit files | `repo` |
 | Session name | a pattern for children's names, such as `<task>-<repo>` | `<task>-<repo>`, or `<slug>-<repo>` without a task ID |
 
@@ -27,6 +28,35 @@ section it comes from. Without either, the handoff carries no hub rules.
 
 Hub files and other material that the work needs (specs, designs, a task's text) are different: the handoff cites
 them as references by absolute path, as for any input.
+
+## Layout
+
+Where the children appear, in the environments that offer a choice:
+
+| Environment | `tabs` | `panes` |
+|---|---|---|
+| Desktop app | the children stay in the sidebar | each child also opened in split view beside the master |
+| Herdr | one tab per child | the first child in a pane to the right of the master, the next ones stacked below it |
+| tmux | one window per child | as in Herdr, in the master's window |
+
+`claude --bg` and the manual case have no layout: skip the question there.
+
+**Asking.** With `ask`, or with no *Layout* key, and no layout in the user's request, ask before starting the
+children, in one ask with two questions:
+
+1. Layout, worded for the environment: separate tabs or stacked panes (Herdr, tmux); sidebar only or split view
+   (desktop app).
+2. Save it as this hub's default: yes or no.
+
+On "save", set `- Layout: <tabs or panes>` in the hub's `## Child sessions` section: replace an existing *Layout*
+line, otherwise add the line after the section's last key; create the section from the template below if it is
+missing. That answer is the explicit yes this file asks for. Don't commit the change; the report says the file
+changed, and committing it follows the hub's own rules. Without "save", use the layout for this conversation
+only, and don't ask again in it. A saved value applies in every environment, with the meaning in the table
+above.
+
+**Many children.** A stack of panes gets short fast, and in Herdr each split halves the pane it splits. With more
+than four children in the stack, open the rest as tabs and say so.
 
 ## Names
 
@@ -63,6 +93,7 @@ Settings for the spawn-session skill. The invocation says which repositories a p
 - Propagate: none
 - Agent: claude
 - Environment: auto
+- Layout: ask
 - Worktrees: repo
 - Session name: `<task>-<repo>`
 ```

@@ -24,6 +24,17 @@ Run once per environment, with a fresh fixture. In the master, ask:
 - [ ] (d) The user types to the child directly, in its tab, sidebar row or `claude attach`, and the child
       answers; an instruction from the user that contradicts the master wins
 
+## Layout
+
+- [ ] Desktop app, Herdr and tmux: without a *Layout* key, the master asks once, in one ask, for the layout (tabs or
+      stacked panes) and whether to save it as the hub's default; `claude --bg` and manual skip the question
+- [ ] On "save", `- Layout: <value>` appears in the hub's `## Child sessions` section (created if missing); on "don't
+      save", the hub is unchanged and a second spawn in the same conversation does not ask again
+- [ ] `panes` in Herdr and tmux: the first child to the right of the master, the next ones stacked below it, the
+      master keeps focus, each pane labelled with the child's name; in tmux the stack has equal heights
+- [ ] `panes` in the desktop app: each child opens in split view beside the master
+- [ ] `tabs`: one tab or window per child, focus unchanged; in the desktop app the children stay in the sidebar
+
 ## First run in a repository
 
 - [ ] Desktop app, repository never opened there: the master reports that the app refused the worktree, asks the

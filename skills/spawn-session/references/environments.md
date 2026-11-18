@@ -34,10 +34,17 @@ it with the tool search first). If its description or parameters differ from the
 
 **Channel.**
 
-- Child to master: `SendMessage` to the master's name, exactly as listed, spaces included and without quotes. Each time a child ends a turn while the master is idle, the
-  app also wakes the master with the start of the child's report.
+- Child to master: `SendMessage` to the master's name, exactly as listed, spaces included and without quotes.
+  Each time a child ends a turn while the master is idle, the app also wakes the master with the start of the
+  child's report.
 - Master to child: `SendMessage` to the session id the start returned (`local_…`).
 - User: opens the child from the sidebar, where it appears as a session linked to the master.
+
+**Layout.** With `panes`, open each child beside the master right after its start, with the app's window tool
+(`open_session_in`, target `split`, the session id the start returned), then check with its layout tool
+(`get_window_layout`) that the child shows in the split. The tool acts only while the master is on screen; for a
+child that does not show, tell the user to drag it from the sidebar into the split. With `tabs`, leave the
+children in the sidebar.
 
 **Limits.** The master sees only the 20 most recent sessions that are not archived. Archiving a child can lose its
 uncommitted changes. The tool is not in the public documentation: detect it at runtime and never assume it.
@@ -46,9 +53,21 @@ uncommitted changes. The tool is not in the public documentation: detect it at r
 
 Requires `HERDR_ENV=1`. Read IDs from the JSON that each command returns; never derive them.
 
+Make the child's pane with the layout from [hub-config.md](hub-config.md):
+
 ```bash
+# tabs: a tab per child; read the pane ID from .result.root_pane
 herdr tab create --workspace "$HERDR_WORKSPACE_ID" --cwd <repo> --label <name> --no-focus
-# read the root pane ID from .result.root_pane
+# panes: the first child to the right of the master (--current is the calling pane, not the focused one);
+# read the pane ID from .result.pane
+herdr pane split --current --direction right --cwd <repo> --no-focus
+# panes: each next child below the last child's pane
+herdr pane split <last-child-pane-id> --direction down --cwd <repo> --no-focus
+```
+
+Then, in that pane:
+
+```bash
 herdr agent start <name> --kind claude --pane <pane-id> -- -n <name> --add-dir <handoff-dir>
 herdr agent prompt <name> "Read and follow <file>"
 ```
@@ -61,7 +80,9 @@ herdr agent prompt <name> "Read and follow <file>"
 - **Worktree:** the child creates it as its handoff says (the mode from [hub-config.md](hub-config.md)), where
   its repository's policy puts worktrees; otherwise a Claude child uses its own worktree support, and another
   kind runs `git worktree add` into `<repo>-worktrees/<name>` next to the repository.
-- When the user wants to watch the child, bring its tab forward after the prompt: `herdr agent focus <name>`.
+- With `panes`, label the pane so the user can tell the children apart: `herdr pane rename <pane-id> <name>`.
+- With `tabs`, when the user wants to watch a child, bring its tab forward after the prompt:
+  `herdr agent focus <name>`.
 - Never close tabs or panes you did not create, and close yours only when the user asks.
 
 **Channel.**
@@ -74,25 +95,40 @@ herdr agent prompt <name> "Read and follow <file>"
   they don't mix with what the user is typing. The text arrives as if the user typed it, so the handoff tells
   the child that lines starting with `[master]` come from the master and fall under the fixed rules. A long
   follow-up goes in a file, like the handoff.
-- User: switches to the child's tab, or asks the master to bring it forward (`herdr agent focus <name>`).
+- User: types in the child's pane, or switches to its tab, or asks the master to bring it forward
+  (`herdr agent focus <name>`).
 
 ## tmux
 
 Requires `TMUX` to be set (the master runs inside tmux). Read the pane ID from the output; never derive it.
 
+Make the child's pane with the layout from [hub-config.md](hub-config.md); each command prints the pane ID,
+such as `%12`:
+
 ```bash
+# tabs: a window per child
 tmux new-window -d -c <repo> -n <name> -P -F '#{pane_id}'
-# prints the pane ID, such as %12
+# panes: the first child to the right of the master's pane
+tmux split-window -h -d -t "$TMUX_PANE" -c <repo> -P -F '#{pane_id}'
+# panes: child k of n (k >= 2) below the last child's pane, sized so the stack has equal heights
+tmux split-window -v -d -t <last-child-pane-id> -l "$(( 100 * (n - k + 1) / (n - k + 2) ))%" -c <repo> -P -F '#{pane_id}'
+```
+
+Then label the pane and start the agent in it:
+
+```bash
+tmux select-pane -t <pane-id> -T <name>
 tmux send-keys -t <pane-id> -l "claude -n <name> --add-dir <handoff-dir> 'Read and follow <file>'"
 tmux send-keys -t <pane-id> Enter
 ```
 
-- `-d` opens the window without moving the user's focus. The window starts with a shell, so it stays open when
-  the agent exits.
+- `-d` keeps the user's focus where it is. The pane starts with a shell, so it stays open when the agent exits.
+- The pane title (`select-pane -T`) names the child in `tmux list-panes -a -F '#{pane_title}'`, for the
+  duplicates check, and on the pane border when `pane-border-status` is on.
 - Type the start command of the child's agent kind. `-n <name>` is for a Claude child; other kinds take their own
   command, such as `codex 'Read and follow <file>'`.
 - **Worktree:** the child creates it as its handoff says, as in Herdr.
-- When the user wants to watch the child, bring its window forward: `tmux select-window -t <pane-id>`.
+- With `tabs`, when the user wants to watch a child, bring its window forward: `tmux select-window -t <pane-id>`.
 - Never kill windows or panes you did not create, and kill yours only when the user asks.
 
 **Channel.**
@@ -105,7 +141,7 @@ tmux send-keys -t <pane-id> Enter
   the same. The `[master]` rule of Herdr applies. A long follow-up goes in a file, like the handoff.
 - tmux has no wake-up for such a child: capture its pane when the user asks or when the master needs its answer,
   never in a polling loop.
-- User: switches to the child's window (`prefix` then `w` lists them).
+- User: types in the child's pane, or switches to its window (`prefix` then `w` lists them).
 
 ## Terminal, Claude Code
 
@@ -157,7 +193,7 @@ otherwise.
 
 ## Messaging caveats (Claude Code)
 
-Say the ones that apply in the report of step 9. Change no setting yourself: the choice is the user's.
+Say the ones that apply in the report of step 10. Change no setting yourself: the choice is the user's.
 
 - Cross-session messaging needs Claude Code 2.1.224 or later on macOS and Linux, 2.1.234 or later on Windows.
 - A message is plain text. It cannot approve a permission prompt, change configuration or run a command.
