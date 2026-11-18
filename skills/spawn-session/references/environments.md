@@ -3,11 +3,13 @@
 How to start a child, give it a worktree, and talk to it in each environment. `<repo>` is the repository's
 absolute path, `<name>` the child's name, `<file>` its handoff file.
 
-**Handoff files.** Herdr, the terminal and the manual case pass the handoff as a file, because a long prompt on a
+**Handoff files.** Herdr, tmux, the terminal and the manual case pass the handoff as a file, because a long prompt on a
 command line breaks quoting and, on macOS, the terminal's line limit. Write it in the harness's scratchpad
 directory if it has one, otherwise in a new `mktemp -d` directory, as `<name>-handoff.md`. Never inside the hub
 or a repository. The prompt on the command line is then one line: `Read and follow <file>` (in the conversation's
-language).
+language), worded without quotes or apostrophes, with a path free of spaces, so it survives the shell quoting
+below. The file sits outside the child's repository: give a Claude child read access to its folder with
+`--add-dir <handoff-dir>` on its command line, or it may ask the user before reading it.
 
 ## Claude desktop app
 
@@ -47,7 +49,7 @@ Requires `HERDR_ENV=1`. Read IDs from the JSON that each command returns; never 
 ```bash
 herdr tab create --workspace "$HERDR_WORKSPACE_ID" --cwd <repo> --label <name> --no-focus
 # read the root pane ID from .result.root_pane
-herdr agent start <name> --kind claude --pane <pane-id> -- -n <name>
+herdr agent start <name> --kind claude --pane <pane-id> -- -n <name> --add-dir <handoff-dir>
 herdr agent prompt <name> "Read and follow <file>"
 ```
 
@@ -57,7 +59,8 @@ herdr agent prompt <name> "Read and follow <file>"
   `herdr agent read <name>` and ask the user before answering any dialog there.
 - Herdr agent names match `[a-z][a-z0-9_-]{0,31}`; the names from [hub-config.md](hub-config.md) already do.
 - **Worktree:** the child creates it as its handoff says (the mode from [hub-config.md](hub-config.md)), where
-  its repository's policy puts worktrees, or where its agent puts them by default.
+  its repository's policy puts worktrees; otherwise a Claude child uses its own worktree support, and another
+  kind runs `git worktree add` into `<repo>-worktrees/<name>` next to the repository.
 - When the user wants to watch the child, bring its tab forward after the prompt: `herdr agent focus <name>`.
 - Never close tabs or panes you did not create, and close yours only when the user asks.
 
@@ -73,10 +76,41 @@ herdr agent prompt <name> "Read and follow <file>"
   follow-up goes in a file, like the handoff.
 - User: switches to the child's tab, or asks the master to bring it forward (`herdr agent focus <name>`).
 
+## tmux
+
+Requires `TMUX` to be set (the master runs inside tmux). Read the pane ID from the output; never derive it.
+
+```bash
+tmux new-window -d -c <repo> -n <name> -P -F '#{pane_id}'
+# prints the pane ID, such as %12
+tmux send-keys -t <pane-id> -l "claude -n <name> --add-dir <handoff-dir> 'Read and follow <file>'"
+tmux send-keys -t <pane-id> Enter
+```
+
+- `-d` opens the window without moving the user's focus. The window starts with a shell, so it stays open when
+  the agent exits.
+- Type the start command of the child's agent kind. `-n <name>` is for a Claude child; other kinds take their own
+  command, such as `codex 'Read and follow <file>'`.
+- **Worktree:** the child creates it as its handoff says, as in Herdr.
+- When the user wants to watch the child, bring its window forward: `tmux select-window -t <pane-id>`.
+- Never kill windows or panes you did not create, and kill yours only when the user asks.
+
+**Channel.**
+
+- A Claude child: `SendMessage` in both directions, as in the terminal case below.
+- Another kind: no messaging. The child writes its reports as replies in its own pane, with the prefix; the
+  master reads them with `tmux capture-pane -p -J -t <pane-id> -S -120`. Follow-ups go as one line,
+  `tmux send-keys -t <pane-id> -l "[master] <text>"` then `tmux send-keys -t <pane-id> Enter`, only when the
+  agent waits for input: its input box is at the bottom of the capture and two captures a few seconds apart are
+  the same. The `[master]` rule of Herdr applies. A long follow-up goes in a file, like the handoff.
+- tmux has no wake-up for such a child: capture its pane when the user asks or when the master needs its answer,
+  never in a polling loop.
+- User: switches to the child's window (`prefix` then `w` lists them).
+
 ## Terminal, Claude Code
 
 ```bash
-cd <repo> && claude --bg -n <name> "Read and follow <file>"
+cd <repo> && claude --bg -n <name> --add-dir <handoff-dir> "Read and follow <file>"
 ```
 
 - The command prints the child's id. The user opens the child with `claude attach <name or id>` and lists
@@ -101,9 +135,25 @@ cd <repo>
 codex "Read and follow <file>"
 ```
 
-Use the start command of the child's agent kind. For a Claude child, `claude -n <name> "Read and follow <file>"`
-keeps the messaging channel. With other kinds there is no automatic channel: the child's reports reach the master
-through the user.
+Use the start command of the child's agent kind. For a Claude child,
+`claude -n <name> --add-dir <handoff-dir> "Read and follow <file>"` keeps the messaging channel. With other
+kinds there is no automatic channel: the child's reports reach the master through the user.
+
+## First run in a repository
+
+A repository where the user has never opened an agent may stop the child at a first-run prompt: folder trust, or
+for some agents an approval or sandbox mode. Those prompts are the user's: never answer them, by keys or
+otherwise.
+
+- **Desktop app:** the session tool can refuse to set up a worktree in a repository the app has never had a
+  session in. Tell the user to open a session in that folder once from the app, and don't retry until they say
+  they did. Meanwhile offer another environment if one is available.
+- **`claude --bg`:** it refuses with `Workspace not trusted`. The user runs `claude` once in the repository and
+  accepts the trust prompt, then you retry; or start the child in Herdr or tmux, where the prompt shows in the
+  child's own window.
+- **Herdr, tmux, manual:** the trust prompt shows in the child's window. Tell the user which window to answer it
+  in. In Herdr, `agent start` returns `agent_not_ready`: send the handoff prompt once the agent is ready. In tmux
+  and the manual case the prompt is already on the command line and runs after the user's answer.
 
 ## Messaging caveats (Claude Code)
 

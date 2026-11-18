@@ -1,6 +1,6 @@
 # spawn-session scenarios
 
-Manual pilot of `spawn-session`, one run per environment: the Claude desktop app, Herdr, a terminal with
+Manual pilot of `spawn-session`, one run per environment: the Claude desktop app, Herdr, tmux, a terminal with
 Claude Code background sessions, and the manual fallback. Each run needs a live master session.
 
 ## Fixture
@@ -25,7 +25,9 @@ printf '# Hub\n\n## Confidentiality\n\nNever name the client in commits.\n' > "$
 echo "$H"
 ```
 
-Open the master session in `$H` with `spawn-session` installed.
+Open the master session in `$H` with `spawn-session` installed. The fixture's repositories are new to Claude
+Code, so the first run in each also covers *First run in a repository*; for the other checks, open each
+repository once yourself (a desktop session there, or `claude` and accept the trust prompt).
 
 ## Scenario
 

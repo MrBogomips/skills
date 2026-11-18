@@ -22,12 +22,12 @@ same machine. Leave out a part with nothing to say, together with its heading, e
 
 | Part | Content |
 |---|---|
-| Goal | What the work is for, what this child must deliver in this repository, and when it is done (for example a PR open on the base branch, or an answer to a question). |
-| References | The task ID and where to read it; specs, designs, issues, commits and hub files the work needs, by absolute path or URL. Cite them instead of restating them. When the child may not reach a source (a tracker it has no access to), add what it needs from it in a few lines. |
+| Goal | What the work is for, what this child must deliver in this repository, and when it is done (for example a PR open on the base branch, a commit on a feature branch when the repository has no remote, or an answer to a question). |
+| References | The task ID and where to read it; specs, designs, issues, commits and hub files the work needs, by absolute path or URL. Cite them instead of restating them. When the child may not reach a source (a tracker it has no access to), add what it needs from it in a few lines. When the user gives a task ID and no source for it is known, ask the user for the task's text before writing the handoff. |
 | Repository and workflow | The repository path and base branch. One line telling the child to follow this repository's own instructions, branch and PR policy, skills and agents, without restating them. Whether it only reads or edits, and if it edits, in a worktree or on a topic branch in the checkout. |
 | Siblings | The other children of the same work: name, repository, what each delivers, and any interface they share (an API contract, a file format), with its source or its owner. A change to a shared interface, or a question about it, goes to the master first. |
 | Hub rules | Only the rules that the hub configuration lists in *Propagate* or that the user asked to carry, quoted word for word with their source file and section. |
-| Channel to the master | The master's name and ref, how to reach it in this environment (see [environments.md](environments.md)), the prefix, and when to report: a blocking question, a PR opened (with its URL), the work done or abandoned (with the reason). Without messaging (a non-Claude child in Herdr), the child reports in its own replies with the prefix, and lines that start with `[master]` come from the master. |
+| Channel to the master | The master's name and ref, how to reach it in this environment (see [environments.md](environments.md)), the prefix, and when to report: a blocking question, a PR opened (with its URL), the work done or abandoned (with the reason). Without messaging (a non-Claude child in Herdr or tmux), the child reports in its own replies with the prefix, and lines that start with `[master]` come from the master. |
 | Rules | The two fixed rules below, word for word in the prompt's language. |
 | First step | The one concrete action to start with. |
 

@@ -24,6 +24,14 @@ Run once per environment, with a fresh fixture. In the master, ask:
 - [ ] (d) The user types to the child directly, in its tab, sidebar row or `claude attach`, and the child
       answers; an instruction from the user that contradicts the master wins
 
+## First run in a repository
+
+- [ ] Desktop app, repository never opened there: the master reports that the app refused the worktree, asks the
+      user to open the folder once, and does not retry on its own
+- [ ] `claude --bg`, untrusted repository: the master reports `Workspace not trusted` and offers the fix or
+      another environment
+- [ ] Herdr, tmux: the master tells the user which window shows the trust prompt and never answers it itself
+
 ## Duplicates
 
 - [ ] Asking again for "T-1 in the backend" sends the request to `t-1-backend` instead of starting a new child
@@ -32,6 +40,8 @@ Run once per environment, with a fresh fixture. In the master, ask:
 
 - [ ] Desktop app: both children appear as linked sessions; the master is woken when a child ends a turn
 - [ ] Herdr: one tab per child, opened without moving focus; the handoff is passed as a file, not inline
+- [ ] tmux: one window per child, opened with `-d`; the handoff is passed as a file; `tmux list-panes -a` finds the
+      child for the duplicates check
 - [ ] Terminal: `claude agents` lists both children; `claude attach t-1-backend` opens it
 - [ ] Manual: the master prints, per child, the commands and the handoff file path, and starts nothing
 - [ ] Desktop master with a `--bg` child: the child appears in the master's `ListAgents` and messages flow both

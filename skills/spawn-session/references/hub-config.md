@@ -15,7 +15,7 @@ conversation prevails over these keys, and these keys over the defaults.
 | Task IDs | the form of a task ID and where tasks live (a file, a tracker) | the task ID the user gives, if any; otherwise the work is named by a short slug |
 | Propagate | hub rules, or sections of the hub's instruction file, to carry into every handoff | none |
 | Agent | the child's agent kind: `claude`, `codex`, … | `claude` |
-| Environment | `auto`, `desktop`, `herdr`, `cli` or `manual` | `auto` |
+| Environment | `auto`, `desktop`, `herdr`, `tmux`, `cli` or `manual` | `auto` |
 | Worktrees | `repo`, `always` or `never`, for children that edit files | `repo` |
 | Session name | a pattern for children's names, such as `<task>-<repo>` | `<task>-<repo>`, or `<slug>-<repo>` without a task ID |
 
