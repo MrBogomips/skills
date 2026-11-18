@@ -1,11 +1,12 @@
 # Terminal, Claude Code
 
 ```bash
-cd <repo> && claude --bg -n <name> --add-dir <handoff-dir> "Read and follow <file>"
+cd <repo> && claude --bg -n <name> --permission-mode <mode> --add-dir <handoff-dir> "Read and follow <file>"
 ```
 
 - The command prints the child's id. The user opens the child with `claude attach <name or id>` and lists
   background sessions with `claude agents`.
+- `<mode>` is the permission mode the children inherit (see [hub-config.md](../hub-config.md)).
 - **Worktree:** a background session moves into a worktree under `<repo>/.claude/worktrees/` before its first
   edit, unless the repository sets `worktree.bgIsolation` to `"none"`. For a child that must work in the
   checkout, add `--settings '{"worktree":{"bgIsolation":"none"}}'`.

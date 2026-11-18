@@ -17,12 +17,13 @@ herdr pane split <last-child-pane-id> --direction down --cwd <repo> --no-focus
 Then, in that pane:
 
 ```bash
-herdr agent start <name> --kind claude --pane <pane-id> -- -n <name> --add-dir <handoff-dir>
+herdr agent start <name> --kind claude --pane <pane-id> -- -n <name> --permission-mode <mode> --add-dir <handoff-dir>
 herdr agent prompt <name> "Read and follow <file>"
 ```
 
 - `--kind` is the child's agent kind; `herdr agent` lists the installed kinds. Arguments after `--` go to the agent
-  itself: `-n <name>` gives a Claude child the same name in `ListAgents`. Other kinds take no such flag.
+  itself: `-n <name>` gives a Claude child the same name in `ListAgents`, and `--permission-mode <mode>`
+  sets the mode the children inherit (see [hub-config.md](../hub-config.md)). Other kinds take their own flags.
 - `agent start` returns once the agent is ready. If it returns `agent_not_ready`, read the pane with
   `herdr agent read <name>` and ask the user before answering any dialog there.
 - Herdr agent names match `[a-z][a-z0-9_-]{0,31}`; the names from [hub-config.md](../hub-config.md) already do.

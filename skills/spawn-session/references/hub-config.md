@@ -29,6 +29,28 @@ section it comes from. Without either, the handoff carries no hub rules.
 Hub files and other material that the work needs (specs, designs, a task's text) are different: the handoff cites
 them as references by absolute path, as for any input.
 
+## Permission mode
+
+Children inherit the master's permission mode, never saved in the configuration.
+
+- **Master's mode:** as the harness reports it to you. Claude Code says it in your context (for example that
+  bypass permissions mode is active); the user can change it during the session (Shift+Tab), so take the latest.
+- **Why:** in Claude Code, a message between a session that bypasses permission prompts and one that doesn't is
+  held for the user's approval in the receiving session, in both directions. Children in the master's mode
+  exchange messages without prompts.
+- **Inherit without asking** when the master does not bypass permission prompts.
+- **Ask at every start** when the master bypasses them (`bypassPermissions`, `--dangerously-skip-permissions`),
+  since every child would then run without prompts: the master's mode first and marked as recommended, then the
+  other modes of the child's agent kind (for Claude: `manual`, `acceptEdits`, `auto`, `plan`). If the user picks
+  a mode that doesn't bypass prompts, say in the report that messages will wait for approval, with the caveat in
+  [environments.md](environments.md).
+- **Unknown mode:** if you can't tell the master's mode, ask, without a recommended option.
+- **Apply** it on the child's command line: `--permission-mode <mode>` for Claude. Each environment's file says
+  where. Another agent kind takes its own flags (for Codex, `--ask-for-approval` and `--sandbox`): use the ones
+  closest to the master's mode, and its default when none fits.
+- A first start in bypass mode may show the agent's own warning to accept: it is the user's to answer, as in
+  *First run in a repository* in [environments.md](environments.md).
+
 ## Layout
 
 Where the children appear, in the environments that offer a choice:
@@ -42,7 +64,7 @@ Where the children appear, in the environments that offer a choice:
 `claude --bg` and the manual case have no layout: skip the question there.
 
 **Asking.** With `ask`, or with no *Layout* key, and no layout in the user's request, ask before starting the
-children, in one ask with two questions:
+children, in one ask with two questions, together with the permission mode when that is asked too:
 
 1. Layout, worded for the environment: separate tabs or stacked panes (Herdr, tmux); sidebar only or split view
    (desktop app).
@@ -52,8 +74,8 @@ On "save", set `- Layout: <tabs or panes>` in the hub's `## Child sessions` sect
 line, otherwise add the line after the section's last key; create the section from the template below if it is
 missing. That answer is the explicit yes this file asks for. Don't commit the change; the report says the file
 changed, and committing it follows the hub's own rules. Without "save", use the layout for this conversation
-only, and don't ask again in it. A saved value applies in every environment, with the meaning in the table
-above.
+only, and don't ask the layout again in it (the permission mode, when asked, is still asked at every start). A saved value
+applies in every environment, with the meaning in the table above.
 
 **Many children.** A stack of panes gets short fast, and in Herdr each split halves the pane it splits. With more
 than four children in the stack, open the rest as tabs and say so.

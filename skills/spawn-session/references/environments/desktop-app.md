@@ -14,9 +14,12 @@ it with the tool search first). If its description or parameters differ from the
 | `background` | the overall work, the user's decisions, and how this child fits among its siblings (at least 80 characters) |
 | `use_worktree` | `true` for a child that edits in a worktree; `false` for a read-only child or one that works in the checkout |
 | `source_branch` | the base branch, for a child with a worktree, when the tool takes it |
+| permission mode | the mode the children inherit, when the tool takes one (see [hub-config.md](../hub-config.md)) |
 
 - The tool accepts `cwd` only for a place the user named: the user's request naming the repository, or the hub
   configuration listing it, is that naming. The app may ask the user to confirm or trust the folder.
+- When the tool takes no permission mode, the child starts in the app's default: say so in the report if it differs
+  from the master's.
 - When the tool asks for a known place first, call its listing tool (`list_start_targets`).
 
 **Channel.**

@@ -18,15 +18,15 @@ Then label the pane and start the agent in it:
 
 ```bash
 tmux select-pane -t <pane-id> -T <name>
-tmux send-keys -t <pane-id> -l "claude -n <name> --add-dir <handoff-dir> 'Read and follow <file>'"
+tmux send-keys -t <pane-id> -l "claude -n <name> --permission-mode <mode> --add-dir <handoff-dir> 'Read and follow <file>'"
 tmux send-keys -t <pane-id> Enter
 ```
 
 - `-d` keeps the user's focus where it is. The pane starts with a shell, so it stays open when the agent exits.
 - The pane title (`select-pane -T`) names the child in `tmux list-panes -a -F '#{pane_title}'`, for the
   duplicates check, and on the pane border when `pane-border-status` is on.
-- Type the start command of the child's agent kind. `-n <name>` is for a Claude child; other kinds take their own
-  command, such as `codex 'Read and follow <file>'`.
+- Type the start command of the child's agent kind. `-n <name>` and `--permission-mode <mode>` (the mode the
+  children inherit) are for a Claude child; other kinds take their own command and flags, such as `codex 'Read and follow <file>'`.
 - **Worktree:** the child creates it as its handoff says (the mode from [hub-config.md](../hub-config.md)), where
   its repository's policy puts worktrees; otherwise a Claude child uses its own worktree support, and another
   kind runs `git worktree add` into `<repo>-worktrees/<name>` next to the repository.
