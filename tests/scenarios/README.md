@@ -1,12 +1,13 @@
 # Scenario tests
 
-Manual checklists for the plugin skills (`kaizen`, `personal-voice`). The automated checks
+Manual checklists for the plugin skills (`kaizen`, `personal-voice`) and for `spawn-session`. The automated checks
 (`tests/validate.sh`, `tests/selftest.sh`, `tests/test-kaizen-stop-gate.sh`) run in CI; these
 scenarios need a person or a live Claude Code session.
 
 ## Skill scenarios
 
-One folder per skill: `kaizen/`, `voice-write/`, `voice-learn/`, `voice-maintain/`. Each scenario
+One folder per skill: `kaizen/`, `voice-write/`, `voice-learn/`, `voice-maintain/`, and
+`spawn-session/` for the standalone skill of that name. Each scenario
 file describes setup, invocation, expected behavior and acceptance criteria, and the folder's
 `README.md` says how to build its fixture. To use one:
 
