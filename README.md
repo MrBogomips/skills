@@ -4,6 +4,15 @@ Simple, general-purpose agent skills that I found useful in daily work and want 
 
 Each skill is a folder with a `SKILL.md` that follows the [Agent Skills](https://agentskills.io) format, so it works with any coding agent that supports skills.
 
+## Skills and plugins
+
+The repository holds two kinds of things:
+
+- **Standalone skills**, in `skills/`. Each one works on its own, in any agent: install the ones you want with the `skills` CLI, or all of them at once as the Claude Code plugin `skills`.
+- **Claude Code plugins**, one top-level folder each (`kaizen/`, `personal-voice/`). A plugin can bring more than skills (hooks, agents, settings), and you install it as a whole. Its README says whether its skills can also be installed one by one with the `skills` CLI, and what you lose that way.
+
+All the plugins come from the `mrbogomips` marketplace, which lists the author's plugins from several repositories.
+
 ## Install
 
 ### Any agent, with the `skills` CLI
@@ -16,9 +25,11 @@ npx skills add MrBogomips/skills --list                # list the available skil
 npx skills add MrBogomips/skills --skill <name> -g     # one skill, for all your projects
 ```
 
+These commands cover the standalone skills in `skills/`. A plugin's skills, where its README says they work alone, are reached through the plugin folder: `npx skills add MrBogomips/skills/<plugin>`.
+
 ### Claude Code, as a plugin
 
-All the skills come as one plugin, `skills`, from the `mrbogomips` marketplace:
+All the standalone skills come as one plugin, `skills`, from the `mrbogomips` marketplace:
 
 ```text
 /plugin marketplace add MrBogomips/claude-plugins
@@ -42,11 +53,29 @@ The plugin installs every skill, and you invoke them as `/skills:<name>` (for ex
 | [`codex-image-gen`](skills/codex-image-gen/SKILL.md) | Generates or edits images through the `codex` CLI's built-in image tool, on the Codex login's quota and with no API key. |
 | [`google-image-gen`](skills/google-image-gen/SKILL.md) | Generates or edits images through the Google Gemini API with your own API key (`GEMINI_API_KEY`). |
 
+## Plugins
+
+| Plugin | What it does | Skills installable alone? |
+|---|---|---|
+| [`kaizen`](kaizen/README.md) | Session retrospective: links the errors, reworks and ambiguities of a session to the skills, rules, CLAUDE.md, memory, hooks and settings behind them, and applies only reviewed fixes you authorize. A Stop hook offers it when a session had friction. | **Yes, with less**: `npx skills add MrBogomips/skills/kaizen` installs the `kaizen` skill; run it with `/kaizen`. There is no Stop hook offer, and the review runs through a general-purpose subagent. |
+| [`personal-voice`](personal-voice/README.md) | Writes documents, emails and messages in your tone and lexicon (`voice-write`), learns from your revisions and your own texts (`voice-learn`), and maintains the profile with per-item approval (`voice-maintain`). | **No**: plugin only. The skills share the plugin's store format and its `store_dir` setting. |
+
+Install a plugin from the `mrbogomips` marketplace:
+
+```text
+/plugin marketplace add MrBogomips/claude-plugins
+/plugin install <plugin>@mrbogomips
+```
+
+Its skills are invoked as `/<plugin>:<skill>`, for example `/personal-voice:voice-write`.
+
 ## Repository layout
 
 - `skills/<name>/SKILL.md`: one directory per skill, with any supporting files next to it.
 - `.claude-plugin/plugin.json`: the manifest of the Claude Code plugin `skills`, which loads every skill in `skills/`.
-- `tests/validate.sh`: checks the plugin manifest and every skill's frontmatter; CI runs it on every push and pull request.
+- `<plugin>/`: a Claude Code plugin (`kaizen/`, `personal-voice/`) with its own `.claude-plugin/plugin.json`, skills, and any hooks or agents.
+- `tests/validate.sh`: checks every plugin manifest and every skill's frontmatter; CI runs it on every push and pull request, together with `tests/test-kaizen-stop-gate.sh`.
+- `tests/scenarios/`: manual scenario checklists for the plugin skills.
 - `tests/test_*.py`: unit tests for the scripts bundled with skills (`python3 -m unittest discover -s tests -p 'test_*.py'`).
 
 ## License

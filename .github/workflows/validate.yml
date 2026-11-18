@@ -18,8 +18,11 @@ jobs:
       - name: Validator self-test
         run: bash tests/selftest.sh
 
-      - name: Plugin and skills agree
+      - name: Plugins and skills agree
         run: bash tests/validate.sh
+
+      - name: kaizen Stop hook
+        run: bash tests/test-kaizen-stop-gate.sh
 
       - name: Bundled script tests
         run: python3 -m unittest discover -s tests -p 'test_*.py'

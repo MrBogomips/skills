@@ -1,0 +1,19 @@
+{
+  "name": "personal-voice",
+  "version": "1.0.0",
+  "description": "Personal writing voice — writes documents, emails and messages in the author's tone and lexicon, learns from the author's revisions and own texts, and maintains the profile only with per-item approval",
+  "author": {
+    "name": "MrBogomips",
+    "url": "https://github.com/MrBogomips"
+  },
+  "license": "MIT",
+  "keywords": ["writing", "voice", "tone", "style", "lexicon", "personalization"],
+  "userConfig": {
+    "store_dir": {
+      "type": "directory",
+      "title": "Voice store directory",
+      "description": "Directory for your global voice profile (tone, lexicon, exemplars). Choose a location you back up; it is never deleted when the plugin is uninstalled.",
+      "required": true
+    }
+  }
+}
