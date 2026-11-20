@@ -9,7 +9,7 @@ Each skill is a folder with a `SKILL.md` that follows the [Agent Skills](https:/
 The repository holds two kinds of things:
 
 - **Standalone skills**, in `skills/`. Each one works on its own, in any agent: install the ones you want with the `skills` CLI, or all of them at once as the Claude Code plugin `skills`.
-- **Claude Code plugins**, one top-level folder each (`kaizen/`, `personal-voice/`). A plugin can bring more than skills (hooks, agents, settings), and you install it as a whole. Its README says whether its skills can also be installed one by one with the `skills` CLI, and what you lose that way.
+- **Claude Code plugins**, one top-level folder each (`kaizen/`, `personal-voice/`, `skill-maker/`). A plugin can bring more than skills (hooks, agents, settings), and you install it as a whole. Its README says whether its skills can also be installed one by one with the `skills` CLI, and what you lose that way.
 
 All the plugins come from the `mrbogomips` marketplace, which lists the author's plugins from several repositories.
 
@@ -60,6 +60,7 @@ The plugin installs every skill, and you invoke them as `/skills:<name>` (for ex
 |---|---|---|
 | [`kaizen`](kaizen/README.md) | Session retrospective: links the errors, reworks and ambiguities of a session to the skills, rules, CLAUDE.md, memory, hooks and settings behind them, and applies only reviewed fixes you authorize. A Stop hook offers it when a session had friction. | **Yes, with less**: `npx skills add MrBogomips/skills/kaizen` installs the `kaizen` skill; run it with `/kaizen`. There is no Stop hook offer, and the review runs through a general-purpose subagent. |
 | [`personal-voice`](personal-voice/README.md) | Writes documents, emails and messages in your tone and lexicon (`voice-write`), learns from your revisions and your own texts (`voice-learn`), and maintains the profile with per-item approval (`voice-maintain`). | **No**: plugin only. The skills share the plugin's store format and its `store_dir` setting. |
+| [`skill-maker`](skill-maker/README.md) | Opinionated tools for producing quality skills and plugins. `skill-readme` inventories, checks and drafts the public README of a plugin and of each skill it ships against one fixed section contract; a read-only agent checks every statement against the component's files, and a script validates the result. | **No**: plugin only. The skill runs the plugin's scripts and dispatches its reviewer agent. |
 
 Install a plugin from the `mrbogomips` marketplace:
 
@@ -74,7 +75,7 @@ Its skills are invoked as `/<plugin>:<skill>`, for example `/personal-voice:voic
 
 - `skills/<name>/SKILL.md`: one directory per skill, with any supporting files next to it.
 - `.claude-plugin/plugin.json`: the manifest of the Claude Code plugin `skills`, which loads every skill in `skills/`.
-- `<plugin>/`: a Claude Code plugin (`kaizen/`, `personal-voice/`) with its own `.claude-plugin/plugin.json`, skills, and any hooks or agents.
+- `<plugin>/`: a Claude Code plugin (`kaizen/`, `personal-voice/`, `skill-maker/`) with its own `.claude-plugin/plugin.json`, skills, and any hooks or agents.
 - `tests/validate.sh`: checks every plugin manifest and every skill's frontmatter; CI runs it on every push and pull request, together with `tests/test-kaizen-stop-gate.sh`.
 - `tests/scenarios/`: manual scenario checklists for the plugin skills.
 - `tests/test_*.py`: unit tests for the scripts bundled with skills (`python3 -m unittest discover -s tests -p 'test_*.py'`).
