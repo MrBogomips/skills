@@ -17,7 +17,6 @@ They follow the [Agent Skills](https://agentskills.io) format and depend on noth
 | Skill | What it does |
 |---|---|
 | [`handoff`](handoff/README.md) | Writes a prompt that lets another session or a colleague continue a task, with a patch or a zip for the files they cannot reach. |
-| [`spawn-session`](spawn-session/README.md) | From a hub of several repositories, starts a child session in each repository a task touches, with a channel back to the master session. |
 | [`done`](done/README.md) | Checks on evidence whether the session's work meets its Definition of Done, then cleans up temporary files and merged branches. |
 | [`pause`](pause/README.md) | Stops background work and writes a checkpoint, so you can leave and resume later in the same session. |
 | [`tldr`](tldr/README.md) | Summarizes a reply in a few bullets and can keep a short footer on later long replies. |
