@@ -18,6 +18,10 @@ it with the tool search first). If its description or parameters differ from the
 
 - The tool accepts `cwd` only for a place the user named: the user's request naming the repository, or the hub
   configuration listing it, is that naming. The app may ask the user to confirm or trust the folder.
+- The app starts the child with its own account and settings, not the master's launch command (*Launch command* in
+  [environments.md](../environments.md)): when the master runs with another identity (`CLAUDE_CONFIG_DIR` or
+  `HOME` set by its launch), say in the report that the child may use another account and may not reach the
+  master by message.
 - When the tool takes no permission mode, the child starts in the app's default: say so in the report if it differs
   from the master's.
 - When the tool asks for a known place first, call its listing tool (`list_start_targets`).

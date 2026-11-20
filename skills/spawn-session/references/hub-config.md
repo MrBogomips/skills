@@ -45,7 +45,8 @@ Children inherit the master's permission mode, never saved in the configuration.
   a mode that doesn't bypass prompts, say in the report that messages will wait for approval, with the caveat in
   [environments.md](environments.md).
 - **Unknown mode:** if you can't tell the master's mode, ask, without a recommended option.
-- **Apply** it on the child's command line: `--permission-mode <mode>` for Claude. Each environment's file says
+- **Apply** it on the child's command line: `--permission-mode <mode>` for Claude, in place of the permission
+  flags of the master's own launch (*Launch command* in [environments.md](environments.md)). Each environment's file says
   where. Another agent kind takes its own flags (for Codex, `--ask-for-approval` and `--sandbox`): use the ones
   closest to the master's mode, and its default when none fits.
 - A first start in bypass mode may show the agent's own warning to accept: it is the user's to answer, as in

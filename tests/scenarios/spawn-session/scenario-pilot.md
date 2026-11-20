@@ -34,6 +34,21 @@ Run once per environment, with a fresh fixture. In the master, ask:
 - [ ] The child's command line carries `--permission-mode <mode>` (Herdr, tmux, `claude --bg`, manual)
 - [ ] Master in bypass mode, user picks a mode without bypass: the report warns that messages wait for approval
 
+## Launch command
+
+Start the master through a wrapper that sets `CLAUDE_CONFIG_DIR` (and `HOME`) to a second profile and adds a
+configuration flag, for example
+`env CLAUDE_CONFIG_DIR=<profile>/.claude claude --setting-sources user,project --dangerously-skip-permissions`.
+
+- [ ] Herdr: each child pane gets `--env CLAUDE_CONFIG_DIR=…` (and `HOME` when it differs); tmux and manual: the
+      command starts with `env CLAUDE_CONFIG_DIR=…`; `claude --bg`: no variables on the command line
+- [ ] The child's command carries `--setting-sources user,project` and not the master's `-n`, `--resume`, prompt
+      or `--dangerously-skip-permissions`
+- [ ] In the child, `printenv CLAUDE_CONFIG_DIR` matches the master and `/status` shows the master's account
+- [ ] The master and the child exchange messages in both directions
+- [ ] No token or other variable from the master's environment appears on a command line or in a pane
+- [ ] Desktop app: the report says the child may use the app's account and may not reach the master
+
 ## Layout
 
 - [ ] Desktop app, Herdr and tmux: without a *Layout* key, the master asks once, in the same ask as the permission
