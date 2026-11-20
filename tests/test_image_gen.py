@@ -3,8 +3,8 @@
 Run from the repo root: python3 -m unittest discover -s tests -p 'test_*.py'
 """
 import base64
-import gc
 import contextlib
+import gc
 import importlib.util
 import io
 import json
