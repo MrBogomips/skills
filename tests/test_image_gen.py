@@ -3,6 +3,7 @@
 Run from the repo root: python3 -m unittest discover -s tests -p 'test_*.py'
 """
 import base64
+import gc
 import contextlib
 import importlib.util
 import io
@@ -45,6 +46,9 @@ def run_main(module, argv, env=None):
     """Run module.main(argv); return (exit code or None, stdout, stderr)."""
     out, err = io.StringIO(), io.StringIO()
     code = None
+    # Collect garbage first: a ResourceWarning for a fake response left by an earlier
+    # test would otherwise be written into the stderr captured here.
+    gc.collect()
     with mock.patch.dict(os.environ, env or {}, clear=False), \
             contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
         try:
