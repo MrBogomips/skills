@@ -31,13 +31,26 @@ reader who wants the mechanism reads `SKILL.md` or the agent file, which are a c
 - When in doubt whether a sentence describes intent or mechanism, ask: would it change if the
   implementation were rewritten with the same purpose? If yes, it is mechanism: leave it out.
 
+## Plugin README: point to the skills, do not document them
+
+- `Included components` gives each skill one short line and the link to its README. That is all the
+  plugin README says about a skill.
+- How a skill is invoked, its arguments, options, outputs, requirements and limits belong to the
+  skill README. Move them there when the existing plugin README holds them, and record the move in
+  the review notes.
+- `Why` is the reason the plugin exists as a whole. `Quick start` is one command and one sentence on
+  what comes back. `Requirements` and `Limitations` hold only what is true for the whole plugin.
+- With a single skill, the plugin README is close to a cover page: why, the link, the other
+  components in a line each, how to install.
+
 ## Keep what is valid
 
 - Read the whole existing README first. Every statement that is still true has a place in the draft.
 - An existing section that is a contract section under another title (`Install`, `Getting started`)
   becomes that contract section, with its text.
 - **Every other existing H2 is a custom section and stays**: same title, same text, after the contract
-  sections. Do not dissolve it into `Usage` or `Inputs and outputs`, even when it would fit there.
+  sections. In a plugin README, a custom section that documents one skill moves, whole, to that
+  skill's README. Do not dissolve it into `Usage` or `Inputs and outputs`, even when it would fit there.
 - Write the contract sections new, from the sources. Where a custom section already holds the detail
   (options, a long example, a format, measurements, how a hook decides), the contract section is one
   line that links to it. Do not repeat it.

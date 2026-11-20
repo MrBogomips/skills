@@ -23,7 +23,8 @@ Arguments: `$ARGUMENTS`
    in the draft.
 5. **Condense, never replicate.** A README says what the component does and why it exists, in few
    lines. How it works stays in `SKILL.md` and the agent files: no steps, rules, tools, permissions or
-   models. A lint warning about size means cut.
+   models. A plugin README does not document its skills: one line and a link each. A lint warning
+   about size means cut.
 6. **No attribution**: no generator lines, session links or tool credits in a README or in the notes.
 
 ## Files of this plugin

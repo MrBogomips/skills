@@ -48,6 +48,7 @@ MAX_INTRO_WORDS = 60
 MAX_SECTION_WORDS = 150
 SECTION_WORDS = {"Why": 120, "Use cases": 240}
 MAX_COMPONENT_WORDS = 40
+MAX_SKILL_WORDS = 30
 MAX_SCENARIOS = 3
 COMPONENT_SECTIONS = (("Agents", "agents"), ("Commands", "commands"), ("Hooks", "hooks"))
 _SCHEME = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]*:")
@@ -166,6 +167,8 @@ def _word_limit(title: str, inv: Optional[Dict[str, Any]]) -> int:
     for component_title, key in COMPONENT_SECTIONS:
         if title == component_title:
             return MAX_COMPONENT_WORDS * max(1, len(inv[key]) if inv else 1)
+    if title == "Included components" and inv:
+        return MAX_SKILL_WORDS * max(1, len(inv["skills"]))
     return SECTION_WORDS.get(title, MAX_SECTION_WORDS)
 
 

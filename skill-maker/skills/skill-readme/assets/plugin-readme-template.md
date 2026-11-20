@@ -29,7 +29,7 @@ scenarios, one sentence for each part.>
 
 | Skill | What it does |
 |---|---|
-| `<skill-name>` | <One line. Link the name to the skill's README once it exists.> |
+| `<skill-name>` | <One short line. Link the name to the skill's README: everything else about the skill is there.> |
 
 ## Agents
 
@@ -58,7 +58,8 @@ installed alone, or why it cannot be.>
 
 ## Quick start
 
-<The first command or request to try after installing, and what the reader should see.>
+<The first command or request to try after installing, and one sentence on what the reader should
+see. The rest is in the skill's README.>
 
 ## Requirements
 

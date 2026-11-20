@@ -148,6 +148,12 @@ class PluginProfileTest(unittest.TestCase):
         self.assertIn("Agents", [f["section"] for f in self.lint(text, one) if f["severity"] == "warning"])
         self.assertNotIn("Agents", [f["section"] for f in self.lint(text, two) if f["severity"] == "warning"])
 
+    def test_included_components_budget_is_per_skill(self):
+        text = plugin_readme().replace("## Included components\n\nText.", "## Included components\n\ndemo " + "word " * 40)
+        skill = {"name": "demo", "readme": "skills/demo/README.md", "readme_exists": False}
+        warned = [f["section"] for f in self.lint(text, inventory(skills=[skill])) if f["severity"] == "warning"]
+        self.assertEqual(warned, ["Included components"])
+
     def test_minimal_plugin_readme_passes(self):
         self.assertEqual(self.lint(plugin_readme()), [])
 

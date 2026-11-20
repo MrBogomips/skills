@@ -40,6 +40,8 @@ You have not seen how the README was written. Trust only what you read in the co
    every passage that retells a source: the steps or rules of a skill, the tools, permissions, model
    or effort of an agent, thresholds, the logic of a hook or script. Report a component described in
    more than a line or two. Do not ask for more detail than a reader needs to decide and to start.
+   In a plugin README, report as `detail` everything said about a single skill beyond its line in
+   `Included components` and the first command in `Quick start`: it belongs to the skill README.
 9. **Audience.** The text addresses the people who evaluate or use the component. Report maintainer
    notes, history, internal process and attribution lines.
 

@@ -43,17 +43,21 @@ Introductory paragraph.
 |---|---|---|---|
 | 1 | `Why` | always | The problem and the value: what the reader gains, and what sets this plugin apart. |
 | 2 | `Use cases` | the uses are not obvious from the introduction | Scenarios, one H3 each, at most three. |
-| 3 | `Included components` | always | Every distributed skill, by name, with one line and a relative link to its README. |
+| 3 | `Included components` | always | Every distributed skill, by name, with one short line and a relative link to its README. Nothing else about the skill. |
 | 4 | `Agents` | the plugin ships agents | Each agent in one line: what it is for. |
 | 5 | `Commands` | the plugin ships commands | Each command in one line: how to call it and what for. |
 | 6 | `Hooks` | the plugin ships hooks | Each hook in one line: when it fires, what for, how to switch it off. |
 | 7 | `Installation` | always | The install commands, and whether the skills also install alone and what is lost that way. |
-| 8 | `Quick start` | always | The first command to run and what the reader should see. |
-| 9 | `Requirements` | there are any | Tools, versions, accounts, keys. |
+| 8 | `Quick start` | always | The first command to run and, in one sentence, what the reader should see. |
+| 9 | `Requirements` | there are any for the whole plugin | Tools, versions, accounts, keys. |
 | 10 | `Configuration` | there is any | Settings, with defaults. |
-| 11 | `Limitations` | there are any | What it does not do, known gaps. |
+| 11 | `Limitations` | there are any for the whole plugin | What it does not do, known gaps. |
 | – | custom sections | – | Kept as they are. |
 | last | `License` | always | The license in the manifest. |
+
+**The plugin README does not document the skills.** Each skill has its own README: the plugin README
+names it in one line and links there. Usage, arguments, options, outputs, requirements and limits of
+a single skill are never repeated at plugin level.
 
 ## Skill profile
 
@@ -78,6 +82,7 @@ section, fenced code excluded, goes over its budget. Custom sections have no bud
 | Introduction | 60 words |
 | `Why` | 120 words |
 | `Use cases` | 240 words, three scenarios |
+| `Included components` | 30 words for each skill |
 | `Agents`, `Commands`, `Hooks` | 40 words for each component; aim for one line |
 | Any other contract section | 150 words |
 
