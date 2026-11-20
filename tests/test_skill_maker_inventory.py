@@ -51,6 +51,15 @@ class InventoryTest(unittest.TestCase):
         self.assertEqual([(s["name"], s["directory"], s["readme_exists"]) for s in result["skills"]],
                          [("alpha", "skills/alpha", True), ("beta-renamed", "skills/beta", False)])
 
+    def test_plugin_readme_sits_with_the_skills_when_the_root_hosts_other_plugins(self):
+        manifest(self.root)
+        skill(self.root, "skills/alpha")
+        self.assertEqual(inventory.build_inventory(self.root)["plugin"]["readme"], "README.md")
+        write(self.root, "other/.claude-plugin/plugin.json", "{}")
+        write(self.root, "README.md", "# repository\n")
+        plugin = inventory.build_inventory(self.root)["plugin"]
+        self.assertEqual((plugin["readme"], plugin["readme_exists"]), ("skills/README.md", False))
+
     def test_agents_commands_and_hooks(self):
         manifest(self.root)
         write(self.root, "agents/reviewer.md", "---\nname: reviewer\ndescription: d\n---\n")

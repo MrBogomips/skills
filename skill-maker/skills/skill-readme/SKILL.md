@@ -19,8 +19,8 @@ Arguments: `$ARGUMENTS`
 2. **Never change** `SKILL.md`, a manifest, a script or a test. Report what is wrong in the notes.
 3. **Every statement has a source** in the component's own files. No source: leave it out and record
    the missing data.
-4. **Keep what is valid.** Still-true content and every custom section of an existing README survive
-   in the draft.
+4. **Keep what the reader needs.** Still-true content that tells the reader what the component is
+   for or how to start survives in the draft. Mechanism and history are cut and listed in the notes.
 5. **Condense, never replicate.** A README says what the component does and why it exists, in few
    lines. How it works stays in `SKILL.md` and the agent files: no steps, rules, tools, permissions or
    models. A plugin README does not document its skills: one line and a link each. A lint warning
@@ -57,7 +57,9 @@ plugin: say so and stop.
 python3 "${CLAUDE_PLUGIN_ROOT}/scripts/inventory.py" <plugin root>
 ```
 
-The JSON lists the plugin, its skills, agents, commands and hooks, whether each README exists, and
+`plugin.readme` is the path of the plugin README: `README.md`, or `skills/README.md` when the plugin
+root is a repository that also hosts other plugins (its root README is then the repository's page:
+leave it alone). The JSON lists the plugin, its skills, agents, commands and hooks, whether each README exists, and
 under `excluded` the `SKILL.md` files that are not distributed (internal skills, fixtures, other
 plugins) with the reason. Work only on what is distributed. Show the user the list before going on
 when it has more than one component.
@@ -67,7 +69,7 @@ when it has more than one component.
 For each README that exists:
 
 ```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/scripts/readme_lint.py" --profile plugin --plugin-root <plugin root> <plugin root>/README.md
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/readme_lint.py" --profile plugin --plugin-root <plugin root> <plugin root>/<plugin readme>
 python3 "${CLAUDE_PLUGIN_ROOT}/scripts/readme_lint.py" --profile skill <skill folder>/README.md
 ```
 
@@ -85,7 +87,8 @@ line goes into the notes unchanged.
 
 1. **Output folder**: the one the user gave; otherwise a `readme-drafts/<plugin name>/` folder in the
    session's temporary or scratch directory. Never inside the plugin unless the user says so. Each
-   draft keeps its relative path: `<output>/README.md`, `<output>/skills/<name>/README.md`.
+   draft keeps the relative path the inventory gives: `<output>/README.md`,
+   `<output>/skills/<name>/README.md`.
 2. **Read the sources** of each component: manifest, `SKILL.md`, its references, scripts, tests, and
    the existing README in full.
 3. **Write the draft** from the template of its profile, following `references/writing-rules.md`.

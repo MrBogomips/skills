@@ -45,11 +45,18 @@ reader who wants the mechanism reads `SKILL.md` or the agent file, which are a c
 
 ## Keep what is valid
 
-- Read the whole existing README first. Every statement that is still true has a place in the draft.
+- Read the whole existing README first. Every statement that is still true and that a reader needs
+  to choose or to start has a place in the draft.
 - An existing section that is a contract section under another title (`Install`, `Getting started`)
   becomes that contract section, with its text.
+- **Cut mechanism and history.** An existing section, or a paragraph of one, that explains how the
+  component works inside (when a hook fires and on which thresholds, what a script analyses, the
+  phases of a run) or tells its past (earlier versions, old marketplaces, what was replaced) is left
+  out. Keep from it only the line a reader acts on, such as the switch that turns a hook off or the
+  command to move from an old install. List every cut in the review notes with its line range, so
+  the owner can restore it.
 - **Every other existing H2 is a custom section and stays**: same title, same text, after the contract
-  sections. In a plugin README, a custom section that documents one skill moves, whole, to that
+  sections. That is content a reader uses: options, a format, an example, measurements. In a plugin README, a custom section that documents one skill moves, whole, to that
   skill's README. Do not dissolve it into `Usage` or `Inputs and outputs`, even when it would fit there.
 - Write the contract sections new, from the sources. Where a custom section already holds the detail
   (options, a long example, a format, measurements, how a hook decides), the contract section is one
@@ -57,8 +64,8 @@ reader who wants the mechanism reads `SKILL.md` or the agent file, which are a c
 - Content a tool generates (a table between markers, a performance section) stays byte for byte.
 - Fix a statement the sources contradict wherever it stands, custom sections included, and record
   the correction in the review notes.
-- In the review notes, list what became a contract section, what stayed as custom, and anything you
-  could not place.
+- In the review notes, list what became a contract section, what stayed as custom, what was cut as
+  mechanism or history, and anything you could not place.
 
 ## Why
 

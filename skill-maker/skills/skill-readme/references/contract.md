@@ -1,6 +1,8 @@
 # README contract
 
-One `README.md` at the root of every plugin and one next to every distributed `SKILL.md`. The README
+One `README.md` at the root of every plugin and one next to every distributed `SKILL.md`. When the
+plugin root is a repository that also hosts other plugins, its root README is the repository's page
+and the plugin README is `skills/README.md`. The README
 is written in English for the people who evaluate or use the component. It also feeds a catalog, so
 its blocks are found by heading level and exact title.
 
@@ -34,7 +36,9 @@ Introductory paragraph.
 - **Conditional sections** (in brackets below) are left out when they have nothing to say. Never keep
   one with "None" or "N/A".
 - **Custom sections**: any other H2 is allowed after the last contract section (in a plugin README,
-  before `License`). Existing custom sections are always kept.
+  before `License`). They hold what a reader uses and the contract has no place for: options, a
+  format, an example, measurements, a block a tool generates. A section that explains how the
+  component works inside, or its history, does not belong in a README.
 - A heading inside a fenced code block is an example, not a section.
 
 ## Plugin profile

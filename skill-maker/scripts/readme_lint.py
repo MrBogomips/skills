@@ -221,14 +221,42 @@ def _local_target(target: str) -> Optional[str]:
     return unquote(target.split("#", 1)[0].split("?", 1)[0]) or None
 
 
+def _slug(title: str) -> str:
+    """GitHub-style anchor of a heading."""
+    text = re.sub(r"[^\w\- ]", "", title.strip().lower().replace("`", ""))
+    return text.replace(" ", "-")
+
+
+def _anchors(target_path: str, own: Dict[str, Any], same: bool) -> Optional[set]:
+    if same:
+        return {_slug(h["title"]) for h in own["headings"]}
+    if not target_path.lower().endswith(".md"):
+        return None
+    try:
+        with open(target_path, encoding="utf-8") as handle:
+            return {_slug(h["title"]) for h in mdparse.parse(handle.read())["headings"]}
+    except (OSError, UnicodeDecodeError):
+        return None
+
+
 def _check_links(doc: Dict[str, Any], path: str, base_dir: Optional[str]) -> List[Finding]:
     found = []
     base = base_dir or os.path.dirname(os.path.abspath(path))
     for link in doc["links"]:
-        local = _local_target(link["target"])
+        target = link["target"]
+        section = _section_at(doc["sections"], link["line"])
+        local = _local_target(target)
         if local and not os.path.exists(os.path.join(base, local)):
-            found.append(finding("error", path, link["line"], _section_at(doc["sections"], link["line"]),
-                                 "relative link target does not exist: %s" % link["target"]))
+            found.append(finding("error", path, link["line"], section,
+                                 "relative link target does not exist: %s" % target))
+            continue
+        if "#" not in target or _SCHEME.match(target) or target.startswith("/"):
+            continue
+        fragment = unquote(target.split("#", 1)[1])
+        anchors = _anchors(os.path.join(base, local) if local else "", doc, not local)
+        if anchors is not None and fragment and fragment not in anchors:
+            found.append(finding("error", path, link["line"], section,
+                                 "no heading for the anchor in: %s" % target))
     return found
 
 
@@ -247,7 +275,10 @@ def _check_components(doc: Dict[str, Any], lines: List[str], path: str, inv: Dic
     if not included:
         return found
     text = "\n".join(lines[included["line"]: included["end"] - 1])
-    targets = {_local_target(l["target"]) for l in doc["links"] if included["line"] <= l["line"] < included["end"]}
+    here = os.path.dirname(inv.get("plugin", {}).get("readme", ""))
+    targets = {os.path.join(here, t) for t in
+               (_local_target(l["target"]) for l in doc["links"] if included["line"] <= l["line"] < included["end"])
+               if t}
     for skill in inv["skills"]:
         if not re.search(r"(?<![\w-])%s(?![\w-])" % re.escape(skill["name"]), text):
             found.append(finding("error", path, included["line"], "Included components",

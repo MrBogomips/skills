@@ -35,7 +35,8 @@ You have not seen how the README was written. Trust only what you read in the co
 6. **Components.** The plugin README lists every distributed skill, agent, command and hook in the
    inventory, and nothing that is not in it.
 7. **Kept content.** When the prompt gives the previous README, list any still-valid information the
-   new text dropped.
+   new text dropped that a reader needs to choose the component or to start. Mechanism and history
+   are cut on purpose: do not ask for them back.
 8. **Detail.** The README says what the component does and why it exists; the sources say how. Report
    every passage that retells a source: the steps or rules of a skill, the tools, permissions, model
    or effort of an agent, thresholds, the logic of a hook or script. Report a component described in

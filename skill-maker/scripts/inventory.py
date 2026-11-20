@@ -165,13 +165,26 @@ def _excluded(root: str, distributed: List[str]) -> List[Dict[str, str]]:
     return excluded
 
 
+def _plugin_readme(root: str) -> str:
+    """`README.md`, or `skills/README.md` when the root also hosts other plugins.
+
+    In such a repository the root README is the page of the repository, so the
+    README of the root plugin sits with its skills.
+    """
+    for name in sorted(os.listdir(root)):
+        if os.path.isfile(os.path.join(root, name, MANIFEST)):
+            return "skills/README.md"
+    return "README.md"
+
+
 def build_inventory(root: str) -> Dict[str, Any]:
     """Return the inventory of the plugin rooted at `root`."""
     if not os.path.isdir(root):
         raise InventoryError("%s is not a directory" % root)
     manifest = read_manifest(root)
     skill_dirs = _skill_dirs(root, manifest)
-    readme = os.path.join(root, "README.md")
+    readme_path = _plugin_readme(root)
+    readme = os.path.join(root, readme_path)
     return {
         "root": os.path.abspath(root),
         "plugin": {
@@ -180,7 +193,7 @@ def build_inventory(root: str) -> Dict[str, Any]:
             "description": manifest.get("description"),
             "license": manifest.get("license"),
             "manifest": MANIFEST.replace(os.sep, "/"),
-            "readme": "README.md",
+            "readme": readme_path,
             "readme_exists": os.path.isfile(readme),
         },
         "skills": [_skill_entry(root, path) for path in skill_dirs],

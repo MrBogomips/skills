@@ -214,7 +214,7 @@ class FileAndCliTest(unittest.TestCase):
         return path
 
     def test_relative_links_must_exist(self):
-        self.write("references/a.md", "x")
+        self.write("references/a.md", "# Top\n")
         body = ("See [a](references/a.md#top), [b](missing.md), [c](https://example.com), [d](#usage) "
                 "and `[e](in-code.md)`.\n")
         path = self.write("README.md", skill_readme().replace("Intro paragraph.", "Intro.") + body)
@@ -232,6 +232,21 @@ class FileAndCliTest(unittest.TestCase):
         found = readme_lint.lint_file(unlinked, "plugin", inv)
         self.assertEqual([(f["severity"], f["message"]) for f in found],
                          [("warning", "no link to skills/alpha/README.md")])
+
+    def test_links_of_a_plugin_readme_kept_with_the_skills(self):
+        self.write("skills/demo/README.md", "x")
+        path = self.write("skills/README.md", plugin_readme().replace(
+            "## Included components\n\nText.", "## Included components\n\n[`demo`](demo/README.md)"))
+        inv = inventory(skills=[{"name": "demo", "readme": "skills/demo/README.md", "readme_exists": True}])
+        inv["plugin"] = {"readme": "skills/README.md"}
+        self.assertEqual(readme_lint.lint_file(path, "plugin", inv), [])
+
+    def test_anchors_must_match_a_heading(self):
+        self.write("other.md", "# Other\n\n## What the `stores` hold\n")
+        good = skill_readme().replace("Intro paragraph.", "Intro [a](other.md#what-the-stores-hold) [b](#why).")
+        bad = skill_readme().replace("Intro paragraph.", "Intro [a](other.md#gone) [b](#nowhere).")
+        self.assertEqual(errors(readme_lint.lint_file(self.write("good.md", good), "skill")), [])
+        self.assertEqual(len(errors(readme_lint.lint_file(self.write("bad.md", bad), "skill"))), 2)
 
     def test_draft_links_resolve_from_the_base_dir(self):
         self.write("plugin/skills/alpha/references/a.md", "x")

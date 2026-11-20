@@ -21,6 +21,7 @@ There is no build step. The repository is Markdown skills plus one JSON manifest
 - `tests/`: `validate.sh` (repository checks), `selftest.sh` (the validator's own tests) and `test-kaizen-stop-gate.sh` (the kaizen Stop hook), all run by `.github/workflows/validate.yml` on pushes and pull requests to `main`; `scenarios/` holds manual scenario checklists for the plugins and for `spawn-session`.
 - `DoD.md`: the Definition of Done that the `done` skill checks a session against.
 - `README.md` keeps the public skill and plugin lists and install instructions; update it whenever a skill or plugin is added, renamed or removed.
+- **Component READMEs**: every plugin and every distributed skill has a short `README.md` that follows the `skill-maker` contract (`skill-maker/skills/skill-readme/references/contract.md`): what it does and why, never a retelling of `SKILL.md`. The `skills` plugin's README is `skills/README.md`, because the root `README.md` is the repository page. Write or revise them with `/skill-maker:skill-readme`.
 
 ## Portability rules
 
@@ -71,7 +72,7 @@ claude plugin validate . --strict                  # plugin.json schema of the r
 claude plugin validate ./kaizen --strict           # ... and of each plugin folder
 claude plugin validate ./personal-voice --strict
 claude plugin validate ./skill-maker --strict
-python3 skill-maker/scripts/validate.py --no-claude skill-maker  # skill-maker's READMEs follow its own contract
+for p in . kaizen personal-voice skill-maker; do python3 skill-maker/scripts/validate.py --no-claude $p; done  # every plugin and skill README follows the contract
 DISABLE_TELEMETRY=1 npx -y skills add ./ --list    # what the skills CLI discovers (Node >= 22.20): only skills/
 DISABLE_TELEMETRY=1 npx -y skills add ./kaizen --list  # a plugin's skills, reached by its folder
 ```
