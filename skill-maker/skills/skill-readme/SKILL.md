@@ -21,7 +21,10 @@ Arguments: `$ARGUMENTS`
    the missing data.
 4. **Keep what is valid.** Still-true content and every custom section of an existing README survive
    in the draft.
-5. **No attribution**: no generator lines, session links or tool credits in a README or in the notes.
+5. **Condense, never replicate.** A README says what the component does and why it exists, in few
+   lines. How it works stays in `SKILL.md` and the agent files: no steps, rules, tools, permissions or
+   models. A lint warning about size means cut.
+6. **No attribution**: no generator lines, session links or tool credits in a README or in the notes.
 
 ## Files of this plugin
 
@@ -85,10 +88,11 @@ line goes into the notes unchanged.
 2. **Read the sources** of each component: manifest, `SKILL.md`, its references, scripts, tests, and
    the existing README in full.
 3. **Write the draft** from the template of its profile, following `references/writing-rules.md`.
-   Delete the conditional sections that do not apply and every placeholder in angle brackets.
+   Delete the conditional sections that do not apply (`Use cases` included, when the uses are obvious)
+   and every placeholder in angle brackets.
 4. **Lint the drafts** with the commands of step 3, adding `--base-dir <folder the README is meant
    for>` so that relative links resolve from the component's own folder. Fix every error before the
-   review.
+   review, and cut until no size warning is left.
 5. Dispatch the fact review on the drafts, giving the existing READMEs as the previous text.
 6. Fix what the review proved wrong, once. Do not start a second review round on your own.
 7. Write `<output>/review-notes.md` with what is left: open findings, scenarios marked observed or

@@ -4,15 +4,18 @@ summary: <One sentence: what the skill does and for whom. At most 200 characters
 
 # <skill-name>
 
-<Introductory paragraph: what the skill does and what the reader gets. This paragraph is the short
-description in the catalog.>
+<Introductory paragraph, at most 60 words: what the skill does and what the reader gets. This
+paragraph is the short description in the catalog.>
 
 ## Why
 
-<The problem the reader has and what this skill does about it that the alternatives do not. State each
-claim with evidence found in the sources.>
+<Two to four sentences: the problem the reader has and why this skill exists. No feature list, no
+description of how it works.>
 
 ## Use cases
+
+<Only if the uses are not obvious from the introduction; otherwise delete this section. At most three
+scenarios, one sentence for each part.>
 
 ### <Task in the reader's words>
 
@@ -29,12 +32,13 @@ and what differs from installing the plugin.>
 
 ## Usage
 
-<How to invoke the skill as the reader types it, the arguments, and one complete example with its
-result.>
+<How to invoke the skill as the reader types it, the arguments, and one example with its result. Not
+the steps the skill follows.>
 
 ## Inputs and outputs
 
-<What the skill reads and what it writes or returns, with paths and formats.>
+<Only if the reader must know a file, a path or a format to use the skill; otherwise delete this
+section. What it needs and what it leaves.>
 
 ## Requirements
 

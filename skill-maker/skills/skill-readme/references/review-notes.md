@@ -49,6 +49,7 @@ Excluded: <SKILL.md files found but not distributed, each with the reason>.
 | `unverified` | The README states something no source confirms. |
 | `missing data` | A section needs information no source gives. |
 | `value` | Value found in the sources that the Why does not state. |
+| `detail` | The README retells the mechanism of a source (steps, rules, tools, permissions, model, internal logic) or goes over a size budget. |
 | `audience` | Text not addressed to the people who evaluate or use the component. |
 | `summary` | `summary:` and the introduction say different things. |
 

@@ -69,8 +69,8 @@ class SkillProfileTest(unittest.TestCase):
         self.assertIn("H1", [s for s, _ in errors(self.lint(skill_readme() + "# again\n"))])
 
     def test_missing_required_section(self):
-        found = errors(self.lint(skill_readme("Why", "Use cases", "Usage")))
-        self.assertEqual(found, [("Inputs and outputs", "required section is missing")])
+        found = errors(self.lint(skill_readme("Why", "Use cases")))
+        self.assertEqual(found, [("Usage", "required section is missing")])
 
     def test_out_of_order_section(self):
         found = errors(self.lint(skill_readme("Why", "Usage", "Use cases", "Inputs and outputs")))
@@ -112,6 +112,25 @@ class SkillProfileTest(unittest.TestCase):
             path = os.path.join(TEMPLATES, "%s-readme-template.md" % profile)
             self.assertEqual(readme_lint.lint_file(path, profile), [], path)
 
+    def test_use_cases_and_inputs_and_outputs_are_optional(self):
+        self.assertEqual(self.lint(skill_readme("Why", "Usage")), [])
+
+    def test_long_contract_text_is_a_warning_and_code_and_custom_text_are_not_counted(self):
+        long_text = "word " * 200 + "\n"
+        text = HEAD + section("Why", long_text) + section("Usage", "```text\n%s```\n" % long_text) \
+            + section("Details", long_text)
+        warnings = [(f["section"], f["message"]) for f in self.lint(text) if f["severity"] == "warning"]
+        self.assertEqual(len(warnings), 1)
+        self.assertEqual(warnings[0][0], "Why")
+        self.assertIn("200 words", warnings[0][1])
+
+    def test_long_introduction_and_too_many_scenarios_are_warnings(self):
+        text = skill_readme("Why", "Use cases", "Usage").replace("Intro paragraph.", "word " * 61)
+        text = text.replace(SCENARIO, SCENARIO.replace("Scenario", "One") + SCENARIO.replace("Scenario", "Two")
+                            + SCENARIO.replace("Scenario", "Three") + SCENARIO.replace("Scenario", "Four"))
+        sections = [f["section"] for f in self.lint(text) if f["severity"] == "warning"]
+        self.assertEqual(sorted(sections), ["Use cases", "introduction"])
+
     def test_unknown_profile(self):
         with self.assertRaises(ValueError):
             self.lint(skill_readme(), profile="agent")
@@ -120,6 +139,14 @@ class SkillProfileTest(unittest.TestCase):
 class PluginProfileTest(unittest.TestCase):
     def lint(self, text, inv=None):
         return readme_lint.lint_text(text, "plugin", "README.md", inv)
+
+    def test_component_section_budget_grows_with_the_components(self):
+        body = "word " * 60 + "\n"
+        text = plugin_readme().replace("## Installation", "## Agents\n\n%s\n## Installation" % body)
+        one = inventory(agents=[{"name": "a"}])
+        two = inventory(agents=[{"name": "a"}, {"name": "b"}])
+        self.assertIn("Agents", [f["section"] for f in self.lint(text, one) if f["severity"] == "warning"])
+        self.assertNotIn("Agents", [f["section"] for f in self.lint(text, two) if f["severity"] == "warning"])
 
     def test_minimal_plugin_readme_passes(self):
         self.assertEqual(self.lint(plugin_readme()), [])

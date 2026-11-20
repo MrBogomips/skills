@@ -4,15 +4,18 @@ summary: <One sentence: what the plugin does and for whom. At most 200 character
 
 # <plugin-name>
 
-<Introductory paragraph: what the plugin does and what the reader gets. This paragraph is the short
-description in the catalog.>
+<Introductory paragraph, at most 60 words: what the plugin does and what the reader gets. This
+paragraph is the short description in the catalog.>
 
 ## Why
 
-<The problem the reader has and what this plugin does about it that the alternatives do not. State
-each claim with evidence found in the sources.>
+<Two to four sentences: the problem the reader has and why this plugin exists. No feature list, no
+description of how it works.>
 
 ## Use cases
+
+<Only if the uses are not obvious from the introduction; otherwise delete this section. At most three
+scenarios, one sentence for each part.>
 
 ### <Task in the reader's words>
 
@@ -30,18 +33,18 @@ each claim with evidence found in the sources.>
 
 ## Agents
 
-<Only if the plugin ships agents; otherwise delete this section. Each agent: what it does and what
-dispatches it.>
+<Only if the plugin ships agents; otherwise delete this section. One line for each agent: what it is
+for. Not its tools, permissions, model or steps.>
 
 ## Commands
 
-<Only if the plugin ships commands; otherwise delete this section. Each command: how to call it and
-what it returns.>
+<Only if the plugin ships commands; otherwise delete this section. One line for each command: how to
+call it and what for.>
 
 ## Hooks
 
-<Only if the plugin ships hooks; otherwise delete this section. Each hook: the event, what it does and
-how to switch it off.>
+<Only if the plugin ships hooks; otherwise delete this section. One line for each hook: when it fires,
+what for, and how to switch it off.>
 
 ## Installation
 

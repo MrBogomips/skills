@@ -13,6 +13,24 @@ Write a statement only when a source in 1 to 3 supports it. When the existing RE
 no other source confirms, keep it and record it in the review notes as unverified. Never fill a gap
 with a guess: leave the statement out and record the missing data.
 
+## Condense, do not replicate
+
+The README says what the component does and why it was made. It does not explain how it works. The
+reader who wants the mechanism reads `SKILL.md` or the agent file, which are a click away.
+
+- Read the sources to understand the component and to check facts, not to retell them.
+- Leave out: the steps and phases of a skill, its rules and checks, the tools and permissions of an
+  agent, the model and effort, thresholds and internal file names, the logic of a hook or script.
+  Keep one of these only when the reader must act on it (a switch to turn a hook off, a file they
+  have to provide).
+- One line per component. "`reviewer`: rereads each draft in a fresh context, read-only" is the level.
+  Three lines for one agent are too many.
+- Prefer one sentence to a list, and a list to a table. Add a conditional section only when it tells
+  the reader something they need before using the component.
+- Stay within the budgets in `contract.md`. A warning from the script means cut, not reword.
+- When in doubt whether a sentence describes intent or mechanism, ask: would it change if the
+  implementation were rewritten with the same purpose? If yes, it is mechanism: leave it out.
+
 ## Keep what is valid
 
 - Read the whole existing README first. Every statement that is still true has a place in the draft.
@@ -21,8 +39,8 @@ with a guess: leave the statement out and record the missing data.
 - **Every other existing H2 is a custom section and stays**: same title, same text, after the contract
   sections. Do not dissolve it into `Usage` or `Inputs and outputs`, even when it would fit there.
 - Write the contract sections new, from the sources. Where a custom section already holds the detail
-  (options, a long example, a format, measurements), say the essential in the contract section and
-  link to the custom section for the rest. Do not repeat it.
+  (options, a long example, a format, measurements, how a hook decides), the contract section is one
+  line that links to it. Do not repeat it.
 - Content a tool generates (a table between markers, a performance section) stays byte for byte.
 - Fix a statement the sources contradict wherever it stands, custom sections included, and record
   the correction in the review notes.
@@ -39,11 +57,14 @@ this component do about it that the alternatives do not.
   For a component that generates artifacts, measured performance is usually the value: state it in the
   Why and link to the section with the numbers.
 - State a claim only with its evidence in the sources. No superlatives, no "powerful", no "seamless".
-- Three to six sentences, or a short list of concrete gains.
+- Two to four sentences, or up to four short bullets of concrete gains. It is the reason the component
+  exists, not a list of its features.
 
 ## Use cases
 
-- Two to four scenarios, each a different kind of reader or task.
+- Optional. Write the section only when the component serves tasks a reader would not guess from the
+  introduction. A component that does one thing when asked (a retrospective, a formatter) has none.
+- One to three scenarios, each a different kind of reader or task, each part one sentence.
 - Take scenarios first from tests, examples and recorded runs: those are observed. Add illustrative
   ones only for tasks the sources show the component can do.
 - In the review notes, mark every scenario observed (with its source) or illustrative. The README does
@@ -57,7 +78,8 @@ A reader must find the first command to run and predict what happens.
 - Plugin `Quick start`: after installation, the one command or request to try first, and what the
   reader sees.
 - Skill `Usage`: the invocation as the reader types it (`/plugin:skill`, or the request in words when
-  the skill triggers on its own), the arguments, one complete example with its result.
+  the skill triggers on its own), the arguments, one example with its result. Not the steps the skill
+  then follows.
 - Copy commands from the sources. Never write a command you have not found there.
 
 ## Installation

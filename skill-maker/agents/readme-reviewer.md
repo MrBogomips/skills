@@ -24,7 +24,9 @@ You have not seen how the README was written. Trust only what you read in the co
 3. **Why.** Does it state the value for the reader: the problem, and what this component does about it
    that the alternatives do not? Look in the custom sections and the sources for value the Why leaves
    out, for example measured performance, and say what should be raised into it.
-4. **Use cases.** Each scenario needs a context, an action and a concrete result, and the component must
+4. **Use cases.** The section is optional: report it as `detail` when its scenarios only restate the
+   introduction, and report its absence only when the sources show uses a reader would not guess.
+   Each scenario needs a context, an action and a concrete result, and the component must
    be able to do what the scenario says. Mark each scenario as observed (a test, an example or a
    recorded run shows it) or illustrative (plausible, not shown anywhere).
 5. **Summary.** The `summary:` and the introductory paragraph must say the same thing. The plugin and
@@ -34,7 +36,11 @@ You have not seen how the README was written. Trust only what you read in the co
    inventory, and nothing that is not in it.
 7. **Kept content.** When the prompt gives the previous README, list any still-valid information the
    new text dropped.
-8. **Audience.** The text addresses the people who evaluate or use the component. Report maintainer
+8. **Detail.** The README says what the component does and why it exists; the sources say how. Report
+   every passage that retells a source: the steps or rules of a skill, the tools, permissions, model
+   or effort of an agent, thresholds, the logic of a hook or script. Report a component described in
+   more than a line or two. Do not ask for more detail than a reader needs to decide and to start.
+9. **Audience.** The text addresses the people who evaluate or use the component. Report maintainer
    notes, history, internal process and attribution lines.
 
 Missing data is a finding: say what you looked for and where.

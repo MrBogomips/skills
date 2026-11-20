@@ -27,15 +27,15 @@ Finding = Dict[str, Any]
 # (title, required) in contract order; "last" is a required closing section.
 PROFILES = {
     "plugin": {
-        "sections": [("Why", True), ("Use cases", True), ("Included components", True),
+        "sections": [("Why", True), ("Use cases", False), ("Included components", True),
                      ("Agents", False), ("Commands", False), ("Hooks", False),
                      ("Installation", True), ("Quick start", True), ("Requirements", False),
                      ("Configuration", False), ("Limitations", False)],
         "last": "License",
     },
     "skill": {
-        "sections": [("Why", True), ("Use cases", True), ("Installation", False), ("Usage", True),
-                     ("Inputs and outputs", True), ("Requirements", False), ("Limitations", False)],
+        "sections": [("Why", True), ("Use cases", False), ("Installation", False), ("Usage", True),
+                     ("Inputs and outputs", False), ("Requirements", False), ("Limitations", False)],
         "last": None,
     },
 }
@@ -43,6 +43,12 @@ ALIASES = {"install": "Installation", "licence": "License", "gettingstarted": "Q
            "usecase": "Use cases", "inputsoutputs": "Inputs and outputs"}
 SCENARIO_LABELS = ("**Context:**", "**Action:**", "**Result:**")
 MAX_SUMMARY = 200
+# Word budgets of the text a README adds to the sources; fenced blocks and custom sections do not count.
+MAX_INTRO_WORDS = 60
+MAX_SECTION_WORDS = 150
+SECTION_WORDS = {"Why": 120, "Use cases": 240}
+MAX_COMPONENT_WORDS = 40
+MAX_SCENARIOS = 3
 COMPONENT_SECTIONS = (("Agents", "agents"), ("Commands", "commands"), ("Hooks", "hooks"))
 _SCHEME = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]*:")
 _SQUASH = re.compile(r"[^a-z0-9]")
@@ -90,6 +96,10 @@ def _check_head(doc: Dict[str, Any], path: str) -> List[Finding]:
     if not doc["intro"]:
         found.append(finding("error", path, h1s[0]["line"], "introduction",
                              "no introductory paragraph between the H1 and the first section"))
+    elif len(doc["intro"].split()) > MAX_INTRO_WORDS:
+        found.append(finding("warning", path, h1s[0]["line"], "introduction",
+                             "%d words; keep the first paragraph within %d"
+                             % (len(doc["intro"].split()), MAX_INTRO_WORDS)))
     return found
 
 
@@ -141,12 +151,37 @@ def _check_order(sections: List[Dict[str, Any]], profile: str, path: str) -> Lis
     return found
 
 
-def _check_bodies(sections: List[Dict[str, Any]], lines: List[str], path: str) -> List[Finding]:
+def _words(body: List[str]) -> int:
+    """Words of a section body outside fenced code blocks."""
+    count, fenced = 0, False
+    for line in body:
+        if line.lstrip().startswith(("```", "~~~")):
+            fenced = not fenced
+        elif not fenced:
+            count += len(line.split())
+    return count
+
+
+def _word_limit(title: str, inv: Optional[Dict[str, Any]]) -> int:
+    for component_title, key in COMPONENT_SECTIONS:
+        if title == component_title:
+            return MAX_COMPONENT_WORDS * max(1, len(inv[key]) if inv else 1)
+    return SECTION_WORDS.get(title, MAX_SECTION_WORDS)
+
+
+def _check_bodies(sections: List[Dict[str, Any]], lines: List[str], path: str,
+                  inv: Optional[Dict[str, Any]] = None) -> List[Finding]:
     found = []
     for section in sections:
         body = lines[section["line"]: section["end"] - 1]
         if not any(line.strip() for line in body):
             found.append(finding("error", path, section["line"], section["title"], "section is empty"))
+        if section["contract"]:
+            words, limit = _words(body), _word_limit(section["contract"], inv)
+            if words > limit:
+                found.append(finding("warning", path, section["line"], section["title"],
+                                     "%d words; keep it within %d and leave the detail to the sources"
+                                     % (words, limit)))
         if section["contract"] == "Use cases":
             found += _check_scenarios(section, lines, path)
     return found
@@ -156,6 +191,9 @@ def _check_scenarios(section: Dict[str, Any], lines: List[str], path: str) -> Li
     if not section["h3"]:
         return [finding("error", path, section["line"], section["title"], "needs at least one scenario as an H3")]
     found = []
+    if len(section["h3"]) > MAX_SCENARIOS:
+        found.append(finding("warning", path, section["line"], section["title"],
+                             "%d scenarios; keep at most %d" % (len(section["h3"]), MAX_SCENARIOS)))
     ends = [head["line"] for head in section["h3"][1:]] + [section["end"]]
     for head, end in zip(section["h3"], ends):
         body = "\n".join(lines[head["line"]: end - 1])
@@ -232,7 +270,7 @@ def lint_text(text: str, profile: str, path: str, inv: Optional[Dict[str, Any]] 
     found = _check_head(doc, path)
     found += _check_titles(doc["sections"], profile, path)
     found += _check_order(doc["sections"], profile, path)
-    found += _check_bodies(doc["sections"], lines, path)
+    found += _check_bodies(doc["sections"], lines, path, inv)
     found += _check_links(doc, path, base_dir)
     if profile == "plugin" and inv is not None:
         found += _check_components(doc, lines, path, inv)
