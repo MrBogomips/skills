@@ -21,6 +21,33 @@ language), worded without quotes or apostrophes, with a path free of spaces, so 
 in the environment's commands. The file sits outside the child's repository: give a Claude child read access to its folder with
 `--add-dir <handoff-dir>` on its command line, or it may ask the user before reading it.
 
+## Launch command
+
+A Claude child starts as the master was started, so it gets the same account, the same configuration directory
+(without which the two sessions can't message each other) and the same settings. Users often start Claude through
+an alias or a wrapper that sets variables and adds flags. Its name can't be seen from inside the session, but its
+effect can, and that is what the child replicates:
+
+1. **Master's arguments.** Walk up from the shell's parent process (`ps -o ppid=,command= -p <pid>`) to the first
+   whose command runs `claude` (`claude …` or `node …/claude …`), and read its arguments.
+2. **Flags to carry**: those that configure the session, such as `--settings`, `--mcp-config`,
+   `--strict-mcp-config`, `--plugin-dir`, `--setting-sources`, `--model`, `--agent`, `--append-system-prompt`.
+   Leave out the ones that belong to the master's own session (`-n`/`--name`, `-r`/`--resume`,
+   `-c`/`--continue`, `--session-id`, `--fork-session`, `-p`/`--print`, `--bg`, `-w`/`--worktree`, `--add-dir`,
+   a prompt) and the permission flags (`--dangerously-skip-permissions`, `--permission-mode`): the child takes
+   the inherited mode instead. `ps` can't tell where an argument with spaces ends: if one has spaces, ask the user
+   for the master's command.
+3. **Identity variables**, read with `printenv` in your own shell, which inherits them: `CLAUDE_CONFIG_DIR` when
+   set, and `HOME` when it differs from the account's home (`dscl . -read /Users/$USER NFSHomeDirectory` on macOS,
+   `getent passwd $USER` on Linux). Other variables only when the user names them. Never dump or copy the
+   environment: it holds tokens, which would end up on command lines and in pane scrollback, and values that
+   belong to the master's pane or terminal.
+4. **Command**: `env HOME=<home> CLAUDE_CONFIG_DIR=<dir> claude <carried flags>`, followed by the flags each
+   environment's file adds. Drop `env` and the variables when there are none to set. Each environment's file says
+   where the variables go.
+
+For another agent kind, carry only the variables and flags the user names.
+
 ## First run in a repository
 
 A repository where the user has never opened an agent may stop the child at a first-run prompt: folder trust, or

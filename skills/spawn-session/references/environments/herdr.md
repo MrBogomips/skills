@@ -6,21 +6,24 @@ Make the child's pane with the layout from [hub-config.md](../hub-config.md):
 
 ```bash
 # tabs: a tab per child; read the pane ID from .result.root_pane
-herdr tab create --workspace "$HERDR_WORKSPACE_ID" --cwd <repo> --label <name> --no-focus
+herdr tab create --workspace "$HERDR_WORKSPACE_ID" --cwd <repo> --label <name> --no-focus [--env KEY=VALUE …]
 # panes: the first child to the right of the master (--current is the calling pane, not the focused one);
 # read the pane ID from .result.pane
-herdr pane split --current --direction right --cwd <repo> --no-focus
+herdr pane split --current --direction right --cwd <repo> --no-focus [--env KEY=VALUE …]
 # panes: each next child below the last child's pane
-herdr pane split <last-child-pane-id> --direction down --cwd <repo> --no-focus
+herdr pane split <last-child-pane-id> --direction down --cwd <repo> --no-focus [--env KEY=VALUE …]
 ```
 
 Then, in that pane:
 
 ```bash
-herdr agent start <name> --kind claude --pane <pane-id> -- -n <name> --permission-mode <mode> --add-dir <handoff-dir>
+herdr agent start <name> --kind claude --pane <pane-id> -- <carried flags> -n <name> --permission-mode <mode> --add-dir <handoff-dir>
 herdr agent prompt <name> "Read and follow <file>"
 ```
 
+- *Launch command* in [environments.md](../environments.md) gives the identity variables and the carried flags.
+  `agent start` runs the agent's own executable, so the variables go on the pane, one `--env` per variable, and
+  the carried flags after `--`.
 - `--kind` is the child's agent kind; `herdr agent` lists the installed kinds. Arguments after `--` go to the agent
   itself: `-n <name>` gives a Claude child the same name in `ListAgents`, and `--permission-mode <mode>`
   sets the mode the children inherit (see [hub-config.md](../hub-config.md)). Other kinds take their own flags.

@@ -64,7 +64,8 @@ directory or repository and don't load the subrepository's `.claude/agents` and 
    in [references/hub-config.md](references/hub-config.md).
 8. **Handoff.** Write one prompt per child following [references/child-prompt.md](references/child-prompt.md).
 9. **Start** each child as [references/environments.md](references/environments.md) and the environment's own file it
-   points to say. Start the children in parallel; with stacked panes, make the panes one after another first,
+   points to say. A Claude child starts with the master's identity variables and configuration flags (*Launch
+   command* in `environments.md`). Start the children in parallel; with stacked panes, make the panes one after another first,
    since each split needs the previous pane. A shared interface is settled through the master, not by waiting.
    The first child in a repository may stop at the folder-trust check: follow *First run in a repository* in
    `environments.md`.
@@ -114,5 +115,6 @@ command is installed, otherwise in tmux when its command is installed, otherwise
 | Status files watched by the master | messages through the channel; no tracking files |
 | A second child for work a live session already follows | a message to that session |
 | Asking the layout again after the user chose it in this conversation | reuse the choice; ask again only if the user brings it up |
+| A bare `claude` in a new pane, when the master was started through an alias or wrapper | the master's identity variables and configuration flags, as *Launch command* says |
 | Starting children in the agent's default permission mode | the master's mode; when the master bypasses permission prompts, only after the user confirms it, at every start |
 | Answering a child's folder-trust prompt, or retrying a start the app refused for that reason | tell the user, who opens the folder once; retry when they say so |
