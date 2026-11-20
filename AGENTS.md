@@ -17,7 +17,7 @@ There is no build step. The repository is Markdown skills plus one JSON manifest
 
 - `skills/<name>/SKILL.md`: one directory per skill. Supporting files (`references/`, `scripts/`, `assets/`) go inside that directory.
 - `.claude-plugin/plugin.json`: the manifest of the `skills` plugin, with `name`, `version`, `description`, `author` and `keywords`. It has **no `skills` field**, so Claude Code loads every `skills/<name>/SKILL.md`. There is no `marketplace.json` here: the marketplace entry (source `github`, `category`, `tags`) lives in `MrBogomips/claude-plugins` and carries no `version`, so the version is read from `plugin.json`.
-- `<plugin>/` (today `kaizen/` and `personal-voice/`): a Claude Code plugin with its own `.claude-plugin/plugin.json`, `skills/`, and optionally `agents/`, `hooks/` and shared files. The root plugin loads only the root `skills/`, and the `skills` CLI lists only the root `skills/` for `npx skills add MrBogomips/skills`, so plugin skills stay out of both.
+- `<plugin>/` (today `kaizen/`, `personal-voice/` and `skill-maker/`): a Claude Code plugin with its own `.claude-plugin/plugin.json`, `skills/`, and optionally `agents/`, `hooks/` and shared files. The root plugin loads only the root `skills/`, and the `skills` CLI lists only the root `skills/` for `npx skills add MrBogomips/skills`, so plugin skills stay out of both.
 - `tests/`: `validate.sh` (repository checks), `selftest.sh` (the validator's own tests) and `test-kaizen-stop-gate.sh` (the kaizen Stop hook), all run by `.github/workflows/validate.yml` on pushes and pull requests to `main`; `scenarios/` holds manual scenario checklists for the plugins and for `spawn-session`.
 - `DoD.md`: the Definition of Done that the `done` skill checks a session against.
 - `README.md` keeps the public skill and plugin lists and install instructions; update it whenever a skill or plugin is added, renamed or removed.
@@ -70,6 +70,8 @@ CODEX_PORT_SH=dash python3 -m unittest discover -s tests -p 'test_codex_port_blo
 claude plugin validate . --strict                  # plugin.json schema of the root plugin
 claude plugin validate ./kaizen --strict           # ... and of each plugin folder
 claude plugin validate ./personal-voice --strict
+claude plugin validate ./skill-maker --strict
+python3 skill-maker/scripts/validate.py --no-claude skill-maker  # skill-maker's READMEs follow its own contract
 DISABLE_TELEMETRY=1 npx -y skills add ./ --list    # what the skills CLI discovers (Node >= 22.20): only skills/
 DISABLE_TELEMETRY=1 npx -y skills add ./kaizen --list  # a plugin's skills, reached by its folder
 ```

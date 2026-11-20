@@ -1,0 +1,11 @@
+{
+  "name": "skill-maker",
+  "version": "0.1.0",
+  "description": "Opinionated tools for producing quality skills and plugins — first skill: inventories, checks and drafts the public README of a plugin and of each skill it ships against a fixed section contract, with an independent fact reviewer and a final validation script",
+  "author": {
+    "name": "MrBogomips",
+    "url": "https://github.com/MrBogomips"
+  },
+  "license": "MIT",
+  "keywords": ["skills", "plugins", "readme", "documentation", "validation", "authoring"]
+}
