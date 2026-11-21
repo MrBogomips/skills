@@ -37,7 +37,7 @@ You can also ask in words: "are we done?", "finalize and cleanup".
 /skills:done --check
 ```
 
-The reply starts with the verdict. With `NOT DONE` it lists only the failing criteria, each with its evidence and the next action.
+The reply has a fixed shape: the verdict, every condition with a check mark (passed, failed, not verifiable, not applicable) and its evidence, every cleanup action with its outcome (`OK`, `FAILED`, `SKIPPED`, `DECLINED`, `PENDING`), then at most one question that gathers every confirmation still needed.
 
 ## Inputs and outputs
 

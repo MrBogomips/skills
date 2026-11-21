@@ -1,97 +1,61 @@
 # On-done treatments
 
-Run them only after the gate (no blocking failure), in this order. Skip a step that does not apply. Every step
-is safe to repeat. The root `DoD.md` *On Done* section can add steps, authorize what otherwise needs a yes, or
-switch a default off; nested files act on their own subtree, most specific first, before the root's lines.
+Run them only after the gate, in this order; skip what does not apply. Each one is one line of the report's
+*Actions*. A treatment that fails is reported with its error: never retry with a stronger command. The root
+`DoD.md` *On Done* section can add treatments, authorize what otherwise needs a yes, or switch one off; nested
+files act on their own subtree, before the root's lines.
 
-A step that fails is reported with its error. Do not retry with a stronger command, and do not upgrade the
-verdict.
+Collect every yes the treatments need into **one** question at the end of the report; run the confirmed ones
+after the answer and report them then.
 
 ## 1. Temporary files
 
-Candidates:
+Candidates: files the session created as drafts, scratch or intermediate output (inside or outside the
+repository), and untracked files matching a `Delete without asking` pattern of a governing `DoD.md`. Never:
+tracked files, anything under `Never touch`, files neither created by the session nor matched by a pattern.
 
-- files this session created as drafts, scratch or intermediate output (known from the conversation), inside
-  or outside the repository;
-- untracked files matching a `Delete without asking` pattern of a governing `DoD.md`;
-- the harness's scratch directory for the session, if it has one and its content is no longer needed.
+Pattern matches and the session's own scratch go without asking. Other files need a yes. Something the user may
+still want (a plan, a design, notes) is offered for keeping, not deleting.
 
-Never candidates: tracked files, anything under a `Never touch` line, and files that are neither created by
-the session nor matched by an authorized pattern (a pattern reaches only its own `DoD.md`'s subtree).
+## 2. Merge an approved pull request
 
-Show the list and delete after a yes. Files matching an authorized pattern need no confirmation. Something the
-user may still want (a design, a plan, notes) is offered for keeping rather than listed for deletion.
+Condition: `pr_state: OPEN`, `pr_review: APPROVED`, `pr_checks: pass` or `none`, `pr_draft: false`,
+`pr_head_matches: yes`, `pr_unresolved_threads: 0`. Authorized by the root `DoD.md`: `gh pr merge <n>` with
+the method it names. Otherwise it needs a yes.
 
-## 2. Approved pull request, not merged
+## 3. Close the merged branch
 
-Condition: `pr_state: OPEN`, `pr_review: APPROVED`, `pr_checks: pass` (or `none`), `pr_draft: false`,
-`pr_head_matches: yes`.
-
-- Authorized by the root `DoD.md`: merge with the method it names (`gh pr merge <n> --squash`, `--merge` or
-  `--rebase`), or the repository's default when it names none.
-- Not authorized: say "approved, ready to merge" and ask.
-- Never merge with failing or pending checks, changes requested, or unresolved threads.
-
-## 3. After a merge
-
-Condition: the snapshot lists the topic branch under `merged_branches`. While it is the current branch it
-carries `current=yes`. `pr_state: MERGED` alone is not enough: with `pr_head_matches: no` the branch has
-commits the merged pull request never contained, so skip this step and report them as undelivered.
-
-No confirmation needed. Run the commands one at a time and stop at the first that fails:
+Condition: the topic branch is listed under `merged_branches`. One call, no confirmation:
 
 ```bash
-git status --porcelain                        # must be empty, otherwise stop and report
-git switch <integration>
-git pull --ff-only                            # if it fails, stop and report: never merge or reset
-bash scripts/dod_check.sh                     # new snapshot: read the topic branch's line again
-git branch -d <topic>                         # line says via=ancestor
-git branch -D <topic>                         # line says via=pr (squash or rebase merge)
-git push <remote> --delete <topic>            # only if the line says remote=yes and the local delete succeeded
-git fetch --prune <remote>
+bash <skill-dir>/scripts/dod_check.sh --finish <topic>
 ```
 
-- If the new snapshot no longer lists the topic branch, it is not provably merged: delete nothing and report.
-- `git branch -d` refuses a squash-merged branch, because its commits are not ancestors of the integration
-  branch. `-D` is allowed only for a line with `via=pr`: a merged pull request's head is exactly the branch
-  tip, so nothing is lost.
-- Delete the remote branch only when the remote tip equals the local tip that was just deleted (`ahead: 0`
-  and `behind: 0` in the first snapshot). Otherwise the remote holds commits nobody verified: ask.
-- `<remote>` is the snapshot's `remote`.
-- Never delete the integration branch, a protected branch, or a branch under a `Never touch` line.
-- A branch checked out in another worktree cannot be deleted: report it.
-- With a remote that deletes merged branches by itself, the remote branch is already gone: `git fetch --prune`
-  is enough.
+It switches to the integration branch, pulls with `--ff-only`, deletes the branch locally (`-d`, or `-D` only
+when a merged pull request has its exact tip) and on the remote (only when the remote tip is the one just
+deleted), prunes, then prints a fresh snapshot. Report its `finish_step` lines. A `FAILED` or a remote branch
+`SKIPPED` because its tip moved needs the user: never resolve it with a stronger command.
 
-## 4. Other stale branches
+Never for a branch under `Never touch`.
 
-Branches under `merged_branches` that are not this session's work: list them and offer to delete them. Never
-delete them unasked.
+## 4. Other merged branches
+
+Branches under `merged_branches` that are not this session's: list them in the final question.
 
 ## 5. Project commands
 
-`Run:` lines of the governing `DoD.md` files, most specific file first, each from its file's directory.
+`Run:` lines of the governing `DoD.md` files, most specific first, each from its file's directory.
 
 ## 6. Session title
 
-Only for "DONE, closable": prefix the session title with `DONE` (`DONE-<current title>`), so the session can be
-recognized as safe to close.
+Only for **DONE, closable**: prefix the current title with `DONE-`.
 
-- **Current title.** Take it from the conversation: a title the user set (in Claude Code a `/rename`, shown as
-  "The user named this session …") or one set through a hook (the marker line written earlier in the session).
-  Use it verbatim. If the session has no known title, say so and suggest one; never write a placeholder such
-  as `<current title>`.
-- **Set it yourself** when the harness has a tool for it, or when the instructions in effect (project or user
-  level) describe a mechanism, such as a marker line that a hook reads. Follow that mechanism exactly and say
-  when it takes effect (for example "applied at your next message").
-- **Otherwise give the user the exact command**, on its own line at the end of the report. In Claude Code an
-  agent cannot run slash commands: only the user, or a `UserPromptSubmit` or `SessionStart` hook, can set the
-  title. The command is `/rename DONE-<current title>`, with the real title filled in.
-- Never report the title as changed unless a tool confirmed it; a marker or a printed command is reported as
-  pending.
+- The current title is the one the user set (`/rename`, "The user named this session …") or the one set by a
+  marker earlier in the session, verbatim. Unknown: say so; never write a placeholder.
+- Set it with the harness's tool, or the mechanism the instructions in effect describe (for example a marker
+  line a hook reads): then it is `PENDING` until it applies, and the report says when.
+- Otherwise print `/rename DONE-<real title>` as the last line: `PENDING`.
 
 ## 7. Handoff
 
-Only when residual work exists: offer a handoff prompt for it. If a `handoff` skill is installed, use it.
-Otherwise write a short prompt: the goal, the current state with branch and commit, the residual items in
-order, where the relevant files are.
+Only when residual work exists: offer one in the final question (with the `handoff` skill when installed).
