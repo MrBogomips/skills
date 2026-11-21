@@ -343,6 +343,16 @@ class Cli(unittest.TestCase):
         self.assertIsNone(code, err)
         self.assertEqual(len(calls), 2)
 
+    def test_error_body_as_array_and_402_billing(self):
+        body = json.dumps([{"error": {"code": 402, "message": "Credits depleted."}}]).encode()
+        error = urllib.error.HTTPError(gt.ENDPOINT, 402, "Payment Required", {}, io.BytesIO(body))
+        opener, _ = fake_urlopen(error)
+        with mock.patch.object(gt.urllib.request, "urlopen", opener):
+            code, _, err = run_main(["--to", "it", "-t", "Hello"], env={"GEMINI_API_KEY": FAKE_KEY})
+        self.assertEqual(code, 1)
+        self.assertIn("Credits depleted.", err)
+        self.assertIn("billing", err)
+
     def test_key_scrubbed_from_errors(self):
         body = json.dumps({"error": {"message": f"bad key {FAKE_KEY}"}}).encode()
         error = urllib.error.HTTPError(gt.ENDPOINT, 400, "bad", {}, io.BytesIO(body))

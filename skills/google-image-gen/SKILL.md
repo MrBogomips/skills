@@ -72,6 +72,7 @@ The script exits non-zero with one line and writes nothing.
 
 - **Missing key (exit 2)**: set `GEMINI_API_KEY`.
 - **401/403**: the key is wrong, restricted, or the project has no access to image models.
+- **402**: the project's prepaid credit is used up; the user tops it up in Google AI Studio.
 - **429**: rate limit or quota. Wait; the script does not retry it.
 - **400**: bad request, often an unknown model or an aspect ratio the model lacks; the API's message is shown.
 - **5xx or timeout**: retried once, then reported.

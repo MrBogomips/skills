@@ -61,7 +61,7 @@ translation (or the path) as it is, and mention the register when it was inferre
 | Exit | Meaning | What to do |
 |---|---|---|
 | 0 | Done | Relay the output. |
-| 1 | Error (bad input, HTTP error, unexpected answer) | Report the one-line message. 401/403: key or project access; 429: quota, wait. |
+| 1 | Error (bad input, HTTP error, unexpected answer) | Report the one-line message. 401/403: key or project access; 402: the project's prepaid credit is used up, top it up in AI Studio; 429: quota, wait. |
 | 2 | No API key | Ask the user to set `GEMINI_API_KEY`. |
 | 3 | Source is already in the target language | Tell the user; nothing was written. |
 | 4 | Code, URLs, placeholders, tags, headings or table rows differ from the source | The translation is in `<output>.unchecked` (or on stdout). Show the user the listed differences. Some are legitimate (a `$1` price that became `1 $`); if every item is, rename the file. Otherwise re-run with `--review`, once. |
