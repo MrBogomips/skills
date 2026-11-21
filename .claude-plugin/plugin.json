@@ -1,8 +1,8 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "skills",
-  "version": "2.2.0",
-  "description": "General-purpose agent skills by Mr Bogomips: handoff, done, pause, tldr, the AGENTS.md family (init, optimize, port to Codex), Gemini web research and image generation.",
+  "version": "2.3.0",
+  "description": "General-purpose agent skills by Mr Bogomips: handoff, done, pause, tldr, the AGENTS.md family (init, optimize, port to Codex), Gemini web research, Gemini translation and image generation.",
   "author": {
     "name": "Mr Bogomips",
     "url": "https://github.com/MrBogomips"
@@ -19,6 +19,7 @@
     "codex",
     "gemini",
     "research",
+    "translation",
     "image-generation",
     "productivity"
   ]
