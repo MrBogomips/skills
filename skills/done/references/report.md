@@ -23,6 +23,9 @@ Always this format, in the conversation's language. The markers and outcomes bel
 - **Conditions**: every condition, one line each, in this order: goals; the `Requirements` of each governing
   `DoD.md` (most specific file first, in file order); then the generic quality, delivery and hygiene
   conditions that are not replaced. Source: `session`, the `DoD.md` path, `instructions` or `default`.
+  A group of sub-items is one line per sub-item, prefixed with the group's trigger or scope; a group whose
+  trigger does not hold is a single ➖ line. An item that still bundles several conditions is reported as
+  failed or not verifiable when any of them is.
   Marks:
   - ✅ passed
   - ❌ failed: add `→` the next action

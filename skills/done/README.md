@@ -41,7 +41,7 @@ The reply has a fixed shape: the verdict, every condition with a check mark (pas
 
 ## Inputs and outputs
 
-`DoD.md` is optional. It has two sections: `## Requirements`, your checklist, and `## On Done`, the cleanup the file authorizes or switches off. The format is in [references/dod-file.md](references/dod-file.md).
+`DoD.md` is optional. It has two sections: `## Requirements`, your checklist (one condition per item, sub-items under a shared trigger such as "At a release:"), and `## On Done`, the cleanup the file authorizes or switches off. The format is in [references/dod-file.md](references/dod-file.md).
 
 The result is a short report in the conversation. `done` writes no file, except `DoD.md` with `init`, after you confirm.
 
