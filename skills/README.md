@@ -1,10 +1,10 @@
 ---
-summary: Eleven general-purpose skills for work with coding agents, from handing over, pausing and closing a session to shared AGENTS.md files, checked web research, translation and image generation.
+summary: Twelve general-purpose skills for work with coding agents, from handing over, pausing and closing a session to shared AGENTS.md files, web research, translation, editorial review and image generation.
 ---
 
 # skills
 
-Eleven small skills for daily work with coding agents. They hand a task over to another session or a colleague, pause and close a work session, keep one short instruction file for every agent, and delegate web research, translation and image generation to other tools. Each skill works on its own.
+Twelve small skills for daily work with coding agents. They hand a task over to another session or a colleague, pause and close a work session, keep one short instruction file for every agent, and delegate web research, translation, editorial review and image generation to other tools. Each skill works on its own.
 
 ## Why
 
@@ -27,6 +27,7 @@ They follow the [Agent Skills](https://agentskills.io) format and depend on noth
 | [`codex-image-gen`](codex-image-gen/README.md) | Generates or edits images through the `codex` CLI, on the Codex login's quota. |
 | [`google-image-gen`](google-image-gen/README.md) | Generates or edits images through the Google Gemini API with your own API key. |
 | [`gemini-translate`](gemini-translate/README.md) | Translates text and files with Google Gemini into any language and register, keeping code and placeholders intact. |
+| [`gemini-editorial-review`](gemini-editorial-review/README.md) | Revises text and files with Google Gemini, through agy or the API, in their own language, removing the marks of machine-written prose and applying your project's writing rules. |
 
 ## Installation
 

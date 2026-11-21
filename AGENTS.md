@@ -38,6 +38,7 @@ A skill in `skills/` has to work in every harness the `skills` CLI targets, not 
 
 - **Add**: run `npx skills init <name>` from inside `skills/` (it writes `<name>/SKILL.md`). The plugin picks it up with no manifest change.
 - **Version**: every pull request that changes what a skill does bumps `version` in `.claude-plugin/plugin.json`, once per pull request: patch for a fix, minor for a new skill or a compatible extension, major when a skill is renamed or removed or its behavior changes incompatibly. Claude Code updates installed plugins only when the version changes.
+- **Backends, not copies**: two skills that would differ only in how they reach a model or tool (an API, a local CLI) are one skill with backends and a setting, not copies: a skill cannot share files with another.
 - **Rename or remove**: change the directory and the frontmatter `name` together. In Claude Code the invocation changes with it (`/skills:<old>` stops working); `skills` CLI installs keep the old name until removed.
 
 ## Plugins

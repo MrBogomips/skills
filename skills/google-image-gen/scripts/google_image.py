@@ -222,6 +222,9 @@ def http_failure(code: int, detail: str) -> str:
                 "GEMINI_API_KEY and that it may use image models (they need a billed project).")
     if code == 400:
         return f"the request was rejected (HTTP 400){detail}"
+    if code == 402:
+        return (f"the project behind the API key has no credit left (HTTP 402){detail} "
+                "Top up or enable billing in Google AI Studio; nothing was billed.")
     if code == 429:
         return f"rate limit or quota exceeded (HTTP 429){detail}. Wait and retry later."
     if code >= 500:
@@ -231,7 +234,11 @@ def http_failure(code: int, detail: str) -> str:
 
 def error_detail(exc: urllib.error.HTTPError, key: str) -> str:
     try:
-        message = json.loads(exc.read().decode("utf-8", "replace"))["error"]["message"]
+        payload = json.loads(exc.read().decode("utf-8", "replace"))
+        # The Interactions endpoint wraps the error object in a one-element array.
+        if isinstance(payload, list) and payload:
+            payload = payload[0]
+        message = payload["error"]["message"]
     except (ValueError, KeyError, TypeError, OSError):
         message = exc.reason if isinstance(exc.reason, str) else ""
     return scrub(" ".join(str(message).split())[:300], key)

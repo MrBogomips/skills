@@ -1,0 +1,59 @@
+---
+summary: Revises text and Markdown files with Google Gemini, through agy or the API, in their own language, removing the marks of machine-written prose and applying your writing rules.
+---
+
+# gemini-editorial-review
+
+`gemini-editorial-review` has Google Gemini 4 Neon review a text or Markdown file in its own language, through your local `agy` CLI or the Gemini API. It strips the marks of machine-written prose and applies the writing rules in your `AGENTS.md`, `CLAUDE.md` and the style guides they cite. You get the revised text and a summary of the changes.
+
+## Why
+
+Text drafted by a coding agent carries the habits of its system prompt: stock openers and closers, bullet lists where an argument belongs, inflated adjectives, calques from English, the same rhythm in every paragraph. Asking the same agent to polish it repeats those habits. This skill hands the review to a different model, with an editor's brief for each kind of text and notes for each language, and aims for prose a careful human writer would sign. The brief forbids invented facts, and a check refuses to write the file when code, URLs or placeholders changed. It runs only when you ask: through `agy` it uses your Antigravity quota, through the API it bills your key.
+
+## Installation
+
+```bash
+npx skills add MrBogomips/skills --skill gemini-editorial-review
+```
+
+It is the same skill as in the `skills` plugin, installed under the name `gemini-editorial-review` instead of `skills:gemini-editorial-review`.
+
+## Usage
+
+Log in to `agy`, or set `GEMINI_API_KEY`, then ask your agent for an editorial review with Gemini, or type `/skills:gemini-editorial-review [technical|marketing|professional|essay|blog|creative] <text-or-file>` in Claude Code with the plugin. The kind of text is optional: Gemini infers it. For `guide.md`, you get `guide.reviewed.md` next to it, plus the summary of changes. Behind the request, the agent collects your writing rules and runs the bundled script, for example:
+
+```bash
+python3 <skill-dir>/scripts/gemini_editorial_review.py --profile technical --rules docs/style-guide.md -i README.md -o README.reviewed.md
+```
+
+`--via agy|api` picks the backend for one run and `--print-prompt` shows what would be sent without making a call. All options are in [SKILL.md](SKILL.md).
+
+## Inputs and outputs
+
+- Input: `-t` text, `-i` file, or stdin; house rules with `--rules` (repeatable) and terms with `--glossary`.
+- Output: the file given with `-o`, otherwise stdout. The source file is never overwritten.
+- The language, the kind of text and the summary of changes go to stderr.
+- When fenced code, inline code, absolute URLs, placeholders, HTML tags or the frontmatter differ from the source, the script exits with status 4 and lists the differences: with `-o`, the revision goes to `<output>.unchecked` instead; without it, it is printed anyway.
+
+## Requirements
+
+- Python 3.9 or later, standard library only.
+- Either the `agy` CLI installed and logged in, or a Gemini API key in `GEMINI_API_KEY` or `GOOGLE_API_KEY` on a project with credit or billing enabled.
+- Default models: `gemini-4-neon-high` through agy, `gemini-4-neon` through the API; `--model` or `GEMINI_EDITORIAL_MODEL` selects another.
+
+## Limitations
+
+- One call per document (through the API, retried once on a server error or timeout), and texts over 150,000 characters are refused: split long documents by chapter.
+- Detailed language notes ship for Italian and English; other languages get the general rules.
+- Relative links, anchors, paths and numbers are asked of Gemini but not checked; headings and tables may be reordered or merged.
+
+## Configuration
+
+Settings live in a user file and an optional project file (`.gemini-editorial-review.json` at the repository root), and only the script writes them:
+
+```bash
+python3 <skill-dir>/scripts/gemini_editorial_review.py config set backend api
+python3 <skill-dir>/scripts/gemini_editorial_review.py config
+```
+
+`backend` is `auto` by default: `agy` when it is installed, the API otherwise. You can also set the model per backend and the timeout; `config` lists every value and where it comes from.

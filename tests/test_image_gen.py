@@ -283,6 +283,14 @@ class GoogleApiTest(unittest.TestCase):
                 self.assertEqual(urlopen.call_count, 1)        # no retry
                 self.assertFalse(self.out.exists())
 
+    def test_error_body_as_array_and_402_billing(self):
+        body = io.BytesIO(json.dumps([{"error": {"code": 402, "message": "Credits depleted."}}]).encode())
+        error = urllib.error.HTTPError("https://x", 402, "Payment Required", {}, body)
+        (code, _, err), _ = self.run_with([error])
+        self.assertEqual(code, 1)
+        self.assertIn("Credits depleted.", err)
+        self.assertIn("billing", err)
+
     def test_5xx_retried_once_then_reported(self):
         (code, _, err), urlopen = self.run_with([http_error(503), http_error(503)])
         self.assertEqual(code, 1)
