@@ -52,6 +52,7 @@ The plugin installs every skill, and you invoke them as `/skills:<name>` (for ex
 | [`gemini-web-research`](skills/gemini-web-research/SKILL.md) | Delegates web research to parallel Gemini jobs through the `agy` CLI. A script checks every claim's quote against the pages each job actually read. |
 | [`codex-image-gen`](skills/codex-image-gen/SKILL.md) | Generates or edits images through the `codex` CLI's built-in image tool, on the Codex login's quota and with no API key. |
 | [`google-image-gen`](skills/google-image-gen/SKILL.md) | Generates or edits images through the Google Gemini API with your own API key (`GEMINI_API_KEY`). |
+| [`gemini-translate`](skills/gemini-translate/SKILL.md) | Translates text and Markdown files through the Google Gemini API into any language and register (formal, professional, technical, informal), detecting the source language and checking that code, links and placeholders come through unchanged. Uses your own API key (`GEMINI_API_KEY`). |
 
 `spawn-session` was retired in 2.0.0. Its successor is the `session-hub` plugin ([MrBogomips/agent-orchestration](https://github.com/MrBogomips/agent-orchestration)): `/plugin install session-hub@mrbogomips`, then use `/session-hub:spawn`. A hub that pins this repository in a lock file keeps the old skill until it updates the pin.
 
