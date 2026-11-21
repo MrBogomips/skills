@@ -1,6 +1,6 @@
 # Editorial review guide
 
-This file is the system instruction that `scripts/gemini_editorial_review.py` sends to Gemini. The script sends
+This file is the system instruction that the script in `scripts/` sends to Gemini. The script sends
 `## Core rules`, `## LLM tells` and `## Workflow`, then either the single `### <profile>` that was asked for or,
 with the profile left to inference, every profile plus `## Profile inference`. It then adds the notes for the
 text's language from `languages/<code>.md` when that file exists, the house rules given with `--rules` (under
