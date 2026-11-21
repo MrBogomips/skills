@@ -4,13 +4,13 @@ summary: Pauses agentic work so that nothing runs or spends tokens while you are
 
 # pause
 
-`pause` suspends work in progress so that nothing is lost and nothing spends tokens while you are away, then picks it up again in the same session. It stops background work, writes a short checkpoint and, when the context is large, gives you a `/compact` line to run before you leave.
+`pause` suspends work in progress so nothing is lost and nothing spends tokens while you are away, then resumes it in the same session. It stops background work, writes a short checkpoint, and gives you a `/compact` command to run before you leave if the context is large.
 
 ## Why
 
-Leaving a session in the middle of a task has two costs. Loops, scheduled wakeups and background agents keep spending tokens while nobody is watching. And after a long pause the prompt cache has expired, so the first turn re-reads the whole context at full price.
+Leaving a session mid-task has two costs. Loops, scheduled wakeups, and background agents keep spending tokens while nobody is watching. After a long pause, the prompt cache also expires, so the first turn back re-reads the whole context at full price.
 
-`pause` stops what would run unattended and notes how to restart it, and has you compact while the cache is still warm, so the resume is cheap. Your working tree stays exactly as it is.
+`pause` stops anything that would run unattended and records how to restart it. It also has you compact while the cache is still warm, so resuming is cheap. Your working tree stays untouched.
 
 ## Installation
 
@@ -18,7 +18,7 @@ Leaving a session in the middle of a task has two costs. Loops, scheduled wakeup
 npx skills add MrBogomips/skills --skill pause
 ```
 
-It is the same skill as in the `skills` plugin, installed under the name `pause` instead of `skills:pause`.
+This installs the same skill included in the `skills` plugin, under the name `pause` instead of `skills:pause`.
 
 ## Usage
 
@@ -26,20 +26,20 @@ It is the same skill as in the `skills` plugin, installed under the name `pause`
 /skills:pause
 ```
 
-Or say it in words: "pause", "I must go". The report lists what was stopped, the path of the checkpoint and, if the context is large, the `/compact` line to run. The agent then does no further work.
+You can also trigger it in plain language, such as "pause" or "I must go". The agent lists what it stopped, the checkpoint path, and a `/compact` command to run if the context is large. After that, it does no further work.
 
-When you are back, say "resume". The agent reads the checkpoint, reports what changed in the repository meanwhile, restarts what it stopped and continues from the next step.
+When you return, say "resume". The agent reads the checkpoint, reports what changed in the repository while you were away, restarts what it stopped, and continues from the next step.
 
 ## Inputs and outputs
 
-The checkpoint is `pause-checkpoint.md`, in the session scratchpad or in the system temporary directory, never inside the repository.
+The checkpoint is written to `pause-checkpoint.md` in the session scratchpad or the system temporary directory, never inside the repository.
 
 ## Requirements
 
-Any agent harness. git is used when the work is in a repository. The compact step needs a harness with a `/compact` command (Claude Code, Codex) and is skipped elsewhere.
+`pause` works with any agent harness and uses git when the work is in a repository. The compact step requires a harness with a `/compact` command (Claude Code, Codex) and is skipped elsewhere.
 
 ## Limitations
 
-- It resumes in the same session. To move the work to another session or person, use `handoff`.
-- An agent cannot run `/compact` itself: you run the line it gives you.
-- Loops, crons and other scheduled tasks are re-created at resume only after you confirm.
+- Work can resume only in the same session. To move it to another session or person, use `handoff`.
+- An agent cannot run `/compact` itself; you run the command it gives you.
+- When you resume, loops, crons, and other scheduled tasks are re-created only after you confirm.
