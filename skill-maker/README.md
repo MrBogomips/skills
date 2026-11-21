@@ -4,27 +4,21 @@ summary: Opinionated Claude Code plugin for producing quality skills and plugins
 
 # skill-maker
 
-Tools for people who publish skills and plugins and want them to read as one catalog. The first skill
-checks and drafts the public `README.md` of a plugin and of each skill it ships.
+A Claude Code plugin for publishing skills and plugins that read as a single catalog. Its first skill checks and drafts the public `README.md` for a plugin and each skill it ships.
 
 ## Why
 
-`SKILL.md` and the manifest are written for agents. People deciding whether to install a plugin need
-a short page that says what it does and why it exists, and most plugins give each a different shape,
-or none for the single skills. `skill-maker` fixes one structure, checks it with scripts, and checks
-every statement against the component's own files. The contract is opinionated: installing the
-plugin means adopting it.
+`SKILL.md` and the manifest are written for agents. People deciding whether to install a plugin need a short page explaining what it does and why it exists, yet most plugins format their READMEs inconsistently or omit them for individual skills. `skill-maker` enforces one fixed contract, validates the structure with scripts, and verifies every statement against the component's own files. The contract is opinionated: installing the plugin means adopting it.
 
 ## Included components
 
 | Skill | What it does |
 |---|---|
-| [`skill-readme`](skills/skill-readme/README.md) | Checks and drafts the README of a plugin and of each skill it ships. |
+| [`skill-readme`](skills/skill-readme/README.md) | Checks and drafts the README for a plugin and each skill it ships. |
 
 ## Agents
 
-`readme-reviewer`: rereads each README in a fresh context and checks its facts against the sources,
-read-only.
+`readme-reviewer`: read-only agent that rereads each README in a fresh context and checks its facts against the source files.
 
 ## Installation
 
@@ -33,28 +27,27 @@ read-only.
 /plugin install skill-maker@mrbogomips
 ```
 
-**Standalone skills: no, plugin only.** The skill needs the plugin's scripts and reviewer agent.
+Standalone skill installation is not supported; the skill depends on the plugin's scripts and reviewer agent.
 
 ## Quick start
 
-From the folder of a plugin:
+From a plugin directory:
 
 ```text
 /skill-maker:skill-readme check .
 ```
 
-You get the components the plugin distributes and the review notes for each README. Nothing is
-written to disk.
+The command reports the plugin's distributed components and review notes for each README, without writing anything to disk.
 
 ## Requirements
 
-Python 3.9 or later as `python3`.
+Python 3.9 or later, available as `python3`.
 
 ## Limitations
 
-- One plugin at a time.
-- The contract is fixed, and READMEs are in English.
-- Facts are judged by a model, so that part of a check can vary between runs.
+- `skill-maker` handles one plugin at a time.
+- The contract is fixed, and only English READMEs are supported.
+- Fact-checking relies on a model, so those results can vary between runs.
 
 ## License
 

@@ -4,13 +4,13 @@ summary: Slims down and restructures a project's AGENTS.md and CLAUDE.md without
 
 # optimize-agents-md
 
-`optimize-agents-md` makes a project's instruction files (`AGENTS.md`, `CLAUDE.md`, nested ones, `.claude/rules`) cost less context on every run while they tell agents the same things. It removes history, settles conflicts with the project's skills, and moves detail that only some folders or tasks need into files that load on demand.
+`optimize-agents-md` trims and restructures a project's instruction files (`AGENTS.md`, `CLAUDE.md`, nested files, and `.claude/rules`) so they use less context on every run without changing what they tell agents. It removes history, resolves conflicts with the project's skills, and moves details needed only for specific folders or tasks into files that load on demand.
 
 ## Why
 
-Instruction files grow: history, rules that a skill already states, detail about one folder that every run pays for. Trimming them by hand risks dropping a rule.
+Over time, instruction files accumulate history, rules already covered by a skill, and details for a single folder that still load on every run. Trimming them by hand risks dropping a rule.
 
-This skill measures the lines and bytes each harness loads at start, before and after. It proposes every change as a diff you approve, and afterwards checks that no line was lost without approval. When the file is already lean it says so and invents no change.
+This skill measures how many lines and bytes each harness loads at startup, before and after. It proposes every change as a diff for you to approve, then checks that no line was dropped without approval. If the file is already lean, it says so and proposes no changes.
 
 ## Installation
 
@@ -18,7 +18,7 @@ This skill measures the lines and bytes each harness loads at start, before and 
 npx skills add MrBogomips/skills --skill optimize-agents-md
 ```
 
-It is the same skill as in the `skills` plugin, installed under the name `optimize-agents-md` instead of `skills:optimize-agents-md`.
+This installs the same skill included in the `skills` plugin, under the name `optimize-agents-md` instead of `skills:optimize-agents-md`.
 
 ## Usage
 
@@ -26,21 +26,25 @@ It is the same skill as in the `skills` plugin, installed under the name `optimi
 /skills:optimize-agents-md [--check] [--threshold N] [path]
 ```
 
-- `--check`: report and proposals only; change nothing.
-- `--threshold N`: the minimum size, in lines, of a block worth moving out of the root file (default 20).
-- `path`: the project root (default: the git root, or the current folder without git).
+| Argument | Description |
+| --- | --- |
+| `--check` | Report and proposals only; changes no files. |
+| `--threshold N` | Minimum size, in lines, of a block worth moving out of the root file (default: 20). |
+| `path` | Project root (default: the git root, or the current folder without git). |
+
+To preview the report without modifying files, run:
 
 ```text
 /skills:optimize-agents-md --check
 ```
 
-You get one report: the questions only you can answer, the lines and bytes loaded at start per harness before and after, and the numbered changes with their diffs. Without `--check`, the skill then applies only the changes you approve.
+Each run produces a single report containing the questions only you can answer, the lines and bytes each harness loads at startup before and after, and the numbered changes with their diffs. Without `--check`, the skill then applies only the changes you approve.
 
 ## Requirements
 
-An agent harness with a shell and file access, bash and the standard BSD or GNU tools. git is used when present.
+Requires an agent harness with shell and file access, bash, and the standard BSD or GNU tools. The skill uses git when present.
 
 ## Limitations
 
-- It does not create a first `AGENTS.md` (use `init-agents-md`) and does not port a Claude Code setup to Codex (use `port-to-agents`).
-- The files are revised in place, since they must keep their names to load: git keeps the previous version, and without git the skill keeps a copy of each file before editing it.
+- Does not create an initial `AGENTS.md` (use `init-agents-md`) or port a Claude Code setup to Codex (use `port-to-agents`).
+- Edits files in place because they must keep their names to load. When present, git keeps the previous version; without git, the skill saves a copy of each file before editing it.

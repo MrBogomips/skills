@@ -4,13 +4,13 @@ summary: Checks on evidence whether a work session meets its Definition of Done,
 
 # done
 
-`done` decides whether the work of a session is finished and proves it: every criterion is checked with a command or a file, never from memory. When the verdict allows it, the skill tidies the workspace: temporary files, merged branches, the local integration branch, the session title.
+`done` verifies whether a work session is finished by checking every criterion against a command or a file rather than memory. When the verdict allows, it cleans up temporary files, merged branches, the local integration branch, and the session title.
 
 ## Why
 
-An agent says "done" easily: the tests passed earlier, the pull request is still open, drafts are lying around. `done` gives you a verdict with its evidence (`NOT DONE` with what is missing, `DONE`, or `DONE, closable`) against criteria you own: `DoD.md` files in the repository, the project instructions, or a generic default.
+Agents are quick to call work done even when tests passed earlier, a pull request is still open, or drafts are lying around. `done` returns a verdict backed by evidence (`NOT DONE` with what is missing, `DONE`, or `DONE, closable`) evaluated against criteria you control: repository `DoD.md` files, project instructions, or a generic default.
 
-Cleanup removes only what is provably disposable. Merging needs your yes unless your root `DoD.md` authorizes it; deleting anything not proven merged always does.
+Cleanup removes only what is provably disposable. Merging requires your approval unless your root `DoD.md` authorizes it; deleting anything not proven merged always requires approval.
 
 ## Installation
 
@@ -18,7 +18,7 @@ Cleanup removes only what is provably disposable. Merging needs your yes unless 
 npx skills add MrBogomips/skills --skill done
 ```
 
-It is the same skill as in the `skills` plugin, installed under the name `done` instead of `skills:done`.
+This installs the same skill from the `skills` plugin, under the name `done` instead of `skills:done`.
 
 ## Usage
 
@@ -26,31 +26,35 @@ It is the same skill as in the `skills` plugin, installed under the name `done` 
 /skills:done [init [dir]] [--check] [free text]
 ```
 
-- No argument: evaluate, then clean up as far as the verdict allows.
-- `--check`: report the verdict and the cleanup that would run; change nothing.
-- `init [dir]`: create or revise the `DoD.md` of a directory (default: the repository root), without evaluating.
-- Free text amends this run only: "ignore the docs PR", "also delete the spike branch".
+| Argument | Behavior |
+| --- | --- |
+| None | Evaluate the session, then run the cleanup the verdict allows. |
+| `--check` | Report the verdict and planned cleanup without making changes. |
+| `init [dir]` | Create or revise `DoD.md` in a directory (default: repository root) without evaluating. |
+| Free text | Amend this run only: "ignore the docs PR" or "also delete the spike branch". |
 
-You can also ask in words: "are we done?", "finalize and cleanup".
+You can also invoke it in plain language, such as "are we done?" or "finalize and cleanup".
+
+Example:
 
 ```text
 /skills:done --check
 ```
 
-The reply has a fixed shape: the verdict, every condition with a check mark (passed, failed, not verifiable, not applicable) and its evidence, every cleanup action with its outcome (`OK`, `FAILED`, `SKIPPED`, `DECLINED`, `PENDING`), then at most one question that gathers every confirmation still needed.
+The response follows a fixed format: the verdict, each condition with its status mark (passed, failed, not verifiable, or not applicable) and evidence, each cleanup action with its outcome (`OK`, `FAILED`, `SKIPPED`, `DECLINED`, `PENDING`), and at most one question covering any remaining confirmations.
 
 ## Inputs and outputs
 
-`DoD.md` is optional. It has two sections: `## Requirements`, your checklist (one condition per item, sub-items under a shared trigger such as "At a release:"), and `## On Done`, the cleanup the file authorizes or switches off. The format is in [references/dod-file.md](references/dod-file.md).
+`DoD.md` is optional and contains two sections: `## Requirements` holds your checklist (one condition per item, with sub-items grouped under a shared trigger such as "At a release:"), and `## On Done` lists the cleanup actions the file authorizes or disables. See [references/dod-file.md](references/dod-file.md) for the format.
 
-The result is a short report in the conversation. `done` writes no file, except `DoD.md` with `init`, after you confirm.
+The output is a short report in the conversation. `done` writes no files unless you run `init`, which writes `DoD.md` only after you confirm.
 
 ## Requirements
 
-An agent harness with a shell. git is used when the work is in a repository, and the GitHub CLI (`gh`) when it is installed. Without them the related checks are reported as not verifiable.
+An agent harness with a shell is required. `done` uses git when the work is in a repository, and the GitHub CLI (`gh`) when installed. Without them, the related checks are reported as not verifiable.
 
 ## Limitations
 
-- It never commits, stashes, resets, force-pushes or rewrites history. Uncommitted work makes the verdict `NOT DONE`.
-- It judges only the work of the current session. Other stale branches are reported apart and do not change the verdict.
-- A criterion that cannot be checked (no `gh`, another forge, no network) does not fail the verdict, but rules out `DONE, closable`.
+- `done` never commits, stashes, resets, force-pushes, or rewrites history. Uncommitted work results in a `NOT DONE` verdict.
+- It evaluates only the work of the current session. Other stale branches are reported separately and do not affect the verdict.
+- A criterion that cannot be verified (no `gh`, another forge, or no network) does not fail the verdict but rules out `DONE, closable`.
