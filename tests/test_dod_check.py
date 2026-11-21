@@ -32,9 +32,16 @@ case "$command" in
         if [ -n "${GH_STUB_AUTH_ERROR:-}" ]; then echo "gh auth login required" >&2; exit 4; fi
         echo "no pull requests found for branch" >&2; exit 1 ;;
     "pr list")
+        if [ -n "${GH_STUB_LOG:-}" ]; then echo "pr list" >> "$GH_STUB_LOG"; fi
         if [ -n "${GH_STUB_MERGED_JSON:-}" ]; then printf '%s' "$GH_STUB_MERGED_JSON" | jq -r "$jq_expr"; exit $?; fi
         if [ -n "${GH_STUB_MERGED:-}" ]; then printf '%s\\n' "$GH_STUB_MERGED"; fi
         exit 0 ;;
+    "run list")
+        if [ -n "${GH_STUB_RUNS_JSON:-}" ]; then printf '%s' "$GH_STUB_RUNS_JSON" | jq -r "$jq_expr"; exit $?; fi
+        if [ -n "${GH_STUB_RUNS:-}" ]; then printf '%s\\n' "$GH_STUB_RUNS"; exit 0; fi
+        echo none; exit 0 ;;
+    "api graphql")
+        printf '%s\\n' "${GH_STUB_THREADS:-0}"; exit 0 ;;
 esac
 exit 1
 """
@@ -402,6 +409,19 @@ class GhQueries(DodCheckCase):
     def test_null_review_decision(self):
         self.assertEqual(self.view([], review=None)["pr_review"][0], "none")
 
+    def test_ci_head_classification(self):
+        cases = [
+            ([], "none"),
+            ([{"status": "completed", "conclusion": "success"}], "pass"),
+            ([{"status": "completed", "conclusion": "success"}, {"status": "in_progress", "conclusion": ""}], "pending"),
+            ([{"status": "completed", "conclusion": "failure"}], "fail"),
+            ([{"status": "completed", "conclusion": "skipped"}], "pass"),
+        ]
+        for runs, expected in cases:
+            with self.subTest(expected=expected):
+                self.use_stub_gh(GH_STUB_RUNS_JSON=json.dumps(runs))
+                self.assertEqual(self.run_script()["ci_head"][0], expected)
+
     def test_merged_list_query(self):
         self.git("checkout", "-q", "-b", "feature/done-one")
         self.write("one.txt")
@@ -431,28 +451,18 @@ class DodHierarchy(DodCheckCase):
         self.write("packages/api/src/deep/new file.ts")
         out = self.run_script()
         self.assertEqual(out["dod_files"][0], "2")
-        self.assertEqual(out["dod_files"][1], [
-            "  packages/api/DoD.md",
-            "    packages/api/src/deep/new file.ts",
-            "    packages/api/src/x.ts",
-            "  DoD.md",
-            "    README.md",
-        ])
+        self.assertEqual(out["dod_files"][1], ["  packages/api/DoD.md paths=2", "  DoD.md paths=1"])
         self.assertNotIn("no_dod_paths", out)
 
     def test_ancestor_dod_listed_even_without_nearest_paths(self):
         self.write("packages/api/src/x.ts", "changed\n")
         out = self.run_script()
-        self.assertEqual(out["dod_files"][1], [
-            "  packages/api/DoD.md",
-            "    packages/api/src/x.ts",
-            "  DoD.md",
-        ])
+        self.assertEqual(out["dod_files"][1], ["  packages/api/DoD.md paths=1", "  DoD.md paths=0"])
 
     def test_root_dod_reported_without_changes(self):
         out = self.run_script()
         self.assertEqual(out["changed_paths"][0], "0")
-        self.assertEqual(out["dod_files"][1], ["  DoD.md"])
+        self.assertEqual(out["dod_files"][1], ["  DoD.md paths=0"])
 
     def test_untracked_nested_repository_is_not_entered(self):
         nested = self.repo / "vendor" / "lib"
@@ -464,19 +474,18 @@ class DodHierarchy(DodCheckCase):
         self.git("commit", "-q", "-m", "nested", cwd=nested)
         out = self.run_script()
         self.assertEqual(self.items(out, "untracked"), ["vendor/lib/"])
-        self.assertEqual(out["dod_files"][1], ["  DoD.md", "    vendor/lib/"])
+        self.assertEqual(out["dod_files"][1], ["  DoD.md paths=1"])
 
     def test_rename_out_of_a_subtree_loads_its_dod(self):
         self.git("mv", "packages/api/src/x.ts", "moved.ts")
         out = self.run_script()
-        self.assertEqual(out["dod_files"][1], [
-            "  packages/api/DoD.md", "    packages/api/src/x.ts", "  DoD.md", "    moved.ts"])
+        self.assertEqual(out["dod_files"][1], ["  packages/api/DoD.md paths=1", "  DoD.md paths=1"])
 
     def test_deleted_file_in_removed_directory(self):
         self.git("rm", "-q", "-r", "packages/web")
         self.commit("drop web")
         out = self.run_script()
-        self.assertEqual(out["dod_files"][1], ["  DoD.md", "    packages/web/y.ts"])
+        self.assertEqual(out["dod_files"][1], ["  DoD.md paths=1"])
 
     def test_paths_without_any_dod(self):
         self.git("rm", "-q", "DoD.md")
@@ -485,7 +494,7 @@ class DodHierarchy(DodCheckCase):
         self.write("packages/web/y.ts", "changed\n")
         self.write("docs/guide.md", "changed\n")
         out = self.run_script()
-        self.assertEqual(out["dod_files"][1], ["  docs/DoD.md", "    docs/guide.md"])
+        self.assertEqual(out["dod_files"][1], ["  docs/DoD.md paths=1"])
         self.assertEqual(out["no_dod_paths"][0], "1")
         self.assertEqual(self.items(out, "no_dod_paths"), ["packages/web/y.ts"])
 
@@ -495,7 +504,7 @@ class DodHierarchy(DodCheckCase):
         self.git("push", "-q", "origin", "HEAD:main")
         self.write("packages/api/src/x.ts", "changed\n")
         out = self.run_script()
-        self.assertEqual(out["dod_files"][1][0], "  packages/api/DOD.md")
+        self.assertEqual(out["dod_files"][1][0], "  packages/api/DOD.md paths=1")
 
     def test_two_spellings_in_one_directory(self):
         probe = self.tmp / "CaseProbe"
@@ -505,6 +514,172 @@ class DodHierarchy(DodCheckCase):
         self.write("packages/api/dod.md")
         out = self.run_script()
         self.assertEqual(self.items(out, "dod_name_conflict"), ["packages/api"])
+
+
+class Extensions(DodCheckCase):
+    """head_tree, --since, debug markers, CI of HEAD, review threads, lazy merged-PR lookup."""
+
+    def test_head_tree_survives_a_new_commit_with_the_same_tree(self):
+        tree = self.run_script()["head_tree"][0]
+        self.git("commit", "-q", "--allow-empty", "-m", "empty")
+        self.assertEqual(self.run_script()["head_tree"][0], tree)
+        self.assertEqual(tree, self.git("rev-parse", "HEAD^{tree}"))
+
+    def test_since_adds_pushed_commits_on_the_integration_branch(self):
+        start = self.git("rev-parse", "HEAD")
+        self.write("pushed.txt")
+        self.commit("pushed work")
+        self.git("push", "-q", "origin", "main")
+        self.assertEqual(self.run_script()["changed_paths"][0], "0")
+        self.assertEqual(self.items(self.run_script("--since", start), "changed_paths"), ["pushed.txt"])
+        self.run_script("--since", "no-such-rev", expect=2)
+
+    def test_debug_markers_in_added_lines_only(self):
+        self.write("old.js", "console.log('kept')\n")
+        self.commit("old")
+        self.git("push", "-q", "origin", "main")
+        self.git("checkout", "-q", "-b", "feature/dbg")
+        self.write("a.js", "let x = 1;\nconsole.log(x);\ndebugger;\n")
+        self.commit("debug")
+        self.write("b.py", "import pdb; pdb.set_trace()\n")
+        out = self.run_script()
+        self.assertEqual(out["debug_markers"][0], "3")
+        self.assertEqual(self.items(out, "debug_markers"),
+                         ["a.js:2: console.log(x);", "a.js:3: debugger;", "b.py:1: import pdb; pdb.set_trace()"])
+
+    def test_ci_of_head_on_the_integration_branch(self):
+        self.use_stub_gh(GH_STUB_RUNS="fail")
+        out = self.run_script()
+        self.assertEqual(out["ci_head"][0], "fail")
+        self.assertEqual(out["gh"][0], "ok")
+        self.assertNotIn("pr_number", out)
+
+    def test_unresolved_threads_on_an_open_pr(self):
+        self.git("checkout", "-q", "-b", "feature/t")
+        head = self.git("rev-parse", "HEAD")
+        self.use_stub_gh(GH_STUB_PR_VIEW=f"3\tOPEN\tfalse\tAPPROVED\tpass\t{head}", GH_STUB_THREADS="2")
+        self.assertEqual(self.run_script()["pr_unresolved_threads"][0], "2")
+
+    def test_no_thread_query_on_a_merged_pr(self):
+        self.git("checkout", "-q", "-b", "feature/m")
+        head = self.git("rev-parse", "HEAD")
+        self.use_stub_gh(GH_STUB_PR_VIEW=f"3\tMERGED\tfalse\tAPPROVED\tpass\t{head}")
+        self.assertNotIn("pr_unresolved_threads", self.run_script())
+
+    def test_merged_pr_list_only_when_a_branch_needs_it(self):
+        log = self.tmp / "gh.log"
+        self.use_stub_gh(GH_STUB_LOG=str(log))
+        self.run_script()
+        self.assertFalse(log.exists())
+        self.git("branch", "feature/unmerged")
+        self.git("checkout", "-q", "feature/unmerged")
+        self.write("u.txt")
+        self.commit("u")
+        self.git("checkout", "-q", "main")
+        self.run_script()
+        self.assertEqual(log.read_text().split("\n")[0], "pr list")
+
+
+class Finish(DodCheckCase):
+    """--finish <topic>: switch, pull, delete local and remote, prune, then a fresh snapshot."""
+
+    def steps(self, out):
+        return {k: v[0] for k, v in out.items() if k.startswith("finish_")}
+
+    def topic(self, name="feature/f", push=True):
+        self.git("checkout", "-q", "-b", name)
+        self.write(name.replace("/", "-") + ".txt")
+        self.commit(name)
+        if push:
+            self.git("push", "-q", "-u", "origin", name)
+        return self.git("rev-parse", "HEAD")
+
+    def merge_on_remote(self, name):
+        self.git("push", "-q", "origin", f"{name}:main")
+
+    def test_ancestor_merge_closes_everything(self):
+        self.topic()
+        self.merge_on_remote("feature/f")
+        done = subprocess.run([BASH, str(SCRIPT), "--finish", "feature/f"], cwd=self.repo, env=self.env,
+                              capture_output=True, text=True)
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        lines = [l for l in done.stdout.splitlines() if l.startswith("finish_step:")]
+        self.assertEqual(lines, [
+            "finish_step: clean OK",
+            "finish_step: switch OK main",
+            "finish_step: pull OK",
+            "finish_step: delete_local OK via=ancestor",
+            "finish_step: delete_remote OK",
+            "finish_step: prune OK",
+        ])
+        out = parse(done.stdout)
+        self.assertEqual(out["branch"][0], "main")
+        self.assertEqual(out["fetch"][0], "skipped")
+        self.assertEqual(out["merged_branches"][0], "0")
+        self.assertEqual(self.git("ls-remote", "--heads", "origin", "feature/f"), "")
+
+    def test_squash_merge_uses_force_delete(self):
+        tip = self.topic(push=False)
+        self.git("checkout", "-q", "main")
+        self.write("squashed.txt")
+        self.commit("squash")
+        self.git("push", "-q", "origin", "main")
+        self.use_stub_gh(GH_STUB_MERGED=f"feature/f\t{tip}")
+        out = self.run_script("--finish", "feature/f")
+        self.assertIn("finish_step", out)
+        done = subprocess.run(["git", "rev-parse", "--verify", "--quiet", "refs/heads/feature/f"],
+                              cwd=self.repo, env=self.env, capture_output=True, text=True)
+        self.assertNotEqual(done.returncode, 0)
+
+    def test_remote_tip_that_moved_is_kept(self):
+        self.topic()
+        self.merge_on_remote("feature/f")
+        other = self.tmp / "other"
+        self.git("clone", "-q", "-b", "feature/f", str(self.remote), str(other), cwd=self.tmp)
+        self.write("more.txt", repo=other)
+        self.git("add", "-A", cwd=other)
+        self.git("commit", "-q", "-m", "more", cwd=other)
+        self.git("push", "-q", "origin", "feature/f", cwd=other)
+        done = subprocess.run([BASH, str(SCRIPT), "--finish", "feature/f"], cwd=self.repo, env=self.env,
+                              capture_output=True, text=True)
+        self.assertIn("finish_step: delete_remote SKIPPED remote tip differs from the deleted local tip",
+                      done.stdout)
+        self.assertNotEqual(self.git("ls-remote", "--heads", "origin", "feature/f"), "")
+
+    def test_not_merged_deletes_nothing(self):
+        self.topic()
+        done = subprocess.run([BASH, str(SCRIPT), "--finish", "feature/f"], cwd=self.repo, env=self.env,
+                              capture_output=True, text=True)
+        self.assertEqual(done.returncode, 1)
+        self.assertIn("finish_step: delete_local FAILED not provably merged", done.stdout)
+        self.git("rev-parse", "--verify", "refs/heads/feature/f")
+
+    def test_dirty_tree_stops_before_switching(self):
+        self.topic()
+        self.merge_on_remote("feature/f")
+        self.write("README.md", "dirty\n")
+        done = subprocess.run([BASH, str(SCRIPT), "--finish", "feature/f"], cwd=self.repo, env=self.env,
+                              capture_output=True, text=True)
+        self.assertEqual(done.returncode, 1)
+        self.assertIn("finish_step: clean FAILED", done.stdout)
+        self.assertEqual(self.git("branch", "--show-current"), "feature/f")
+
+    def test_non_fast_forward_pull_stops(self):
+        self.topic()
+        self.merge_on_remote("feature/f")
+        self.git("checkout", "-q", "main")
+        self.write("local-only.txt")
+        self.commit("diverge")
+        self.git("checkout", "-q", "feature/f")
+        done = subprocess.run([BASH, str(SCRIPT), "--finish", "feature/f"], cwd=self.repo, env=self.env,
+                              capture_output=True, text=True)
+        self.assertEqual(done.returncode, 1)
+        self.assertIn("finish_step: pull FAILED", done.stdout)
+        self.git("rev-parse", "--verify", "refs/heads/feature/f")
+
+    def test_integration_branch_is_refused(self):
+        self.run_script("--finish", "main", expect=2)
+        self.run_script("--finish", "no-such-branch", expect=2)
 
 
 if __name__ == "__main__":
