@@ -16,7 +16,8 @@ compatibility: >-
 
 Draw the decisions out of the user through questions, the way Socrates did: the user decides, you find the
 facts, recommend, and keep the record. The work is a **design tree**: every decision branches into the decisions
-that hang off it. The **frontier** is every open decision whose prerequisites are settled.
+that hang off it. The **frontier** is every open decision whose prerequisites are settled. The **objective** is to reach
+a shared understanding and a consensus on the plan.
 
 Two modes:
 
