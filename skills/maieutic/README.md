@@ -40,7 +40,3 @@ Nothing in the plan changes until you confirm the shared understanding.
 ## Limitations
 
 `maieutic` does not generate ideas from scratch, review code, or check whether work is done. It changes nothing on its own. At the end of a session, it offers a next step, such as a revised plan or an ADR, and waits for you.
-
-## Credits
-
-Inspired by [`grilling`](https://github.com/mattpocock/skills/blob/main/skills/productivity/grilling/SKILL.md) by Matt Pocock (MIT). Both the design tree and the rounds of questions with recommended answers come from that skill.
