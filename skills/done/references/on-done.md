@@ -1,9 +1,18 @@
 # On-done treatments
 
 Run them only after the gate, in this order; skip what does not apply. Each one is one line of the report's
-*Actions*. A treatment that fails is reported with its error: never retry with a stronger command. The root
-`DoD.md` *On Done* section can add treatments, authorize what otherwise needs a yes, or switch one off; nested
-files act on their own subtree, before the root's lines.
+*Actions*. A treatment that fails is reported with its error: never retry with a stronger command.
+
+The `On Done` section of the `DoD.md` changes them. Lines with a defined meaning; other sentences are
+instructions, within the skill's safety rules:
+
+| Line | Effect |
+|---|---|
+| `Delete without asking: <patterns>` | matching untracked files are deleted without a yes |
+| `Merge approved pull requests: yes[, <method>]` | an approved, ready pull request is merged without a yes |
+| `Never touch: <things>` | no treatment touches the named branches, files or directories |
+| `Run: <command>` | runs after the default treatments, from the repository root |
+| `Do not <default treatment>` | switches it off, e.g. "Do not delete remote branches" |
 
 Collect every yes the treatments need into **one** question at the end of the report; run the confirmed ones
 after the answer and report them then.
@@ -11,7 +20,7 @@ after the answer and report them then.
 ## 1. Temporary files
 
 Candidates: files the session created as drafts, scratch or intermediate output (inside or outside the
-repository), and untracked files matching a `Delete without asking` pattern of a governing `DoD.md`. Never:
+repository), and untracked files matching a `Delete without asking` pattern. Never:
 tracked files, anything under `Never touch`, files neither created by the session nor matched by a pattern.
 
 Pattern matches and the session's own scratch go without asking. Other files need a yes. Something the user may
@@ -19,9 +28,8 @@ still want (a plan, a design, notes) is offered for keeping, not deleting.
 
 ## 2. Merge an approved pull request
 
-Condition: `pr_state: OPEN`, `pr_review: APPROVED`, `pr_checks: pass` or `none`, `pr_draft: false`,
-`pr_head_matches: yes`, `pr_unresolved_threads: 0`. Authorized by the root `DoD.md`: `gh pr merge <n>` with
-the method it names. Otherwise it needs a yes.
+Condition: `pr_ready: yes` and `pr_review: APPROVED`. Authorized by the `DoD.md`: `gh pr merge <n>` with the
+method it names. Otherwise it needs a yes.
 
 ## 3. Close the merged branch
 
@@ -44,7 +52,7 @@ Branches under `merged_branches` that are not this session's: list them in the f
 
 ## 5. Project commands
 
-`Run:` lines of the governing `DoD.md` files, most specific first, each from its file's directory.
+The `Run:` lines and the other instructions of `On Done`, in file order, from the repository root.
 
 ## 6. Session title
 

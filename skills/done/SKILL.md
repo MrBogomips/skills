@@ -1,14 +1,16 @@
 ---
 name: done
 description: >-
-  Checks on evidence whether a work session is done against a Definition of Done (DoD.md files, project
-  instructions or a generic default), then tidies up: temporary files, merged branches, the local integration
-  branch, the session title. Use when the user asks whether the work is done, or to finalize, wrap up, clean up
-  or close the session ("finalize and cleanup", "are we done?", "chiudiamo"), or to create or revise a DoD.md.
+  Checks on evidence whether a work session is done against a Definition of Done (the repository's DoD.md,
+  project instructions or a generic default), then tidies up: temporary files, merged branches, the local
+  integration branch, the session title. Use when the user asks whether the work is done, or to finalize, wrap
+  up, clean up or close the session ("finalize and cleanup", "are we done?", "chiudiamo"), or to create or
+  revise a DoD.md.
 license: MIT
 compatibility: >-
   Any agent harness with a shell. Uses git when the work is in a repository and the GitHub CLI (gh) when it is
   installed; without them the related checks are reported as not verifiable.
+model: sonnet
 ---
 
 # Done
@@ -20,68 +22,87 @@ disposable. Be fast: one snapshot, batched commands, at most one question at the
 ## Invocation
 
 ```text
-done [init [dir]] [--check] [free text]
+done [init] [--check] [free text]
 ```
 
 - No argument: evaluate, then run the treatments the verdict allows.
 - `--check`: report the verdict and the treatments that would run; change nothing.
-- `init [dir]`: create or revise a `DoD.md`, without evaluating: follow [references/init.md](references/init.md).
+- `init`: create or revise the `DoD.md`, without evaluating: follow [references/init.md](references/init.md).
 - Free text amends this run only: "ignore the docs PR", "also delete the spike branch".
 
 ## The Definition of Done
 
-Highest priority first: what the user said in this session; the `DoD.md` files the snapshot lists under
-`dod_files` (read them from disk now); done criteria in the project instructions or the conversation; the
-generic DoD in [references/default-dod.md](references/default-dod.md).
+Three parts, evaluated and reported in this order. What the user said in this session overrides them; the
+project's safety and git rules always hold.
 
-- A `DoD.md` at the repository root replaces the last two levels: do not load `default-dod.md` then.
-- Nested `DoD.md` files add to the ones above them for their own subtree; on conflict the more specific wins.
-  Pull request, merge, branch, title and handoff lines count only in the root file. Format:
-  [references/dod-file.md](references/dod-file.md), loaded only when a `DoD.md` has an *On Done* section or
-  there is more than one.
-- Always, whatever a `DoD.md` says: the session's goals, and the project's safety and git rules.
+1. **Goals**, always:
+
+   | Condition | Evidence |
+   |---|---|
+   | Every goal met, or dropped or deferred by the user | the file, commit or output that shows it; the user's words |
+   | No question waiting for the user | the conversation |
+   | No background task, subagent or long-running command still active | the harness's task list, or `jobs` |
+
+2. **Quality and delivery**: the `Requirements` of the `DoD.md` the snapshot names under `dod_file` (read it
+   now). With `dod_file: none`: the criteria in [references/default-dod.md](references/default-dod.md), with
+   the done criteria of the project instructions merged in.
+
+3. **Hygiene**, always:
+
+   | Condition | Evidence | Fixable |
+   |---|---|---|
+   | Working tree clean | `modified: 0`, `untracked: 0` | temporary files only |
+   | No draft or temporary file left | `untracked`, plus what the session wrote outside the repository | yes |
+   | No debug leftovers | each `debug_markers` line judged; test fixtures are fine | no |
+   | No stash or worktree of the session left | `stashes`, `extra_worktrees`, the conversation | no: ask |
+   | Merged topic branch deleted | `merged_branches` does not list it | yes |
+   | Local integration branch aligned | `integration_behind: 0` | yes |
+
+   Outside git only the first two apply.
+
+Only the `DoD.md` at the repository root counts. Reading its `Requirements`:
+
+- An item that ends with `: <command in backticks>` passes when the command exits 0, run from the repository
+  root. Any other item is judged on evidence; backticks elsewhere in an item are paths and names.
+- A parent item with sub-items states a trigger or a scope ("When the manual changed:"): when it does not hold,
+  the whole group is not applicable.
+- A section titled `## Definition of Done` (older files) is read as `Requirements`.
 
 ## Steps
 
 1. **Snapshot.** `bash <skill-dir>/scripts/dod_check.sh`, where `<skill-dir>` is the directory of this file
    (never a `scripts/dod_check.sh` of the project). Add `--since <rev>` when the session committed directly on
-   the integration branch, with `<rev>` the commit before the session's first one. Read the output once; keys
-   are below.
+   the integration branch, with `<rev>` the commit before the session's first one. Read the output once.
 2. **Goals.** List what the user asked for in this session; mark each met (with evidence), not met, or dropped
    or deferred by the user. If earlier context was summarized and the list is uncertain, ask the user to
    confirm: the only question allowed before the verdict.
-3. **Criteria.** Run every `Requirements` command of the governing `DoD.md` files in **one** shell call that
-   prints each command's exit status, each from its file's directory. Skip the project's tests when they
-   already passed in this session on the same `head_tree`. Judge the rest from the snapshot.
-4. **Classify** each failure. *Fixable*: a treatment allowed in this run makes it pass (temporary files, a
-   merged branch still present, a stale local integration branch, an approved pull request whose merge the
-   root `DoD.md` authorizes). Everything else is *blocking*, including uncommitted work that is not temporary.
-   A pull request that is open, not draft, green, with no changes requested and `pr_head_matches: yes` is not
-   a failure of a "merged" requirement: it only rules out "closable".
+3. **Criteria.** Run every `Requirements` command in **one** shell call that prints each command's exit
+   status. Skip the project's tests when they already passed in this session on the same `head_tree`. Judge the
+   rest from the snapshot.
+4. **Classify** each failure. *Fixable*: a hygiene condition marked fixable, or a pull request with
+   `pr_ready: yes` and `pr_review: APPROVED` whose merge the `DoD.md` authorizes. Everything else is
+   *blocking*. An open pull request with `pr_ready: yes` is not a failure of a "merged" requirement: it only
+   rules out "closable".
 5. **Gate.** Any blocking failure: NOT DONE, no treatment. With `--check`: report and stop.
 6. **Treat**, following [references/on-done.md](references/on-done.md). The `--finish` output is the new
    snapshot: no other re-evaluation is needed.
-7. **Report**, exactly as in [references/report.md](references/report.md).
+7. **Report**, in the format below.
 
 Judge only this session's work: its branches, its pull requests, the files it created. Other stale items are
 listed apart and never change the verdict.
 
-## Snapshot keys
+## Snapshot keys that need care
 
-| Key | Use |
+| Key | Meaning |
 |---|---|
 | `fetch: failed`, `gh` not `ok`, `forge: unknown` | remote facts are *not verifiable*: no "closable" |
 | `head_tree` | identity of the tested content: same tree, no need to rerun tests |
-| `upstream`, `ahead`, `behind`, `integration_behind` | pushed? local integration branch stale? |
-| `modified`, `untracked`, `stashes`, `extra_worktrees` | working tree state; stashes and worktrees may not be the session's |
 | `ci_head` | on the integration branch: CI of `HEAD` (`pass`, `fail`, `pending`, `none`) |
-| `pr_number` … `pr_checks`, `pr_unresolved_threads` | the current branch's latest pull request |
-| `pr_head_matches` | `no`: the pull request describes an earlier state; the new commits are undelivered |
+| `pr_head_matches: no` | the pull request describes an earlier state; the new commits are undelivered |
+| `pr_ready` | open pull request: `yes` when it is not a draft, has the current `HEAD`, checks `pass` or `none`, no changes requested and no unresolved thread; `no (<what is in the way>)` |
 | `merged_branches` | local branches safe to delete (`via=ancestor` or `via=pr`, `remote=yes`, `current=yes`) |
 | `changed_paths` | the session's work: changes since the merge base (and `--since`), plus local changes |
-| `debug_markers` | added lines that look like debug leftovers: judge each, test fixtures are fine |
-| `dod_files` | governing `DoD.md` files, most specific first, with how many changed paths each governs |
-| `no_dod_paths`, `dod_name_conflict` | paths with no `DoD.md` above them; two spellings in one directory: ask |
+| `stashes`, `extra_worktrees` | may not be the session's |
 
 ## Verdicts
 
@@ -91,26 +112,73 @@ listed apart and never change the verdict.
 | **DONE** | everything passes, but something can still come back (pull request awaiting review or merge), residual work exists, or a criterion is not verifiable |
 | **DONE, closable** | everything passes and nothing can come back |
 
-A treatment that fails or that the user declines leaves its criterion failing: NOT DONE when it comes from a
-`DoD.md`, quality or delivery; DONE without "closable" for a generic hygiene item.
+A treatment that fails or that the user declines leaves its criterion failing: NOT DONE for a goal, quality or
+delivery criterion; DONE without "closable" for a hygiene one.
 
 ## Safety
 
 - Merging, deleting a remote branch that is not provably merged, and deleting files outside an authorized
   pattern each need the user's yes in this session.
-- Never commit, stash, reset, force-push or rewrite history. Uncommitted work is blocking; offer to commit it
-  as a separate step.
-- Delete only untracked files the session created, or that match a `Delete without asking` pattern of a
-  governing `DoD.md` in that file's subtree. Never tracked files.
+- Never commit, stash, reset, force-push or rewrite history. Uncommitted work that is not temporary is
+  blocking; offer to commit it as a separate step.
+- Delete only untracked files the session created, or that match a `Delete without asking` pattern of the
+  `DoD.md`. Never tracked files.
 - Delete a branch only through `--finish` or when `merged_branches` lists it. `pr_state: MERGED` with
   `pr_head_matches: no` deletes nothing.
-- Run a project command only when a `DoD.md` names it; confirm first one that acts outside the work tree or on
-  a service other than the forge.
+- Run a project command only when the `DoD.md` names it; confirm first one that acts outside the work tree or
+  on a service other than the forge.
 
-## Common mistakes
+## Report
 
-| Mistake | Instead |
-|---|---|
-| "Tests passed earlier" | cite the run on the same `head_tree`, or run them |
-| Stopping at NOT DONE for leftover drafts | drafts are fixable: delete them, then report |
-| `DONE-<current title>` with the placeholder left in, or "title updated" with no confirmation | the real title; a marker or a printed command is `PENDING` |
+Always this format, in the conversation's language. The marks and outcomes never change.
+
+```text
+<VERDICT>[ (--check)]
+
+<Conditions heading>
+<mark> <condition> (<source>) — <evidence>[ → <next action>]
+
+<Actions heading>
+<action>: <OUTCOME>[ — <details>]
+
+[<Residual heading>
+- <item>]
+
+[<one question collecting every yes still needed>]
+```
+
+- **Conditions**: every condition of the three parts, one line each, in their order (`Requirements` in file
+  order). Source: `session`, `DoD.md`, `instructions` or `default`. A group of sub-items is one line per
+  sub-item, prefixed with its trigger or scope; a group whose trigger does not hold is a single ➖ line.
+  Marks: ✅ passed; ❌ failed, with `→` the next action; ⚠️ not verifiable, with why and `→` how to make it
+  verifiable; ➖ not applicable, or not evaluated because the gate stopped the run.
+- **Actions**: every treatment of `on-done.md`, in its order, one line each. Outcomes: `OK`; `FAILED` with the
+  error; `SKIPPED` (not needed or not allowed) with why; `DECLINED` by the user; `PENDING` (waiting for the
+  user or for the next message); `WOULD RUN` only with `--check`. When the gate stopped the run, a single
+  line: `None: the gate stopped the treatments (<n> failed)`.
+- **Residual**: only when there is some (deferred goals, undelivered commits, assumptions the agent made).
+- **Question**: at most one, at the end, grouping every confirmation (files to delete, other branches, the
+  `DoD.md` offer after a run with `dod_file: none`, handoff). Nothing else is asked after the verdict.
+- A session title set by printing a command: that command is the very last line.
+
+```text
+DONE, closable
+
+Conditions
+✅ Goal: fix the login redirect (session) — PR #23
+✅ Tests pass (DoD.md) — `npm test` exit 0
+✅ Pull request merged into main (DoD.md) — #23 MERGED, pr_head_matches: yes
+✅ Working tree clean (default) — modified: 0, untracked: 0
+✅ No debug leftovers (default) — debug_markers: 0
+
+Actions
+Temporary files: SKIPPED — none
+Merge pull request: SKIPPED — already merged
+Close branch fix/login: OK — main pulled, local -D (via=pr), remote deleted
+Other merged branches: PENDING — feature/old: asked below
+Project commands: OK — scripts/sync.sh exit 0
+Session title: PENDING — DONE-ACME-API-Fixing-Login, applied at your next message
+Handoff: SKIPPED — no residual work
+
+Delete the merged branch feature/old, which is not from this session? (yes/no)
+```

@@ -125,8 +125,7 @@ class RepositoryState(DodCheckCase):
         out = self.run_script(cwd=plain)
         self.assertEqual(out["git"][0], "no")
         self.assertEqual(out["root"][0], str(plain))
-        self.assertEqual(out["dod_files"][0], "1")
-        self.assertEqual(self.items(out, "dod_files"), ["DoD.md"])
+        self.assertEqual(out["dod_file"][0], "DoD.md")
         self.assertNotIn("branch", out)
 
     def test_clean_pushed_repository(self):
@@ -136,7 +135,7 @@ class RepositoryState(DodCheckCase):
             "remote": "origin", "fetch": "ok", "upstream": "origin/main", "ahead": "0", "behind": "0",
             "integration_behind": "0", "modified": "0", "untracked": "0", "stashes": "0",
             "extra_worktrees": "0", "forge": "unknown", "merged_branches": "0",
-            "changed_paths": "0", "dod_files": "0",
+            "changed_paths": "0", "dod_file": "none",
         }
         for key, value in expected.items():
             self.assertEqual(out[key][0], value, key)
@@ -432,88 +431,36 @@ class GhQueries(DodCheckCase):
         self.assertEqual(self.items(self.run_script(), "merged_branches"), ["feature/done-one remote=no via=pr"])
 
 
-class DodHierarchy(DodCheckCase):
-    def setUp(self):
-        super().setUp()
-        for rel in ("DoD.md", "packages/api/DoD.md", "docs/DoD.md"):
-            self.write(rel, "# Definition of Done\n")
-        self.write("packages/api/src/x.ts")
-        self.write("packages/web/y.ts")
-        self.write("docs/guide.md")
-        self.commit("layout")
+class DodFile(DodCheckCase):
+    """Only the DoD file at the repository root counts."""
+
+    def test_root_file_reported_without_changes(self):
+        self.write("DoD.md", "# Definition of Done\n")
+        self.commit("dod")
         self.git("push", "-q", "origin", "main")
-        self.git("checkout", "-q", "-b", "feature/h")
-
-    def test_chain_most_specific_first(self):
-        self.write("packages/api/src/x.ts", "changed\n")
-        self.write("README.md", "changed\n")
-        self.commit("work")
-        self.write("packages/api/src/deep/new file.ts")
-        out = self.run_script()
-        self.assertEqual(out["dod_files"][0], "2")
-        self.assertEqual(out["dod_files"][1], ["  packages/api/DoD.md paths=2", "  DoD.md paths=1"])
-        self.assertNotIn("no_dod_paths", out)
-
-    def test_ancestor_dod_listed_even_without_nearest_paths(self):
-        self.write("packages/api/src/x.ts", "changed\n")
-        out = self.run_script()
-        self.assertEqual(out["dod_files"][1], ["  packages/api/DoD.md paths=1", "  DoD.md paths=0"])
-
-    def test_root_dod_reported_without_changes(self):
         out = self.run_script()
         self.assertEqual(out["changed_paths"][0], "0")
-        self.assertEqual(out["dod_files"][1], ["  DoD.md paths=0"])
+        self.assertEqual(out["dod_file"][0], "DoD.md")
 
-    def test_untracked_nested_repository_is_not_entered(self):
-        nested = self.repo / "vendor" / "lib"
-        nested.mkdir(parents=True)
-        self.git("init", "-q", "-b", "main", str(nested))
-        self.write("vendor/lib/DoD.md")
-        self.write("vendor/lib/a.txt")
-        self.git("add", "-A", cwd=nested)
-        self.git("commit", "-q", "-m", "nested", cwd=nested)
-        out = self.run_script()
-        self.assertEqual(self.items(out, "untracked"), ["vendor/lib/"])
-        self.assertEqual(out["dod_files"][1], ["  DoD.md paths=1"])
-
-    def test_rename_out_of_a_subtree_loads_its_dod(self):
-        self.git("mv", "packages/api/src/x.ts", "moved.ts")
-        out = self.run_script()
-        self.assertEqual(out["dod_files"][1], ["  packages/api/DoD.md paths=1", "  DoD.md paths=1"])
-
-    def test_deleted_file_in_removed_directory(self):
-        self.git("rm", "-q", "-r", "packages/web")
-        self.commit("drop web")
-        out = self.run_script()
-        self.assertEqual(out["dod_files"][1], ["  DoD.md paths=1"])
-
-    def test_paths_without_any_dod(self):
-        self.git("rm", "-q", "DoD.md")
-        self.commit("no root dod")
-        self.git("push", "-q", "origin", "HEAD:main")
-        self.write("packages/web/y.ts", "changed\n")
-        self.write("docs/guide.md", "changed\n")
-        out = self.run_script()
-        self.assertEqual(out["dod_files"][1], ["  docs/DoD.md paths=1"])
-        self.assertEqual(out["no_dod_paths"][0], "1")
-        self.assertEqual(self.items(out, "no_dod_paths"), ["packages/web/y.ts"])
+    def test_file_in_a_subdirectory_is_ignored(self):
+        self.write("packages/api/DoD.md", "# Definition of Done\n")
+        self.write("packages/api/src/x.ts")
+        out = self.run_script(cwd=self.repo / "packages" / "api")
+        self.assertEqual(out["dod_file"][0], "none")
 
     def test_case_variant_name_is_honored(self):
-        self.git("mv", "packages/api/DoD.md", "packages/api/DOD.md")
-        self.commit("rename")
-        self.git("push", "-q", "origin", "HEAD:main")
-        self.write("packages/api/src/x.ts", "changed\n")
-        out = self.run_script()
-        self.assertEqual(out["dod_files"][1][0], "  packages/api/DOD.md paths=1")
+        self.write("DOD.md", "# Definition of Done\n")
+        self.assertEqual(self.run_script()["dod_file"][0], "DOD.md")
 
-    def test_two_spellings_in_one_directory(self):
+    def test_two_spellings_prefer_the_canonical_name(self):
         probe = self.tmp / "CaseProbe"
         probe.touch()
         if (self.tmp / "caseprobe").exists():
             self.skipTest("case-insensitive filesystem")
-        self.write("packages/api/dod.md")
-        out = self.run_script()
-        self.assertEqual(self.items(out, "dod_name_conflict"), ["packages/api"])
+        self.write("DOD.md")
+        self.write("DoD.md")
+        self.write("dod.md")
+        self.assertEqual(self.run_script()["dod_file"][0], "DoD.md")
 
 
 class Extensions(DodCheckCase):
@@ -539,7 +486,7 @@ class Extensions(DodCheckCase):
         self.commit("old")
         self.git("push", "-q", "origin", "main")
         self.git("checkout", "-q", "-b", "feature/dbg")
-        self.write("a.js", "let x = 1;\nconsole.log(x);\ndebugger;\n")
+        self.write("a.js", "let x = 1;\nconsole.log(x);\ndebugger;\n// TODO: later\n")
         self.commit("debug")
         self.write("b.py", "import pdb; pdb.set_trace()\n")
         out = self.run_script()
@@ -558,13 +505,30 @@ class Extensions(DodCheckCase):
         self.git("checkout", "-q", "-b", "feature/t")
         head = self.git("rev-parse", "HEAD")
         self.use_stub_gh(GH_STUB_PR_VIEW=f"3\tOPEN\tfalse\tAPPROVED\tpass\t{head}", GH_STUB_THREADS="2")
-        self.assertEqual(self.run_script()["pr_unresolved_threads"][0], "2")
+        out = self.run_script()
+        self.assertEqual(out["pr_unresolved_threads"][0], "2")
+        self.assertEqual(out["pr_ready"][0], "no (unresolved threads 2)")
+
+    def test_pr_ready(self):
+        self.git("checkout", "-q", "-b", "feature/r")
+        head = self.git("rev-parse", "HEAD")
+        cases = {
+            f"3\tOPEN\tfalse\t\tpass\t{head}": "yes",
+            f"3\tOPEN\tfalse\tAPPROVED\tnone\t{head}": "yes",
+            f"3\tOPEN\ttrue\t\tpending\t{head}": "no (draft, checks pending)",
+            f"3\tOPEN\tfalse\tCHANGES_REQUESTED\tfail\tother": "no (head differs, checks fail, changes requested)",
+        }
+        for line, expected in cases.items():
+            self.use_stub_gh(GH_STUB_PR_VIEW=line)
+            self.assertEqual(self.run_script()["pr_ready"][0], expected, line)
 
     def test_no_thread_query_on_a_merged_pr(self):
         self.git("checkout", "-q", "-b", "feature/m")
         head = self.git("rev-parse", "HEAD")
         self.use_stub_gh(GH_STUB_PR_VIEW=f"3\tMERGED\tfalse\tAPPROVED\tpass\t{head}")
-        self.assertNotIn("pr_unresolved_threads", self.run_script())
+        out = self.run_script()
+        self.assertNotIn("pr_unresolved_threads", out)
+        self.assertNotIn("pr_ready", out)
 
     def test_merged_pr_list_only_when_a_branch_needs_it(self):
         log = self.tmp / "gh.log"

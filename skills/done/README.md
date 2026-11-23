@@ -8,7 +8,7 @@ summary: Checks on evidence whether a work session meets its Definition of Done,
 
 ## Why
 
-Agents are quick to call work done even when tests passed earlier, a pull request is still open, or drafts are lying around. `done` returns a verdict backed by evidence (`NOT DONE` with what is missing, `DONE`, or `DONE, closable`) evaluated against criteria you control: repository `DoD.md` files, project instructions, or a generic default.
+Agents are quick to call work done even when tests passed earlier, a pull request is still open, or drafts are lying around. `done` returns a verdict backed by evidence (`NOT DONE` with what is missing, `DONE`, or `DONE, closable`) evaluated against criteria you control: the repository's `DoD.md`, project instructions, or a generic default.
 
 Cleanup removes only what is provably disposable. Merging requires your approval unless your root `DoD.md` authorizes it; deleting anything not proven merged always requires approval.
 
@@ -23,14 +23,14 @@ This installs the same skill from the `skills` plugin, under the name `done` ins
 ## Usage
 
 ```text
-/skills:done [init [dir]] [--check] [free text]
+/skills:done [init] [--check] [free text]
 ```
 
 | Argument | Behavior |
 | --- | --- |
 | None | Evaluate the session, then run the cleanup the verdict allows. |
 | `--check` | Report the verdict and planned cleanup without making changes. |
-| `init [dir]` | Create or revise `DoD.md` in a directory (default: repository root) without evaluating. |
+| `init` | Create or revise the `DoD.md` at the repository root without evaluating. |
 | Free text | Amend this run only: "ignore the docs PR" or "also delete the spike branch". |
 
 You can also invoke it in plain language, such as "are we done?" or "finalize and cleanup".
@@ -45,7 +45,7 @@ The response follows a fixed format: the verdict, each condition with its status
 
 ## Inputs and outputs
 
-`DoD.md` is optional and contains two sections: `## Requirements` holds your checklist (one condition per item, with sub-items grouped under a shared trigger such as "At a release:"), and `## On Done` lists the cleanup actions the file authorizes or disables. See [references/dod-file.md](references/dod-file.md) for the format.
+`DoD.md` is optional, lives at the repository root and contains two sections: `## Requirements` holds your checklist (one condition per item, with sub-items grouped under a shared trigger such as "At a release:"), and `## On Done` lists the cleanup actions the file authorizes or disables. See [references/init.md](references/init.md) for the format.
 
 The output is a short report in the conversation. `done` writes no files unless you run `init`, which writes `DoD.md` only after you confirm.
 

@@ -67,52 +67,14 @@ print_counted() {
     print_list "  " "$2"
 }
 
-# Prints the DoD file names (any letter case) found in directory $1, one per line.
-dod_names() {
-    ls -1a "$1" 2>/dev/null | grep -i '^dod\.md$' | while IFS= read -r name; do
+# Prints the name of the DoD file of directory $1: `DoD.md`, else the first other spelling
+# (DOD.md, dod.md, ...). Prints nothing when there is none.
+dod_file() {
+    local names
+    names="$(ls -1a "$1" 2>/dev/null | grep -i '^dod\.md$' | while IFS= read -r name; do
         [ -f "$1/$name" ] && echo "$name"
-    done
-}
-
-# Reads changed paths from file $1 (relative to $ROOT) and prints the DoD files that govern them,
-# most specific first, each with the number of changed paths it is the nearest file for.
-report_dod_files() {
-    local changed="$1" dir names
-    : > "$WORK/map"; : > "$WORK/conflicts"
-    # An entry ending in "/" is an untracked nested repository: it counts as one path and is not entered.
-    # The root is always looked at, so its DoD file is reported even when nothing changed.
-    awk '{ p = $0; sub(/\/$/, "", p); while (match(p, /\/[^\/]*$/)) { p = substr(p, 1, RSTART - 1); print p } }
-         END { print "." }' "$changed" | LC_ALL=C sort -u > "$WORK/dirs"
-    while IFS= read -r dir; do
-        [ -d "$ROOT/$dir" ] || continue
-        names="$(dod_names "$ROOT/$dir")"
-        [ -n "$names" ] || continue
-        printf '%s\t%s\n' "$dir" "$(printf '%s\n' "$names" | head -1)" >> "$WORK/map"
-        [ "$(printf '%s\n' "$names" | wc -l | tr -d ' ')" -gt 1 ] && echo "$dir" >> "$WORK/conflicts"
-    done < "$WORK/dirs"
-
-    # nearest: "<dod file>\t<path>" for each path with a governing file; orphans: the other paths.
-    awk -F'\t' -v orphans="$WORK/orphans" '
-        NR == FNR { file[$1] = ($1 == "." ? $2 : $1 "/" $2); next }
-        {
-            p = $0; found = ""; sub(/\/$/, "", p)
-            while (match(p, /\/[^\/]*$/)) { p = substr(p, 1, RSTART - 1); if (p in file) { found = file[p]; break } }
-            if (found == "" && ("." in file)) found = file["."]
-            if (found == "") print $0 > orphans; else print found "\t" $0
-        }
-    ' "$WORK/map" "$changed" > "$WORK/nearest"
-    [ -f "$WORK/orphans" ] || : > "$WORK/orphans"
-
-    # Most specific first: deeper directories before their ancestors.
-    awk -F'\t' '{ f = ($1 == "." ? $2 : $1 "/" $2); n = gsub(/\//, "/", $1); if ($1 == ".") n = -1; print n "\t" f }' \
-        "$WORK/map" | LC_ALL=C sort -t "$TAB" -k1,1nr -k2,2 | cut -f2- > "$WORK/dods"
-
-    echo "dod_files: $(count "$WORK/dods")"
-    while IFS= read -r dod; do
-        echo "  $dod paths=$(awk -F'\t' -v d="$dod" '$1 == d' "$WORK/nearest" | wc -l | tr -d ' ')"
-    done < "$WORK/dods"
-    if [ -s "$WORK/orphans" ] && [ -s "$WORK/dods" ]; then print_counted no_dod_paths "$WORK/orphans"; fi
-    if [ -s "$WORK/conflicts" ]; then print_counted dod_name_conflict "$WORK/conflicts"; fi
+    done | LC_ALL=C sort)"
+    if printf '%s\n' "$names" | grep -qxF 'DoD.md'; then echo 'DoD.md'; else printf '%s\n' "$names" | head -1; fi
 }
 
 # Prints "ancestor" or "pr" when local branch $1 is provably merged, nothing otherwise.
@@ -144,7 +106,7 @@ debug_lines() {
         /^@@ / { split($3, a, ","); line = substr(a[1], 2) + 0; next }
         /^\+/ {
             text = substr($0, 2)
-            if (text ~ /console\.log\(|debugger;|pdb\.set_trace|breakpoint\(\)|binding\.pry|var_dump\(|dbg!\(|FIXME|XXX|TODO/) {
+            if (text ~ /console\.log\(|debugger;|pdb\.set_trace|breakpoint\(\)|binding\.pry|var_dump\(|dbg!\(/) {
                 sub(/^[ \t]+/, "", text); print path ":" line ": " substr(text, 1, 120)
             }
             line++
@@ -158,8 +120,8 @@ if ! ROOT="$(g rev-parse --show-toplevel)" || [ -z "$ROOT" ]; then
     ROOT="$(pwd -P)"
     echo "git: no"
     echo "root: $ROOT"
-    dod_names "$ROOT" > "$WORK/dods"
-    print_counted dod_files "$WORK/dods"
+    DOD="$(dod_file "$ROOT")"
+    echo "dod_file: ${DOD:-none}"
     exit 0
 fi
 cd "$ROOT" || exit 1
@@ -357,13 +319,25 @@ if [ "$FORGE" = "github" ]; then
         echo "pr_review: ${REVIEW:-none}"
         echo "pr_checks: $(printf '%s' "$PR_LINE" | cut -f5)"
         # no: the pull request describes an earlier state of this branch, not the current HEAD.
-        if [ "$(printf '%s' "$PR_LINE" | cut -f6)" = "$(g rev-parse HEAD)" ]; then echo "pr_head_matches: yes"; else echo "pr_head_matches: no"; fi
-        [ -n "$THREADS" ] && echo "pr_unresolved_threads: $THREADS"
+        if [ "$(printf '%s' "$PR_LINE" | cut -f6)" = "$(g rev-parse HEAD)" ]; then HEAD_MATCHES="yes"; else HEAD_MATCHES="no"; fi
+        echo "pr_head_matches: $HEAD_MATCHES"
+        if [ "$(printf '%s' "$PR_LINE" | cut -f2)" = "OPEN" ]; then
+            echo "pr_unresolved_threads: ${THREADS:-unknown}"
+            # yes: the pull request can be reviewed and merged as it is; no: followed by what is in the way.
+            CHECKS="$(printf '%s' "$PR_LINE" | cut -f5)"
+            WHY=""
+            [ "$(printf '%s' "$PR_LINE" | cut -f3)" = "false" ] || WHY="$WHY, draft"
+            [ "$HEAD_MATCHES" = "yes" ] || WHY="$WHY, head differs"
+            case "$CHECKS" in pass|none) ;; *) WHY="$WHY, checks $CHECKS" ;; esac
+            [ "$REVIEW" != "CHANGES_REQUESTED" ] || WHY="$WHY, changes requested"
+            [ "${THREADS:-unknown}" = "0" ] || WHY="$WHY, unresolved threads ${THREADS:-unknown}"
+            if [ -z "$WHY" ]; then echo "pr_ready: yes"; else echo "pr_ready: no (${WHY#, })"; fi
+        fi
     fi
 fi
 print_counted merged_branches "$WORK/merged"
 
-# ---------------------------------------------------------------- the session's work and its DoD files
+# ---------------------------------------------------------------- the session's work and the DoD file
 MERGE_BASE=""
 if [ -n "$BASE_REF" ] && [ "$HAS_HEAD" -eq 1 ]; then MERGE_BASE="$(g merge-base HEAD "$BASE_REF")"; fi
 DIFF_BASE="${SINCE:-$MERGE_BASE}"
@@ -383,5 +357,6 @@ print_counted changed_paths "$WORK/changed"
 } | debug_lines > "$WORK/debug"
 print_counted debug_markers "$WORK/debug"
 
-report_dod_files "$WORK/changed"
+DOD="$(dod_file "$ROOT")"
+echo "dod_file: ${DOD:-none}"
 exit 0

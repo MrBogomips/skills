@@ -7,12 +7,20 @@
 - [ ] The kaizen Stop hook test passes: `bash tests/test-kaizen-stop-gate.sh`
 - [ ] Bundled-script tests pass: `python3 -m unittest discover -s tests -p 'test_*.py'`
 - [ ] The codex-port block passes under dash: `CODEX_PORT_SH=dash python3 -m unittest discover -s tests -p 'test_codex_port_block.py'`
-- [ ] The manifest schemas are valid: `claude plugin validate . --strict`, and `claude plugin validate ./<plugin> --strict` for each plugin folder
-- [ ] A pull request that changes a skill bumps `version` in the `plugin.json` of the plugin that ships it: `.claude-plugin/plugin.json` for `skills/`, `<plugin>/.claude-plugin/plugin.json` for a plugin folder (see `AGENTS.md` for patch, minor or major)
-- [ ] The `README.md` skill and plugin lists are updated when a skill or plugin is added, renamed or removed, and each plugin README still says correctly whether its skills install alone; a new or changed skill has a README that passes `skill-maker/scripts/validate.py`
-- [ ] Skills in `skills/` follow the portability rules of `AGENTS.md`: frontmatter `name` equals the directory, bundled files by relative path, no personal paths, macOS/BSD-compatible scripts; plugin folders follow its Plugins section
-- [ ] A pull request that adds or changes a skill has had its description and its context use reviewed with the `skill-creator` skill: the description is short and keeps every trigger phrase, and the body and its references load only what a run needs. The review changes no behavior and runs no evals. The pull request description says what was reviewed and what changed
-- [ ] The pull request is merged into `main`, with the `validate` check green
+- [ ] Every manifest schema is valid: `for m in .claude-plugin/plugin.json */.claude-plugin/plugin.json; do claude plugin validate "$(dirname "$(dirname "$m")")" --strict || exit 1; done`
+- [ ] Every plugin and skill README follows the contract: `for m in .claude-plugin/plugin.json */.claude-plugin/plugin.json; do python3 skill-maker/scripts/validate.py --no-claude "$(dirname "$(dirname "$m")")" || exit 1; done`
+- [ ] When the pull request changes a skill:
+  - [ ] `version` is bumped in the `plugin.json` of the plugin that ships it (`.claude-plugin/plugin.json` for `skills/`), by the patch, minor or major rule of `AGENTS.md`
+  - [ ] its description and its context use were reviewed with the `skill-creator` skill, changing no behavior and running no evals
+  - [ ] its description is short and keeps every trigger phrase
+  - [ ] its body and references load only what a run needs
+  - [ ] the pull request description says what was reviewed and what changed
+- [ ] When a skill or plugin is added, renamed or removed: the `README.md` skill and plugin lists are updated
+- [ ] Each plugin README says correctly whether its skills install alone
+- [ ] Skills in `skills/` follow the portability rules of `AGENTS.md`
+- [ ] Plugin folders follow the Plugins section of `AGENTS.md`
+- [ ] The pull request is merged into `main`
+- [ ] The `validate` check is green
 
 ## On Done
 
