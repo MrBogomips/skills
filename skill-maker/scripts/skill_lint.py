@@ -26,6 +26,9 @@ CLAUDE_CODE_KEYS: FrozenSet[str] = frozenset(
     ["when_to_use", "argument-hint", "arguments", "disable-model-invocation", "user-invocable",
      "disallowed-tools", "model", "effort", "context", "agent", "background", "hooks", "paths", "shell"])
 MAX_SKILL_LINES = 500
+MAX_NAME = 64
+MAX_DESCRIPTION = 1024
+KEBAB = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
 DEV_DIRS = frozenset(["tests", "evals", "scenarios"])
 IGNORED_DIRS = frozenset(["__pycache__", ".git"])
 SCRIPT_EXTENSIONS = (".py", ".sh", ".js", ".mjs", ".rb", ".pl")
@@ -44,9 +47,12 @@ def _read(path: str) -> Optional[str]:
 
 
 def _key_lines(text: str) -> Dict[str, int]:
-    """Line number of each top-level frontmatter key."""
-    found = {}
-    for number, line in enumerate(text.splitlines()[1:], start=2):
+    """Line number of each top-level frontmatter key (none when the file has no frontmatter)."""
+    found: Dict[str, int] = {}
+    lines = text.lstrip("\ufeff").splitlines()
+    if not lines or lines[0].strip() != "---":
+        return found
+    for number, line in enumerate(lines[1:], start=2):
         if line.strip() == "---":
             break
         match = _KEY_LINE.match(line)
@@ -145,6 +151,40 @@ def _check_language(path: str, text: str, front, prose, start: int) -> List[Find
     return found
 
 
+def check_frontmatter(skill_dir: str) -> List[Finding]:
+    """Rule P1 and the description limits: `name` equals the directory, kebab-case, description present."""
+    path = os.path.join(skill_dir, "SKILL.md")
+    text = _read(path)
+    front = mdparse.split_frontmatter(text)[0] if text is not None else None
+    if front is None:
+        return [finding("error", path, 1, "frontmatter", "missing or unreadable frontmatter")]
+    found = []
+    name, description = front.get("name", ""), front.get("description", "")
+    directory = os.path.basename(os.path.normpath(skill_dir))
+    if not name:
+        found.append(finding("error", path, 1, "name", "is missing"))
+    elif name != directory:
+        found.append(finding("error", path, 1, "name", "`%s` differs from the directory `%s`" % (name, directory)))
+    if name and (not KEBAB.match(name) or len(name) > MAX_NAME):
+        found.append(finding("error", path, 1, "name",
+                             "must be lowercase words joined by hyphens, at most %d characters" % MAX_NAME))
+    if not description.strip():
+        found.append(finding("error", path, 1, "description", "is missing or empty"))
+    elif len(description) > MAX_DESCRIPTION:
+        found.append(finding("error", path, 1, "description",
+                             "has %d characters; the limit is %d" % (len(description), MAX_DESCRIPTION)))
+    return found
+
+
+def _markdown_files(skill_dir: str) -> List[str]:
+    """The skill's README.md and every Markdown file under references/, nested folders included."""
+    files = [os.path.join(skill_dir, "README.md")] if os.path.isfile(os.path.join(skill_dir, "README.md")) else []
+    for current, dirs, names in os.walk(os.path.join(skill_dir, "references")):
+        dirs[:] = sorted(d for d in dirs if d not in IGNORED_DIRS)
+        files += [os.path.join(current, name) for name in sorted(names) if name.endswith(".md")]
+    return files
+
+
 def lint_skill(skill_dir: str, portable: bool, public: bool) -> List[Finding]:
     """Return the rulebook findings for the skill directory (its SKILL.md and references)."""
     skill_file = os.path.join(skill_dir, "SKILL.md")
@@ -158,12 +198,8 @@ def lint_skill(skill_dir: str, portable: bool, public: bool) -> List[Finding]:
     found += _dev_files(skill_dir)
     patterns = _script_patterns(_bundled_scripts(skill_dir))
     found += _check_markdown(skill_file, text, patterns, public)
-    references = os.path.join(skill_dir, "references")
-    if os.path.isdir(references):
-        for name in sorted(os.listdir(references)):
-            if name.endswith(".md"):
-                path = os.path.join(references, name)
-                found += _check_markdown(path, _read(path) or "", patterns, public)
+    for path in _markdown_files(skill_dir):
+        found += _check_markdown(path, _read(path) or "", patterns, public)
     return found
 
 
@@ -182,6 +218,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     args = parser.parse_args(argv)
     findings = []
     for skill_dir in args.skill_dirs:
+        findings += check_frontmatter(skill_dir)
         findings += lint_skill(skill_dir, args.portable, not args.custom)
     sys.stdout.write(readme_lint.format_findings(findings, args.json) + "\n")
     return 1 if readme_lint.has_errors(findings) else 0

@@ -30,8 +30,6 @@ from readme_lint import Finding, finding  # noqa: E402
 
 KEBAB = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
 SEMVER = re.compile(r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$")
-MAX_NAME = 64
-MAX_DESCRIPTION = 1024
 CLAUDE_TIMEOUT_SECONDS = 180
 
 
@@ -57,26 +55,7 @@ def _read_frontmatter(path: str) -> Optional[Dict[str, str]]:
 
 
 def _check_skill(root: str, skill: Dict[str, Any]) -> List[Finding]:
-    path = os.path.join(root, skill["skill_file"])
-    front = _read_frontmatter(path)
-    if front is None:
-        return [finding("error", path, 1, "frontmatter", "missing or unreadable frontmatter")]
-    found = []
-    name, description = front.get("name", ""), front.get("description", "")
-    directory = os.path.basename(skill["directory"])
-    if not name:
-        found.append(finding("error", path, 1, "name", "is missing"))
-    elif name != directory:
-        found.append(finding("error", path, 1, "name", "`%s` differs from the directory `%s`" % (name, directory)))
-    if name and (not KEBAB.match(name) or len(name) > MAX_NAME):
-        found.append(finding("error", path, 1, "name",
-                             "must be lowercase words joined by hyphens, at most %d characters" % MAX_NAME))
-    if not description.strip():
-        found.append(finding("error", path, 1, "description", "is missing or empty"))
-    elif len(description) > MAX_DESCRIPTION:
-        found.append(finding("error", path, 1, "description",
-                             "has %d characters; the limit is %d" % (len(description), MAX_DESCRIPTION)))
-    return found
+    return skill_lint.check_frontmatter(os.path.join(root, skill["directory"]))
 
 
 def _check_agent(root: str, agent: Dict[str, str]) -> List[Finding]:

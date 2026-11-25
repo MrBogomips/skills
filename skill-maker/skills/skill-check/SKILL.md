@@ -45,8 +45,9 @@ plugin: say so and stop.
    them under Next steps instead of fixing them here.
 4. **Independent review.** Dispatch the `rulebook-reviewer` agent in `check` mode with the target's
    paths, the rulebook path, the path of `official-references.md` and the validator output. Never pass
-   your own opinion of the files. Without a subagent tool, apply the rules marked `reviewer` yourself,
-   one file at a time, and say in the report that the review was not independent.
+   your own opinion of the files. Without a subagent tool, apply the rules marked `reviewer` or `both`
+   yourself, one file at a time, confirm or reject each `S3` warning, and say in the report that the
+   review was not independent.
 5. **Report**, in the format of `references/report.md`:
    - **Recommended tools** first, when skill-creator or plugin-dev is missing. Read the session's
      available skills, or `claude plugin list` when unsure. Show the rows of the Recommended tools table

@@ -146,7 +146,36 @@ class SkillLintTest(unittest.TestCase):
                         "scope, and always ask before you change the folder.\n")
         self.assertEqual(self.found(), [])
 
+    # final review fixes
+    def test_no_frontmatter_body_key_lines_are_not_keys(self):
+        self.write("SKILL.md", "# Alpha\n\nArguments: here\n")
+        self.assertNotIn(("warning", "S12"), self.found())
+
+    def test_check_frontmatter_name_and_description(self):
+        self.write("SKILL.md", "---\nname: Other_Name\n---\n\nBody.\n")
+        sections = sorted(f["section"] for f in skill_lint.check_frontmatter(self.dir))
+        self.assertEqual(sections, ["description", "name", "name"])
+        self.write("SKILL.md", "no frontmatter\n")
+        self.assertEqual([f["section"] for f in skill_lint.check_frontmatter(self.dir)], ["frontmatter"])
+
+    def test_nested_reference_language_checked(self):
+        self.write("references/languages/it.md", 'Use "fammi le domande difficili" here.\n')
+        self.assertEqual(self.found(), [("warning", "S3")])
+
+    def test_skill_readme_language_checked(self):
+        self.write("README.md", '# Alpha\n\nAsk: "non scrivo mai così".\n')
+        self.assertEqual(self.found(), [("warning", "S3")])
+
     # command line, for a skill outside any plugin
+    def test_cli_reports_broken_frontmatter(self):
+        import subprocess
+        script = os.path.join(SCRIPTS, "skill_lint.py")
+        self.write("SKILL.md", "---\nname: Other_Name\n---\n\nBody.\n")
+        done = subprocess.run([sys.executable, script, self.dir], capture_output=True, text=True)
+        self.assertEqual(done.returncode, 1, done.stdout + done.stderr)
+        self.assertIn("[name]", done.stdout)
+        self.assertIn("[description]", done.stdout)
+
     def test_cli_lints_a_loose_skill(self):
         import subprocess
         script = os.path.join(SCRIPTS, "skill_lint.py")
