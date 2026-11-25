@@ -1,0 +1,84 @@
+{
+  "plugins": [
+    {
+      "key": "skill-creator",
+      "repo": "anthropics/claude-plugins-official",
+      "path": "plugins/skill-creator",
+      "commit": "2a40fd2e7c52207aa903bd33fc4c65716126966e",
+      "rules": [
+        "T2",
+        "T3",
+        "T4"
+      ]
+    },
+    {
+      "key": "plugin-dev",
+      "repo": "anthropics/claude-plugins-official",
+      "path": "plugins/plugin-dev",
+      "commit": "43fd1f9db0941b2b83cb62268e35970d4a67c202",
+      "rules": [
+        "C1",
+        "C5",
+        "C7",
+        "C8"
+      ]
+    },
+    {
+      "key": "hookify",
+      "repo": "anthropics/claude-plugins-official",
+      "path": "plugins/hookify",
+      "commit": "30202c767cfaf325212b3921ab484f83adaec850",
+      "rules": [
+        "C6"
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "key": "docs-skills",
+      "url": "https://code.claude.com/docs/en/skills.md",
+      "sha256": "3de6c6acc4b9a446307c112a90fe40a8739b1d28796595952cd146f37483509d",
+      "rules": [
+        "S1",
+        "S12",
+        "S4"
+      ]
+    },
+    {
+      "key": "docs-plugins-reference",
+      "url": "https://code.claude.com/docs/en/plugins-reference.md",
+      "sha256": "bcd6278cef41259de55b509ae9d9f91c9d2fba1c369798ec1a6667738ae32986",
+      "rules": [
+        "P2",
+        "P5"
+      ]
+    },
+    {
+      "key": "docs-sub-agents",
+      "url": "https://code.claude.com/docs/en/sub-agents.md",
+      "sha256": "9e223cb6656a18c9244ce019fdd1635871f1dd96ba0425dcff64a965978f1e5a",
+      "rules": [
+        "C1",
+        "C2",
+        "C4"
+      ]
+    },
+    {
+      "key": "docs-hooks",
+      "url": "https://code.claude.com/docs/en/hooks.md",
+      "sha256": "d16003851f60562eaa793e6270316b17550f8e24691214d7d798e5a503537c79",
+      "rules": [
+        "C5"
+      ]
+    },
+    {
+      "key": "agentskills-spec",
+      "url": "https://agentskills.io/specification.md",
+      "sha256": "bf4137a702014f82a022de532e597c5f92ea86fb53fe29ea27bee3bbc1d19738",
+      "rules": [
+        "P1",
+        "S12"
+      ]
+    }
+  ]
+}
