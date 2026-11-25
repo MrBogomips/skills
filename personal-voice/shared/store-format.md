@@ -181,7 +181,7 @@ Qualifiers, in this order, each only when the rule depends on it:
 
 | Qualifier | Form | Example |
 |---|---|---|
-| Language | `[<code>]` | `[it]` |
+| Language | `[<code>]` | `[en]` |
 | Audience | `[to <audience>]` | `[to clients]`, `[to family]` |
 | Topic (tone rules only) | `[topic: <slug>]` | `[topic: cycling]` |
 
@@ -196,21 +196,21 @@ Glossary entries use the same form, stating the preferred term, the terms to
 avoid and the meaning:
 
 ```
-- [it] Use "rilascio", not "deploy", for a production release; the client's term. (evidence: 2, reinforced: 2026-09-10)
+- [en] Use "release", not "deploy", for a production rollout; the client's term. (evidence: 2, reinforced: 2026-09-10)
 ```
 
 ## Observation entries
 
 ```markdown
-### Avoid "inoltre"
+### Avoid "furthermore"
 - kind: lexicon
-- language: it
+- language: en
 - topic: software-engineering
 - audience: colleagues
-- destination: languages/it.md › Avoid
+- destination: languages/en.md › Avoid
 - evidence: 1
 - sources:
-  - 2026-09-29 · revision · text: status email to the team · project: /path/to/example-portal · "Inoltre, il rilascio è pronto." → "E il rilascio è pronto."
+  - 2026-09-29 · revision · text: status email to the team · project: /path/to/example-portal · "Furthermore, the release is ready." → "And the release is ready."
 ```
 
 - **Heading**: the trait in a few English words.
@@ -229,7 +229,7 @@ avoid and the meaning:
 - **evidence**: the number of distinct text labels in `sources`.
 - **reinforces**: only when the trait matches a rule already in the store: the
   rule's file, heading and first words, such as
-  `languages/it.md › Avoid › "Inoltre" at the start`. Maintenance then adds
+  `languages/en.md › Avoid › "Furthermore" at the start`. Maintenance then adds
   this evidence to the rule and updates its `reinforced` date, instead of
   proposing a new rule. `destination` is the same file and heading.
 
@@ -283,16 +283,16 @@ it in this session, do not record project observations.
 | First observation for a topic with no file | — | `observations.md`, `topic:` set; no topic file until a rule is promoted |
 | How the author addresses clients | 2 tone; 3 neither, audience | `core.md` › Audiences, `[to clients]` |
 | Terms the author uses in software engineering | 2 lexicon; 3 topic | `topics/software-engineering.md` |
-| Writes "deploy", not "rilascio", in Italian software texts | 2 lexicon; 3 topic and language | `topics/software-engineering.md`, `[it]` |
-| A literary Italian expression used on several topics | 2 lexicon; 3 language only | `languages/it.md` › Signature expressions |
+| Writes "release", not "deploy", in English software texts | 2 lexicon; 3 topic and language | `topics/software-engineering.md`, `[en]` |
+| A literary English expression used on several topics | 2 lexicon; 3 language only | `languages/en.md` › Signature expressions |
 | Replaces a term with the client's own, in that client's project | 1 no | `.personal-voice/glossary.md` |
 | A message to a family member, written inside a project | 0 personal | global store, never `.personal-voice/` |
-| Closing informal Italian emails to colleagues | 2 tone; 3 language, audience | `languages/it.md` › Audiences |
+| Closing informal English emails to colleagues | 2 tone; 3 language, audience | `languages/en.md` › Audiences |
 
 The last rule, once promoted, reads:
 
 ```
-- [it] [to colleagues] Close informal emails with "Un saluto e a presto", never "Cordiali saluti". (evidence: 3, reinforced: 2026-09-12)
+- [en] [to colleagues] Close informal emails with "Cheers", never "Best regards". (evidence: 3, reinforced: 2026-09-12)
 ```
 
 ## Limits

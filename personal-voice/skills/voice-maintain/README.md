@@ -24,11 +24,11 @@ update is up to you.
 
 ### Turn a repeated fix into a rule
 
-**Context:** You removed "pertanto" from two different texts, and the pending observation stores both as evidence.
+**Context:** You removed "therefore" from two different texts, and the pending observation stores both as evidence.
 
 **Action:** Say "review my voice profile", then reply with that item's number.
 
-**Result:** The rule is added to `languages/it.md` in your global store, and the observation is removed from `observations.md`.
+**Result:** The rule is added to `languages/en.md` in your global store, and the observation is removed from `observations.md`.
 
 ### Share a project glossary with your team
 
@@ -45,10 +45,10 @@ profile") or accept a suggestion from [`voice-learn`](../voice-learn/README.md).
 numbered list such as:
 
 ```text
-1. PROMOTE → global › languages/it.md › Avoid
-   [it] Avoid "pertanto"; drop it or restructure the sentence. (evidence: 2)
-   Evidence: 2026-09-18 meeting follow-up to the team · "Pertanto, rinviamo…" → "Rinviamo…"
-             2026-09-25 retrospective reminder to the team · "non uso mai 'pertanto'"
+1. PROMOTE → global › languages/en.md › Avoid
+   [en] Avoid "therefore"; drop it or restructure the sentence. (evidence: 2)
+   Evidence: 2026-09-18 meeting follow-up to the team · "Therefore, we postpone…" → "We postpone…"
+             2026-09-25 retrospective reminder to the team · "I never use 'therefore'"
 ```
 
 Reply with the items to apply (for example, `1, 3 remove, 2 keep A`), or `all` to apply every item

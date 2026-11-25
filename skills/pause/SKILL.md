@@ -51,7 +51,7 @@ Never commit, stash, reset or otherwise change the user's repository: the workin
 
    If the context is still small, say that compacting is not needed.
 5. **Report** in a few lines: what was stopped, the checkpoint path, the `/compact` line if any, and that saying
-   "resume" (or "riprendi") picks the work up again. Then stop: do no further work until the user returns.
+   "resume" (in any language) picks the work up again. Then stop: do no further work until the user returns.
 
 ## Resume
 

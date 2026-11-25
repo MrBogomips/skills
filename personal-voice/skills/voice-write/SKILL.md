@@ -16,7 +16,7 @@ Once this skill is loaded, keep watching for two events until the session ends:
    disk. Invoke `personal-voice:voice-learn` on that revision in the same turn,
    without asking, then carry on with whatever else they asked.
 2. **The author signals the end of the work session**, in any language ("that's
-   all for today", "per oggi chiudiamo", "on s'arrête là"). Invoke
+   all for today", "let's stop here", "done for the day"). Invoke
    `personal-voice:voice-learn` for the session wrap-up.
 
 ## Scope

@@ -44,7 +44,7 @@ After writing, show one line in the language of the conversation, naming how
 many observations were recorded and where:
 
 ```
-Voice profile: recorded 2 observations — global › languages/it.md (new), project › glossary.md (+1 evidence).
+Voice profile: recorded 2 observations — global › languages/en.md (new), project › glossary.md (+1 evidence).
 ```
 
 Nothing else about the recording, unless the author asks.

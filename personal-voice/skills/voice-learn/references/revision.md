@@ -7,7 +7,7 @@ in three forms:
 |---|---|---|
 | Pasted final version | Claude's text earlier in this session | The pasted text |
 | Edited file | The content Claude last wrote to the file in this session | The file as it is on disk now: read it in full, even when a change notice shows only some lines |
-| Spoken correction | The passage of Claude's text the correction is about | The correction itself ("don't write 'inoltre'", "too formal", "I'd say 'a presto'") |
+| Spoken correction | The passage of Claude's text the correction is about | The correction itself ("don't write 'furthermore'", "too formal", "I'd say 'cheers'") |
 
 ## 1. Check that the draft is available
 
@@ -27,8 +27,8 @@ Only changes the author made are preferences.
 - Claude drafted, the author revised → the author's changes are preferences.
 - The author wrote, Claude edited (proofreading, rewording, translating) →
   Claude's changes are not preferences. Record nothing from them.
-- The author rejects one of Claude's edits to their text ("no, keep my 'e
-  poi'") → that rejection is a spoken correction and is a preference.
+- The author rejects one of Claude's edits to their text ("no, keep my 'and
+  then'") → that rejection is a spoken correction and is a preference.
 
 ## 3. Separate style from content
 
@@ -37,7 +37,7 @@ Compare the two versions change by change.
 | Record (style) | Skip (content) |
 |---|---|
 | Word choice among synonyms, jargon, borrowed expressions | Corrected facts, figures, dates, times, names |
-| Register, address form (tu/Lei, du/Sie), greetings and closings | Added or removed information |
+| Register, address form (formal or informal), greetings and closings | Added or removed information |
 | Sentence length, rhythm, punctuation habits | Changed scope, commitments or recipients |
 | Structure: order of paragraphs, lists vs prose, headings | Reordering required by the content |
 | Removed LLM habits: stock openers and closers, hedges, rule-of-three lists, summaries | Typo and grammar fixes |
