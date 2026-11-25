@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
-"""Final validation of a plugin: manifest, skill and agent frontmatter, READMEs.
+"""Final validation of a plugin: manifest, skill and agent frontmatter, the authoring rulebook, READMEs.
 
-Usage: validate.py [--json] [--no-claude] <plugin-root>
+Usage: validate.py [--json] [--no-claude] [--portable] [--custom] <plugin-root>
+
+--portable: the plugin's skills are also distributed through the `skills` CLI (stricter frontmatter keys).
+--custom: the skills are project- or user-scoped, not published (no English check).
 
 Runs `claude plugin validate <root> --strict` too when the `claude` CLI is on
 PATH (skip it with --no-claude). Exit status: 0 no errors, 1 errors, 2 bad usage.
@@ -22,6 +25,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import inventory  # noqa: E402
 import mdparse  # noqa: E402
 import readme_lint  # noqa: E402
+import skill_lint  # noqa: E402
 from readme_lint import Finding, finding  # noqa: E402
 
 KEBAB = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
@@ -111,7 +115,7 @@ def _run_claude(root: str) -> List[Finding]:
     return [finding("error", root, 1, "claude plugin validate", "failed with --strict: %s" % tail)]
 
 
-def validate(root: str, run_claude: bool = True) -> List[Finding]:
+def validate(root: str, run_claude: bool = True, portable: bool = False, public: bool = True) -> List[Finding]:
     """Return every finding for the plugin rooted at `root`."""
     try:
         inv = inventory.build_inventory(root)
@@ -120,8 +124,10 @@ def validate(root: str, run_claude: bool = True) -> List[Finding]:
     found = _check_manifest(root, inv["plugin"])
     for skill in inv["skills"]:
         found += _check_skill(root, skill)
+        found += skill_lint.lint_skill(os.path.join(root, skill["directory"]), portable, public)
     for agent in inv["agents"]:
         found += _check_agent(root, agent)
+        found += skill_lint.lint_agent(os.path.join(root, agent["file"]), public)
     found += _check_readmes(root, inv)
     if run_claude:
         found += _run_claude(root)
@@ -132,9 +138,12 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser = argparse.ArgumentParser(description="Final validation of a Claude Code plugin.")
     parser.add_argument("--json", action="store_true", help="print the findings as JSON")
     parser.add_argument("--no-claude", action="store_true", help="skip `claude plugin validate --strict`")
+    parser.add_argument("--portable", action="store_true",
+                        help="the skills are also distributed through the skills CLI")
+    parser.add_argument("--custom", action="store_true", help="unpublished skills: skip the English check")
     parser.add_argument("root")
     args = parser.parse_args(argv)
-    findings = validate(args.root, run_claude=not args.no_claude)
+    findings = validate(args.root, run_claude=not args.no_claude, portable=args.portable, public=not args.custom)
     sys.stdout.write(readme_lint.format_findings(findings, args.json) + "\n")
     return 1 if readme_lint.has_errors(findings) else 0
 
