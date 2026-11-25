@@ -4,7 +4,7 @@ description: >-
   Interviews the user about a plan, design or decision in short rounds of questions with recommended answers,
   and logs what was decided and discarded. Use when the user asks to be grilled or interviewed about a plan, to
   stress-test, challenge or poke holes in it, to play devil's advocate, or to settle decisions before acting
-  ("grill me", "fammi le domande difficili", "mettimi sotto torchio", "avvocato del diavolo"). Not for ideation
+  ("grill me", "ask me the hard questions", "put me through the wringer", "play devil's advocate"). Not for ideation
   from scratch, code review, or checking finished work.
 license: MIT
 compatibility: >-
@@ -23,7 +23,7 @@ Two modes:
 
 - **Interview** (default): cooperative. Each question carries your recommendation.
 - **Hard**: devil's advocate. On when the user says "hard", `--hard`, "devil's advocate", "poke holes",
-  "avvocato del diavolo", "mettimi sotto torchio" or "senza pietà". Adds the [Hard mode](#hard-mode) rules.
+  "put me through the wringer" or "no mercy", in any language. Adds the [Hard mode](#hard-mode) rules.
 
 Any other request runs in interview mode, including "grill me" and "stress-test". The user can switch modes at
 any time.

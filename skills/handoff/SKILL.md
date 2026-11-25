@@ -4,7 +4,7 @@ description: >-
   Prepares a handoff prompt that lets another agent session or a colleague pick up a piece of work. Use when the
   user asks to hand off, hand over, pass on or transfer the current task, or one topic of it, to another session,
   a remote or cloud agent, another machine or a colleague, or asks for a handoff prompt, file or zip
-  ("passaggio di consegne").
+  ("hand this over", "write a handoff").
 license: MIT
 compatibility: >-
   Any agent harness with a shell. Uses git when the work is in a repository, and the system clipboard and a zip
