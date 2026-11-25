@@ -8,13 +8,14 @@
 - [ ] Bundled-script tests pass: `python3 -m unittest discover -s tests -p 'test_*.py'`
 - [ ] The codex-port block passes under dash: `CODEX_PORT_SH=dash python3 -m unittest discover -s tests -p 'test_codex_port_block.py'`
 - [ ] Every manifest schema is valid: `for m in .claude-plugin/plugin.json */.claude-plugin/plugin.json; do claude plugin validate "$(dirname "$(dirname "$m")")" --strict || exit 1; done`
-- [ ] Every plugin and skill README follows the contract: `for m in .claude-plugin/plugin.json */.claude-plugin/plugin.json; do python3 skill-maker/scripts/validate.py --no-claude "$(dirname "$(dirname "$m")")" || exit 1; done`
+- [ ] Every skill follows the rulebook and every README the contract: `python3 skill-maker/scripts/validate.py --no-claude --portable . && for m in */.claude-plugin/plugin.json; do python3 skill-maker/scripts/validate.py --no-claude "$(dirname "$(dirname "$m")")" || exit 1; done`
 - [ ] When the pull request changes a skill:
   - [ ] `version` is bumped in the `plugin.json` of the plugin that ships it (`.claude-plugin/plugin.json` for `skills/`), by the patch, minor or major rule of `AGENTS.md`
   - [ ] its description and its context use were reviewed with the `skill-creator` skill, changing no behavior and running no evals
   - [ ] its description is short and keeps every trigger phrase
   - [ ] its body and references load only what a run needs
   - [ ] the pull request description says what was reviewed and what changed
+  - [ ] a new skill that enforces a discipline has its baseline run recorded in `tests/scenarios/<skill>/baseline.md`
 - [ ] When a skill or plugin is added, renamed or removed: the `README.md` skill and plugin lists are updated
 - [ ] Each plugin README says correctly whether its skills install alone
 - [ ] Skills in `skills/` follow the portability rules of `AGENTS.md`

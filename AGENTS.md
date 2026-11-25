@@ -19,6 +19,7 @@ There is no build step. The repository is Markdown skills plus one JSON manifest
 - `.claude-plugin/plugin.json`: the manifest of the `skills` plugin, with `name`, `version`, `description`, `author` and `keywords`. It has **no `skills` field**, so Claude Code loads every `skills/<name>/SKILL.md`. There is no `marketplace.json` here: the marketplace entry (source `github`, `category`, `tags`) lives in `MrBogomips/claude-plugins` and carries no `version`, so the version is read from `plugin.json`.
 - `<plugin>/` (today `kaizen/`, `personal-voice/` and `skill-maker/`): a Claude Code plugin with its own `.claude-plugin/plugin.json`, `skills/`, and optionally `agents/`, `hooks/` and shared files. The root plugin loads only the root `skills/`, and the `skills` CLI lists only the root `skills/` for `npx skills add MrBogomips/skills`, so plugin skills stay out of both.
 - `tests/`: `validate.sh` (repository checks), `selftest.sh` (the validator's own tests) and `test-kaizen-stop-gate.sh` (the kaizen Stop hook), all run by `.github/workflows/validate.yml` on pushes and pull requests to `main`; `scenarios/` holds manual scenario checklists for the plugins.
+- `skill-maker/shared/rules/`: the authoring rulebook every skill here follows. `skill-maker/shared/official-baseline.json` records the official sources it rests on; `.github/scripts/official_drift.py`, run monthly by `.github/workflows/official-drift.yml`, opens an `official-drift` issue when one changes (see [Official drift](#official-drift)).
 - `DoD.md`: the Definition of Done that the `done` skill checks a session against.
 - `README.md` keeps the public skill and plugin lists and install instructions; update it whenever a skill or plugin is added, renamed or removed.
 - **Component READMEs**: every plugin and every distributed skill has a short `README.md` that follows the `skill-maker` contract (`skill-maker/skills/skill-readme/references/contract.md`): what it does and why, never a retelling of `SKILL.md`. The `skills` plugin's README is `skills/README.md`, because the root `README.md` is the repository page. Write or revise them with `/skill-maker:skill-readme`.
@@ -31,6 +32,7 @@ A skill in `skills/` has to work in every harness the `skills` CLI targets, not 
 - **`name` equals the directory name** (lowercase, hyphens). The `skills` CLI installs a skill under its frontmatter `name`, so a mismatch gives the skill different identities in the two channels. Neither tool reports it (see Verification).
 - **`description`** says what the skill does and when to use it. Before a skill loads, the description is the only part an agent sees.
 - **English**: every skill and plugin here is public (published through this repository, the marketplace or the `skills` CLI), so frontmatter, `SKILL.md`, references, agent files, README and examples are in English. Trigger phrases are English too; a term from another language is allowed only when English speakers commonly use it. There is no exception for skills whose subject is writing in several languages. The skill still talks to the user in their language. A custom skill (project- or user-scoped and never published) follows the language of the project's instruction file, then of the user's instructions, else English.
+- **Authoring rules**: the general rules for skills, agents and plugins are in `skill-maker/shared/rules/`; check a skill against them with `/skill-maker:skill-check`.
 - **Bundled files** are referenced by paths relative to the skill directory. Never use `${CLAUDE_PLUGIN_ROOT}` or files outside `skills/<name>/`: the `skills` CLI installs only the skill directory into each agent's skills folder.
 - **No dependence on the author's setup**: no personal paths, no reliance on `~/.claude` rules or memory, and no assumption that particular MCP servers, plugins or CLIs are installed. Detect them at runtime or ask the user.
 - **Bundled scripts** run on users' machines, so keep them macOS/BSD-compatible: no `grep -P`, no `head -n -1`, bash 3.2.
@@ -38,6 +40,7 @@ A skill in `skills/` has to work in every harness the `skills` CLI targets, not 
 ## Adding, changing, removing a skill
 
 - **Add**: run `npx skills init <name>` from inside `skills/` (it writes `<name>/SKILL.md`). The plugin picks it up with no manifest change.
+- **Baseline first** (rule T1): before writing a skill, run its task on a fresh agent without it and record how it fails in `tests/scenarios/<skill>/baseline.md`. Required for a skill that enforces a discipline (approvals, checks before claiming done), recommended for the others.
 - **Version**: every pull request that changes what a skill does bumps `version` in `.claude-plugin/plugin.json`, once per pull request: patch for a fix, minor for a new skill or a compatible extension, major when a skill is renamed or removed or its behavior changes incompatibly. Claude Code updates installed plugins only when the version changes.
 - **Backends, not copies**: two skills that would differ only in how they reach a model or tool (an API, a local CLI) are one skill with backends and a setting, not copies: a skill cannot share files with another.
 - **Rename or remove**: change the directory and the frontmatter `name` together. In Claude Code the invocation changes with it (`/skills:<old>` stops working); `skills` CLI installs keep the old name until removed.
@@ -74,7 +77,8 @@ claude plugin validate . --strict                  # plugin.json schema of the r
 claude plugin validate ./kaizen --strict           # ... and of each plugin folder
 claude plugin validate ./personal-voice --strict
 claude plugin validate ./skill-maker --strict
-for p in . kaizen personal-voice skill-maker; do python3 skill-maker/scripts/validate.py --no-claude $p; done  # every plugin and skill README follows the contract
+python3 skill-maker/scripts/validate.py --no-claude --portable .  # root skills: rulebook lint and README contract
+for p in kaizen personal-voice skill-maker; do python3 skill-maker/scripts/validate.py --no-claude $p; done  # each plugin folder
 DISABLE_TELEMETRY=1 npx -y skills add ./ --list    # what the skills CLI discovers (Node >= 22.20): only skills/
 DISABLE_TELEMETRY=1 npx -y skills add ./kaizen --list  # a plugin's skills, reached by its folder
 ```
@@ -84,6 +88,15 @@ DISABLE_TELEMETRY=1 npx -y skills add ./kaizen --list  # a plugin's skills, reac
 When you change `tests/validate.sh`, add or adjust a case in `tests/selftest.sh` and run `bash tests/selftest.sh`; CI runs it before the validator. Both scripts must stay bash 3.2 compatible: run them with `/bin/bash` on macOS to check.
 
 To try a plugin locally in Claude Code without installing it: `claude --plugin-dir .` (the skills appear as `/skills:<name>`), or `claude --plugin-dir ./<plugin>` for a plugin folder.
+
+## Official drift
+
+skill-maker's rulebook rests on official sources (the official plugins and documentation pages in `skill-maker/shared/official-baseline.json`). When the monthly workflow opens an `official-drift` issue:
+
+1. Fetch each changed source into the session scratchpad: `gh api` on the compare link for a plugin, the `.md` page for a documentation page.
+2. Dispatch the `rulebook-reviewer` agent in `drift` mode with the affected rule IDs listed in the issue and those files.
+3. Apply the agreed rule changes, then record the new commits and hashes with `GITHUB_TOKEN=$(gh auth token) python3 .github/scripts/official_drift.py --refresh` (with a python.org build on macOS, also set `SSL_CERT_FILE=/etc/ssl/cert.pem`).
+4. Bump skill-maker's version (patch, or minor when a rule changes meaning) and open one pull request that closes the issue.
 
 ## Working documents
 
