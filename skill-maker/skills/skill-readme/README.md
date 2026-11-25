@@ -54,3 +54,4 @@ The `skill-maker` plugin and Python 3.9 or later as `python3`.
 
 - Works on one plugin at a time.
 - Verifies statements against files without running the component.
+- The contract is fixed, and only English READMEs are supported.

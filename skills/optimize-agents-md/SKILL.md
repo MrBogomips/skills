@@ -77,7 +77,7 @@ optimize-agents-md [--check] [--threshold N] [path]
      or deleted with approval.
    - Every path the new files name exists; every command is declared (scripts in the package manifest, Makefile
      targets, workflows) or confirmed by the user.
-   - Re-run `scripts/inventory.sh`: the "after" numbers match the projection, no new `warn:` line.
+   - Re-run `bash scripts/inventory.sh`: the "after" numbers match the projection, no new `warn:` line.
    - Classify the new files again as in step 3: nothing new to propose.
 
 ## Red flags

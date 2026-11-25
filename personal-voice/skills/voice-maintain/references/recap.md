@@ -8,14 +8,14 @@ Write the recap in the language of the conversation. Structure:
 Voice maintenance — 7 proposals
 Global store: <path> · Project store: .personal-voice/ (personal)
 
-1. PROMOTE → global › languages/it.md › Avoid
-   [it] Avoid "pertanto"; drop it or restructure the sentence. (evidence: 2)
-   Evidence: 2026-09-18 meeting follow-up to the team · "Pertanto, rinviamo…" → "Rinviamo…"
-             2026-09-25 retrospective reminder to the team · "non uso mai 'pertanto'"
+1. PROMOTE → global › languages/en.md › Avoid
+   [en] Avoid "therefore"; drop it or restructure the sentence. (evidence: 2)
+   Evidence: 2026-09-18 meeting follow-up to the team · "Therefore, we postpone…" → "We postpone…"
+             2026-09-25 retrospective reminder to the team · "I never use 'therefore'"
 
-2. CONFLICT → global › languages/it.md › Audiences
-   A (rule):        [it] [to clients] Use "Lei"; close with "Buona giornata". (evidence: 2)
-   B (observation): [it] [to clients] Use "tu". (evidence: 2)
+2. CONFLICT → global › languages/en.md › Audiences
+   A (rule):        [en] [to clients] Close with "Kind regards". (evidence: 2)
+   B (observation): [en] [to clients] Close with "Best". (evidence: 2)
    Choose: keep A · keep B · qualify (e.g. B only [to long-standing clients])
 
 3. REVIEW (stale) → global › core.md › Tone

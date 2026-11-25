@@ -19,19 +19,19 @@ Drafts written for you carry LLM habits instead of your own phrasing, so you end
 
 ### Write to colleagues the way you do
 
-**Context:** Your profile records how you address colleagues in Italian and the software terms you use.
+**Context:** Your profile records how you address colleagues and the software terms you use.
 
-**Action:** Ask Claude: "Scrivi una mail breve ai colleghi: la versione 2.4 è in ambiente di test da oggi, il deploy è previsto venerdì."
+**Action:** Ask Claude: "Write a short email to the team: version 2.4 is in the test environment as of today, and the deploy is planned for Friday."
 
 **Result:** An email using your form of address, closing, and terminology, with no facts beyond your request.
 
 ### Use a client's terms in that client's project
 
-**Context:** Your profile uses "deploy", while the client project's glossary specifies "rilascio".
+**Context:** Your profile uses "deploy", while the client project's glossary specifies "release".
 
 **Action:** Ask for the email from inside that project.
 
-**Result:** The email uses "rilascio"; the same request outside the project uses "deploy".
+**Result:** The email uses "release"; the same request outside the project uses "deploy".
 
 ## Usage
 

@@ -78,6 +78,45 @@ class ValidateTest(unittest.TestCase):
         self.write("README.md", (PLUGIN_README % "demo").replace("## Agents\n\n`reviewer` checks things.\n\n", ""))
         self.assertEqual(self.errors(), [("README.md", "Agents")])
 
+    def all_findings(self, **options):
+        found = validate.validate(self.root, run_claude=False, **options)
+        return [(f["severity"], f["section"]) for f in found]
+
+    def test_skill_lint_findings_included(self):
+        self.write("skills/alpha/SKILL.md", '---\nname: alpha\ndescription: Does alpha. Use for "non scrivo mai così".\n---\n')
+        self.assertEqual(self.all_findings(), [("warning", "S3")])
+        script = os.path.join(SCRIPTS, "validate.py")
+        done = subprocess.run([sys.executable, script, "--no-claude", self.root], capture_output=True, text=True)
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+
+    def test_dev_file_fails_validation(self):
+        self.write("skills/alpha/tests/case.md", "x\n")
+        self.assertIn(("error", "P6"), self.all_findings())
+        script = os.path.join(SCRIPTS, "validate.py")
+        done = subprocess.run([sys.executable, script, "--no-claude", self.root], capture_output=True, text=True)
+        self.assertEqual(done.returncode, 1)
+
+    def test_agent_lint_findings_included(self):
+        self.write("agents/reviewer.md", "---\nname: reviewer\ndescription: Reviews.\n---\n\nTODO\n")
+        self.assertEqual(self.all_findings(), [("warning", "P3")])
+
+    def test_custom_flag_skips_language(self):
+        self.write("skills/alpha/SKILL.md", '---\nname: alpha\ndescription: Does alpha. Use for "non scrivo mai così".\n---\n')
+        self.assertEqual(self.all_findings(public=False), [])
+        script = os.path.join(SCRIPTS, "validate.py")
+        done = subprocess.run([sys.executable, script, "--no-claude", "--custom", self.root],
+                              capture_output=True, text=True)
+        self.assertNotIn("S3", done.stdout)
+
+    def test_portable_flag_makes_unknown_key_error(self):
+        self.write("skills/alpha/SKILL.md", "---\nname: alpha\ndescription: Does alpha.\ncolour: blue\n---\n")
+        self.assertEqual(self.all_findings(), [("warning", "S12")])
+        self.assertEqual(self.all_findings(portable=True), [("error", "S12")])
+        script = os.path.join(SCRIPTS, "validate.py")
+        done = subprocess.run([sys.executable, script, "--no-claude", "--portable", self.root],
+                              capture_output=True, text=True)
+        self.assertEqual(done.returncode, 1)
+
     def test_cli_exit_status(self):
         script = os.path.join(SCRIPTS, "validate.py")
         done = subprocess.run([sys.executable, script, "--no-claude", self.root], capture_output=True, text=True)

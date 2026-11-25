@@ -4,7 +4,7 @@ summary: Records how you write, from your revisions of Claude's drafts and from 
 
 # voice-learn
 
-`voice-learn` records how you write. It compares Claude's drafts against the versions you actually used, notes direct corrections such as "I never write 'inoltre'", and reads texts you wrote without AI. Each habit becomes an observation waiting for your review in your voice profile. It records without asking and never changes a rule.
+`voice-learn` records how you write. It compares Claude's drafts against the versions you actually used, notes direct corrections such as "I never write 'furthermore'", and reads texts you wrote without AI. Each habit becomes an observation waiting for your review in your voice profile. It records without asking and never changes a rule.
 
 ## Why
 
@@ -26,9 +26,9 @@ The edits you make to a draft show your voice better than any description, yet t
 
 ### Correct a word once
 
-**Context:** Claude's note to your colleagues includes "altresì", a word you never use.
+**Context:** Claude's note to your colleagues includes "moreover", a word you never use.
 
-**Action:** Reply: "Non scrivere 'altresì', non lo uso mai."
+**Action:** Reply: "Don't write 'moreover', I never use it."
 
 **Result:** The corrected text, followed by a single line naming the new observation and its target profile file.
 
@@ -47,7 +47,7 @@ Claude loads `personal-voice:voice-learn` automatically when you revise text it 
 After recording, you see a single line:
 
 ```text
-Voice profile: recorded 2 observations — global › languages/it.md (new), project › glossary.md (+1 evidence).
+Voice profile: recorded 2 observations — global › languages/en.md (new), project › glossary.md (+1 evidence).
 ```
 
 When enough observations are pending, a second line suggests running [`voice-maintain`](../voice-maintain/README.md). When you close the session, `voice-learn` records any revision it missed and prints a recap of at most two lines.
