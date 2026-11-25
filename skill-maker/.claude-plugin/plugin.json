@@ -1,7 +1,7 @@
 {
   "name": "skill-maker",
   "version": "0.2.0",
-  "description": "Opinionated tools for producing quality skills and plugins — first skill: inventories, checks and drafts the public README of a plugin and of each skill it ships against a fixed section contract, with an independent fact reviewer and a final validation script",
+  "description": "Opinionated tools for producing quality skills and plugins against one authoring rulebook: skill-check checks a skill or plugin and fixes only approved findings, skill-audit gives every skill in a collection a verdict, skill-readme checks and drafts public READMEs; read-only reviewer agents and a validator back each one",
   "author": {
     "name": "MrBogomips",
     "url": "https://github.com/MrBogomips"

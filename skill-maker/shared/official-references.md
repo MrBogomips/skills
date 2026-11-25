@@ -52,8 +52,9 @@ leaves out. The skills built into Claude Code are covered through the documentat
 
 ### Recommended tools
 
-skill-maker works without these, but strongly recommends them. Its reports list each missing one on
-every run, with what is lost and how to install it.
+skill-maker works without these, but strongly recommends them. The reports of skill-check and
+skill-audit list skill-creator and plugin-dev, the two it hands off to, on every run where they are
+missing, with what is lost and how to install them. The other rows are for reference.
 
 | Tool | skill-maker hands off | Lost without it | Install |
 |---|---|---|---|
