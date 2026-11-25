@@ -4,7 +4,7 @@ description: >-
   Checks on evidence whether a work session is done against a Definition of Done (the repository's DoD.md,
   project instructions or a generic default), then tidies up: temporary files, merged branches, the local
   integration branch, the session title. Use when the user asks whether the work is done, or to finalize, wrap
-  up, clean up or close the session ("finalize and cleanup", "are we done?", "chiudiamo"), or to create or
+  up, clean up or close the session ("finalize and cleanup", "are we done?", "let's close"), or to create or
   revise a DoD.md.
 license: MIT
 compatibility: >-

@@ -20,7 +20,7 @@ This command installs the same skill included in the `skills` plugin, under the 
 
 ## Usage
 
-Start a session in your own words (such as "grill me about `drafts/plan.md`" or "fammi le domande difficili su questo piano"), or invoke `/skills:maieutic` with the plugin in Claude Code. Point the skill to a file, a pull request, or an idea in the conversation. A typical question looks like this:
+Start a session in your own words (such as "grill me about `drafts/plan.md`" or "ask me the hard questions about this plan"), or invoke `/skills:maieutic` with the plugin in Claude Code. Point the skill to a file, a pull request, or an idea in the conversation. A typical question looks like this:
 
 ```markdown
 **Q6. Queue technology** — The plan adds RabbitMQ. Options: (A) a jobs table in the existing PostgreSQL;
@@ -29,7 +29,7 @@ Start a session in your own words (such as "grill me about `drafts/plan.md`" or 
 ```
 
 - Answer by question ID ("yes to all but 3", "4 B", "5 no, because …"), or say "stop" to end the session.
-- Ask for hard mode ("devil's advocate", "poke holes", "mettimi sotto torchio") to add the strongest case against each recommendation and a closing pre-mortem.
+- Ask for hard mode ("devil's advocate", "poke holes", "no mercy") to add the strongest case against each recommendation and a closing pre-mortem.
 
 Nothing in the plan changes until you confirm the shared understanding.
 
