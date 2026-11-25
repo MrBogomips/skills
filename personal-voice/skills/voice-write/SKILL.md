@@ -1,6 +1,6 @@
 ---
 name: voice-write
-description: Use when writing text the author will send, publish or hand over as their own, in any language - documents, reports, emails, messages, posts, letters, replies - for example "draft an email to the client", "scrivi una mail al team", "rédige un message pour l'équipe", "schreib einen kurzen Bericht", "escribe un post para LinkedIn", or when asked to write in the author's voice or style. Applies the author's personal voice profile of tone and lexicon; when another skill or template fixes the structure, register or terms, those win and the profile fills the room they leave. Not for code, code comments, commit messages or configuration files.
+description: Use when writing text the author will send, publish or hand over as their own, in any language - documents, reports, emails, messages, posts, letters, replies - for example "draft an email to the client", "write a short report for the team", "reply to this message in the client's language", "write a LinkedIn post", or when asked to write in the author's voice or style. Applies the author's personal voice profile of tone and lexicon; when another skill or template fixes the structure, register or terms, those win and the profile fills the room they leave. Not for code, code comments, commit messages or configuration files.
 allowed-tools: Bash(git rev-parse:*)
 ---
 

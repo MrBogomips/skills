@@ -1,6 +1,6 @@
 ---
 name: voice-learn
-description: Records the author's tone and lexicon as pending observations in their personal voice profile. Use when the author revises a document or message Claude wrote for them (text for people, not code) - pastes the version they actually sent, edits such a file, or states corrections such as "I never write X", "too formal", "non scrivo mai così" - when the author shares texts they wrote without AI so Claude can learn their style, when asked to learn from a text for the voice profile, or when the author ends a work session in which the personal-voice plugin was used.
+description: Records the author's tone and lexicon as pending observations in their personal voice profile. Use when the author revises a document or message Claude wrote for them (text for people, not code) - pastes the version they actually sent, edits such a file, or states corrections such as "I never write X", "too formal", "I would never write that" - when the author shares texts they wrote without AI so Claude can learn their style, when asked to learn from a text for the voice profile, or when the author ends a work session in which the personal-voice plugin was used.
 allowed-tools: Bash(git rev-parse:*)
 ---
 

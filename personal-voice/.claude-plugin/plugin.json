@@ -1,6 +1,6 @@
 {
   "name": "personal-voice",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Personal writing voice — writes documents, emails and messages in the author's tone and lexicon, learns from the author's revisions and own texts, and maintains the profile only with per-item approval",
   "author": {
     "name": "MrBogomips",

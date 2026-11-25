@@ -42,7 +42,7 @@ Compare the two versions change by change.
 | Structure: order of paragraphs, lists vs prose, headings | Reordering required by the content |
 | Removed LLM habits: stock openers and closers, hedges, rule-of-three lists, summaries | Typo and grammar fixes |
 
-When one change mixes both ("martedì 14" → "mercoledì 15" inside a rewritten
+When one change mixes both ("Tuesday 14" → "Wednesday 15" inside a rewritten
 sentence), record only the style part. When you cannot tell whether a change
 is style or content, skip it.
 
