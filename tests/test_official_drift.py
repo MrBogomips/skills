@@ -105,5 +105,40 @@ class OfficialDriftTest(unittest.TestCase):
         self.assertEqual({key: rules for key, rules in recorded.items() if rules}, cited)
 
 
+class OpenIssueScriptTest(unittest.TestCase):
+    """.github/scripts/open_drift_issue.sh with a fake gh that logs its calls."""
+
+    def run_script(self, open_issue):
+        import subprocess
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        log = os.path.join(tmp.name, "gh.log")
+        fake = os.path.join(tmp.name, "gh")
+        with open(fake, "w", encoding="utf-8") as handle:
+            handle.write('#!/bin/sh\necho "$*" >> "%s"\n'
+                         'case "$1 $2" in "issue list") printf "%%s" "%s";; esac\n' % (log, open_issue))
+        os.chmod(fake, 0o755)
+        body = os.path.join(tmp.name, "drift.md")
+        with open(body, "w", encoding="utf-8") as handle:
+            handle.write("changed\n")
+        env = dict(os.environ, PATH=tmp.name + os.pathsep + os.environ.get("PATH", ""))
+        done = subprocess.run(["bash", os.path.join(ROOT, ".github", "scripts", "open_drift_issue.sh"), body],
+                              capture_output=True, text=True, env=env)
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        with open(log, encoding="utf-8") as handle:
+            return handle.read().splitlines()
+
+    def test_no_open_issue_creates_one(self):
+        calls = self.run_script("")
+        self.assertTrue(calls[0].startswith("label create official-drift"))
+        self.assertTrue(calls[-1].startswith("issue create"))
+        self.assertIn("--label official-drift", calls[-1])
+
+    def test_open_issue_gets_a_comment_not_a_second_issue(self):
+        calls = self.run_script("42")
+        self.assertTrue(calls[-1].startswith("issue comment 42"))
+        self.assertFalse(any(call.startswith("issue create") for call in calls))
+
+
 if __name__ == "__main__":
     unittest.main()

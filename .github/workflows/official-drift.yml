@@ -1,0 +1,31 @@
+name: Official drift
+
+# Monthly: have the official plugins or documentation pages that skill-maker's rulebook rests on
+# changed since skill-maker/shared/official-baseline.json was recorded? If so, open (or update) one
+# issue labelled official-drift. Handling it is described in AGENTS.md, section "Official drift".
+
+on:
+  schedule:
+    - cron: "0 6 1 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compare with the baseline
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 .github/scripts/official_drift.py --out drift.md
+
+      - name: Open or update the issue
+        if: hashFiles('drift.md') != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash .github/scripts/open_drift_issue.sh drift.md
