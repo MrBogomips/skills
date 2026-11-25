@@ -1,16 +1,24 @@
 #!/usr/bin/env python3
 """Mechanical checks of a skill directory and of an agent file against the authoring rulebook.
 
-Rule IDs refer to shared/rules/. Standard library only; validate.py calls lint_skill and lint_agent.
+Usage: skill_lint.py [--json] [--portable] [--custom] <skill-dir>...
+
+For a skill outside any plugin; validate.py calls lint_skill and lint_agent for a whole plugin.
+Rule IDs refer to shared/rules/. Standard library only. Exit status: 0 no errors, 1 errors, 2 bad usage.
 """
 
+import argparse
 import os
 import re
+import sys
 from typing import Dict, FrozenSet, List, Optional, Tuple
 
-import lang_heuristic
-import mdparse
-from readme_lint import Finding, finding
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+import lang_heuristic  # noqa: E402
+import mdparse  # noqa: E402
+import readme_lint  # noqa: E402
+from readme_lint import Finding, finding  # noqa: E402
 
 PORTABLE_KEYS: FrozenSet[str] = frozenset(
     ["name", "description", "license", "compatibility", "metadata", "allowed-tools"])
@@ -162,3 +170,22 @@ def lint_skill(skill_dir: str, portable: bool, public: bool) -> List[Finding]:
 def lint_agent(agent_file: str, public: bool) -> List[Finding]:
     """Return the placeholder and language findings for an agent file."""
     return _check_markdown(agent_file, _read(agent_file) or "", [], public)
+
+
+def main(argv: Optional[List[str]] = None) -> int:
+    parser = argparse.ArgumentParser(description="Check skill directories against the authoring rulebook.")
+    parser.add_argument("--json", action="store_true", help="print the findings as JSON")
+    parser.add_argument("--portable", action="store_true",
+                        help="the skills are also distributed through the skills CLI")
+    parser.add_argument("--custom", action="store_true", help="unpublished skills: skip the English check")
+    parser.add_argument("skill_dirs", nargs="+", metavar="skill-dir")
+    args = parser.parse_args(argv)
+    findings = []
+    for skill_dir in args.skill_dirs:
+        findings += lint_skill(skill_dir, args.portable, not args.custom)
+    sys.stdout.write(readme_lint.format_findings(findings, args.json) + "\n")
+    return 1 if readme_lint.has_errors(findings) else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

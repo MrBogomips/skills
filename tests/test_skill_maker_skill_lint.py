@@ -146,6 +146,23 @@ class SkillLintTest(unittest.TestCase):
                         "scope, and always ask before you change the folder.\n")
         self.assertEqual(self.found(), [])
 
+    # command line, for a skill outside any plugin
+    def test_cli_lints_a_loose_skill(self):
+        import subprocess
+        script = os.path.join(SCRIPTS, "skill_lint.py")
+        self.write("tests/a.md", "x\n")
+        done = subprocess.run([sys.executable, script, self.dir], capture_output=True, text=True)
+        self.assertEqual(done.returncode, 1, done.stdout + done.stderr)
+        self.assertIn("[P6]", done.stdout)
+        os.remove(os.path.join(self.dir, "tests", "a.md"))
+        os.rmdir(os.path.join(self.dir, "tests"))
+        self.skill(description='Does it. Use for "non scrivo mai così".')
+        done = subprocess.run([sys.executable, script, "--custom", self.dir], capture_output=True, text=True)
+        self.assertEqual((done.returncode, "[S3]" in done.stdout), (0, False), done.stdout + done.stderr)
+        done = subprocess.run([sys.executable, script, "--json", self.dir], capture_output=True, text=True)
+        self.assertEqual(done.returncode, 0)
+        self.assertIn('"S3"', done.stdout)
+
     # agents
     def test_agent_language_and_placeholder(self):
         path = os.path.join(self.dir, "agent.md")
