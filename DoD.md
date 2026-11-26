@@ -16,6 +16,7 @@
   - [ ] its body and references load only what a run needs
   - [ ] the pull request description says what was reviewed and what changed
   - [ ] a new skill that enforces a discipline has its baseline run recorded in `tests/scenarios/<skill>/baseline.md`
+  - [ ] a new skill, or a change of its scope, passed the value gate in `DESIGN.md`, with its outcome recorded
 - [ ] When a skill or plugin is added, renamed or removed: the `README.md` skill and plugin lists are updated
 - [ ] Each plugin README says correctly whether its skills install alone
 - [ ] Skills in `skills/` follow the portability rules of `AGENTS.md`
