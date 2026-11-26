@@ -1,7 +1,8 @@
 # Design principles
 
 What earns a place in this repository. The authoring rules (how a skill is written) live in
-`skill-maker/shared/rules/`; this file decides whether a skill should exist at all.
+`skill-maker/shared/rules/`; this file decides whether a skill should exist at all. skill-maker's
+rules V1–V6 carry this gate to collections outside this repository; here, this file is the authority.
 
 ## The value gate
 

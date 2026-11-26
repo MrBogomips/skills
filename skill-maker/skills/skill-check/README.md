@@ -39,5 +39,6 @@ recommended: see the [plugin README](../../README.md#recommended-tools).
 ## Limitations
 
 - One skill or plugin per run. For a collection, use `skill-audit`; for READMEs, `skill-readme`.
-- It reads files and does not run evals or tune triggers: it points you to skill-creator for those.
+- It reads files and does not run evals or tune triggers: it points you to skill-creator, and to
+  `claude plugin eval` and `/doctor prompt-audit` in Claude Code, for those.
 - Without a subagent tool, the review is done by the same agent, and the report says so.

@@ -41,7 +41,8 @@
       "rules": [
         "S1",
         "S12",
-        "S4"
+        "S4",
+        "V5"
       ]
     },
     {
@@ -78,6 +79,22 @@
       "rules": [
         "P1",
         "S12"
+      ]
+    },
+    {
+      "key": "docs-memory",
+      "url": "https://code.claude.com/docs/en/memory.md",
+      "sha256": "7e52db857de441b381a3ee7ce1182a4267f6bbddee08000574e61e54fc335eac",
+      "rules": [
+        "V5"
+      ]
+    },
+    {
+      "key": "docs-plugin-evals",
+      "url": "https://code.claude.com/docs/en/plugin-evals.md",
+      "sha256": "998e3a9072a39a3c4349b443f2cf0df391449d7db2e92446bd8bc07531f59543",
+      "rules": [
+        "T2"
       ]
     }
   ]

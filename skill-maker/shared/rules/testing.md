@@ -20,7 +20,10 @@ Checked by: reviewer
 Judge a skill by comparing runs with it against runs without it: no skill for a new skill, the previous
 version for a change. A skill that does not beat its baseline is not finished.
 
-Official source: skill-creator · Checked by: reviewer
+In Claude Code (v2.1.269 or later), `claude plugin eval <plugin> --ablation with-without` runs a plugin's
+eval cases with and without it and reports the difference.
+
+Official source: skill-creator, docs-plugin-evals · Checked by: reviewer
 
 ### T3. Assertions that discriminate
 

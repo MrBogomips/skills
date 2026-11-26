@@ -10,10 +10,11 @@ with another, retire), its reason and its top findings, and the count per verdic
 
 ## Why
 
-Checking skills one at a time does not show which two answer the same requests, or which ones have
-fallen behind the rules. skill-audit judges the whole set at once, flags merge candidates across the
-collection, and gives each verdict a reason that stands on its own. Every decision stays with you: it
-edits nothing, and offers `skill-check` for the skills worth improving.
+Checking skills one at a time does not show which two answer the same requests, which ones have
+fallen behind the rules, or which ones the model and the harness now do natively. skill-audit judges
+the whole set at once, first on whether each skill still adds value over native features, flags merge
+candidates across the collection, and gives each verdict a reason that stands on its own. Every
+decision stays with you: it edits nothing, and offers `skill-check` for the skills worth improving.
 
 ## Usage
 
@@ -24,6 +25,9 @@ edits nothing, and offers `skill-check` for the skills worth improving.
 - The folder can mix plugins and loose skills.
 - `--custom` marks skills that are never published, which skips the English check. Without it, the
   skill reads your project's instruction files to tell, and asks when they don't say.
+
+In Claude Code, the skill may ask you to run `/skill-doctor` and share its output, so that retire
+verdicts rest on what each skill costs and how often you use it. You can decline.
 
 The reply gives the path of the report and the counts per verdict, then offers `skill-check` on each
 skill marked improve, one at a time.
