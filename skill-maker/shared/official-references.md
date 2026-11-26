@@ -2,7 +2,7 @@
 
 The rules this plugin checks come from the pages below. Read the page, not this summary, before
 writing or changing a manifest or a frontmatter: the pages change, this file is a pointer with the
-facts the scripts rely on. Last checked: 2026-11-25.
+facts the scripts rely on. Last checked: 2026-11-26.
 
 | Topic | Page |
 |---|---|
@@ -10,6 +10,9 @@ facts the scripts rely on. Last checked: 2026-11-25.
 | Marketplace manifest, plugin entries, sources | https://code.claude.com/docs/en/plugin-marketplaces |
 | `SKILL.md` frontmatter and substitutions in Claude Code | https://code.claude.com/docs/en/skills |
 | Agent files and plugin agents | https://code.claude.com/docs/en/sub-agents |
+| Plugin evals (`claude plugin eval`) | https://code.claude.com/docs/en/plugin-evals |
+| Unused skills (`/skill-doctor`) | https://code.claude.com/docs/en/skills#find-unused-skills |
+| Audit of instruction files and skills (`/doctor prompt-audit`) | https://code.claude.com/docs/en/memory#audit-your-instruction-files |
 | Portable skill format (any harness) | https://agentskills.io/specification |
 
 ## Facts the scripts rely on
@@ -63,6 +66,21 @@ missing, with what is lost and how to install them. The other rows are for refer
 | claude-md-management | audits of instruction files | nothing in skill-maker; instruction files are out of its scope | `/plugin install claude-md-management@claude-plugins-official` |
 | claude-code-setup | recommendations of hooks, agents and skills for a codebase | nothing in skill-maker | `/plugin install claude-code-setup@claude-plugins-official` |
 | hookify | turning repeated mistakes into hook rules | the C6 promotion of a skipped rule to a hook is done by hand | `/plugin install hookify@claude-plugins-official` |
+
+### Built-in commands
+
+Claude Code commands that skill-maker points to instead of rebuilding them:
+
+| Command | From | Used by | What it gives |
+|---|---|---|---|
+| `claude plugin eval <plugin> --ablation with-without` | v2.1.269 | skill-check (T2) | a plugin's eval cases run with and without it, and the score difference |
+| `/skill-doctor` | v2.1.252 | skill-audit (V5) | each skill's context cost and how often it is used; skills never invoked |
+| `/doctor prompt-audit [path]` | v2.1.283 | skill-check (V5) | findings with proposed edits on instruction files, rules, skills, commands and agents: instructions for older models, missing files, contradictions |
+
+An agent cannot start a slash command, so the skills ask the user to run `/skill-doctor` or
+`/doctor prompt-audit` and share the output. `claude plugin eval` is a shell command, but it runs the
+plugin as the user and bills each run: the skills suggest it and never start it unasked. Without these
+commands, the rules' manual methods apply.
 
 Which rules rest on which source, and the version each was last checked against, is recorded in
 `official-baseline.json`. A monthly check in the source repository opens an issue when one changes.

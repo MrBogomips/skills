@@ -44,10 +44,12 @@ plugin: say so and stop.
    Keep only the findings for the target. Errors from the README contract belong to skill-readme: list
    them under Next steps instead of fixing them here.
 4. **Independent review.** Dispatch the `rulebook-reviewer` agent in `check` mode with the target's
-   paths, the rulebook path, the path of `official-references.md` and the validator output. Never pass
-   your own opinion of the files. Without a subagent tool, apply the rules marked `reviewer` or `both`
-   yourself, one file at a time, confirm or reject each `S3` warning, and say in the report that the
-   review was not independent.
+   paths, the rulebook path, the path of `official-references.md`, the validator output and, when they
+   exist, the project's own value gate (a `DESIGN.md` or a section of its instruction files) and the
+   skill's recorded baseline run.
+   Never pass your own opinion of the files. Without a subagent tool, apply the rules marked `reviewer`
+   or `both` yourself, one file at a time, confirm or reject each `S3` warning, and say in the report
+   that the review was not independent.
 5. **Report**, in the format of `references/report.md`:
    - **Recommended tools** first, when skill-creator or plugin-dev is missing. Read the session's
      available skills, or `claude plugin list` when unsure. Show the rows of the Recommended tools table
@@ -55,7 +57,9 @@ plugin: say so and stop.
    - Findings from the validator and the reviewer, merged, numbered F1, F2…, most severe first, each
      with its rule ID and `path:line`. Drop the `S3` warnings the reviewer rejected.
    - Next steps: evals and trigger tuning go to skill-creator, agents, hooks and commands to plugin-dev;
-     when one is missing, give the manual method of the matching T or C rule.
+     when one is missing, give the manual method of the matching T or C rule. For a plugin, suggest
+     `claude plugin eval <plugin> --ablation with-without` (T2) and `/doctor prompt-audit <path>`;
+     versions, and why they are never run unasked, are in `official-references.md`, Built-in commands.
 6. **Fix only approved findings.** Ask which IDs to apply. Edit only for the IDs the user names, or for
    all of them when the user says "all". Fix the finding and nothing else: a change of behavior the
    rules do not require is a suggestion in the report, not an edit.

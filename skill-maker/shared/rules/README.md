@@ -6,6 +6,7 @@ cite, a reason, and a line that says who checks it: the validator (`scripts/vali
 
 | File | IDs | Covers |
 |---|---|---|
+| [value.md](value.md) | V1–V6 | Whether a skill should exist: value over native features, thinness, retirement, minimum model |
 | [skill-md.md](skill-md.md) | S1–S12 | `SKILL.md`, descriptions, language, wording, scripts, frontmatter |
 | [testing.md](testing.md) | T1–T8 | Testing a skill before and after writing it |
 | [structure.md](structure.md) | P1–P6 | Names, paths, placeholders, manifests, files that must not ship |

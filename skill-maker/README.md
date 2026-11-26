@@ -61,9 +61,10 @@ Python 3.9 or later, available as `python3`. Strongly recommended: skill-creator
 
 ## Authoring rulebook
 
-The rules live in [`shared/rules/`](shared/rules/README.md), grouped by ID: `SKILL.md` and descriptions
-(S), testing (T), structure and manifests (P), and Claude Code agents, hooks and commands (C). Your
-project's own `AGENTS.md` or `CLAUDE.md` wins over official guidance, and both win over the rulebook.
+The rules live in [`shared/rules/`](shared/rules/README.md), grouped by ID: the value of a skill over
+native features (V), `SKILL.md` and descriptions (S), testing (T), structure and manifests (P), and
+Claude Code agents, hooks and commands (C). Your project's own `AGENTS.md` or `CLAUDE.md` wins over
+official guidance, and both win over the rulebook.
 
 ## Recommended tools
 

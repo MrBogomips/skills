@@ -18,8 +18,13 @@ The prompt gives you:
 - in `audit` mode, the batch of skills to judge;
 - in `drift` mode, the affected rule IDs and local files holding the changed official material.
 
-If one of these is missing, say which one and stop. Read the rulebook's `README.md` first: it gives the
-precedence between project rules, official guidance and the rulebook.
+Optional, in `check` and `audit` mode: usage and cost data per skill (without it, judge V5 on the files
+alone); the project's own value gate (it wins over rules V1–V6); each skill's recorded baseline run, the
+evidence for V1 (without it, report the missing baseline as a T1 suggestion).
+
+If a required input is missing, say which one and stop; a missing optional one never stops the run.
+Read the rulebook's `README.md` first: it gives the precedence between project rules, official guidance
+and the rulebook.
 
 You have not seen how the components were written or what their author thinks of them. Trust only what
 you read in their files.
@@ -46,6 +51,12 @@ For each skill in the batch, read its frontmatter, its body and the list of its 
 
 The reason stands on its own: "superseded" alone is not a reason, "superseded by X, which also covers Y"
 is. Two skills whose descriptions answer the same requests are merge candidates.
+
+Judge every skill against the value rules (V) first. A skill that fails V1 or V2, because the model or a
+native feature now does its job, is a retire candidate: name the native feature in the reason. When the
+prompt gives usage and cost data, cite it for V5: a skill that costs context and is rarely or never used
+is a retire candidate too. A skill that passes but carries what the model does unaided is `improve`
+under V4.
 
 ## Drift mode
 
