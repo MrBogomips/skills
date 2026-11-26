@@ -1,6 +1,6 @@
 # Scenario tests
 
-Manual checklists for the plugin skills (`kaizen`, `personal-voice`, `skill-maker`). A `baseline.md` records the run of a skill's task without the skill (rule T1). The automated checks
+Manual checklists for the plugin skills (`kaizen`, `personal-voice`, `skill-maker`). A `baseline.md` records the value-gate outcome of a skill (`DESIGN.md`) and the run of its task without the skill (rule T1), or the desk review that stands in for it until that run is made. The automated checks
 (`tests/validate.sh`, `tests/selftest.sh`, `tests/test-kaizen-stop-gate.sh`) run in CI; these
 scenarios need a person or a live Claude Code session.
 

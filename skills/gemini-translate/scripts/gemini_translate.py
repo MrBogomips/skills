@@ -66,7 +66,7 @@ RESPONSE_SCHEMA = {
 
 
 # --------------------------------------------------------------------------- #
-# Transport and key handling, kept in step with skills/google-image-gen.
+# Transport and key handling, kept in step with skills/image-gen (api backend).
 # --------------------------------------------------------------------------- #
 def die(message: str, code: int = 1) -> None:
     print(f"ERROR: {message}", file=sys.stderr)

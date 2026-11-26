@@ -51,7 +51,7 @@ The output is a short report in the conversation. `done` writes no files unless 
 
 ## Requirements
 
-An agent harness with a shell is required. `done` uses git when the work is in a repository, and the GitHub CLI (`gh`) when installed. Without them, the related checks are reported as not verifiable.
+A model of Sonnet class or above; a less capable model does not do this job well enough. An agent harness with a shell is required. `done` uses git when the work is in a repository, and the GitHub CLI (`gh`) when installed. Without them, the related checks are reported as not verifiable.
 
 ## Limitations
 

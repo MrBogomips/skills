@@ -1,14 +1,14 @@
 ---
-summary: Summarizes a reply in a few bullets that separate decisions, open questions and next actions, and can keep a short TLDR footer on later long replies.
+summary: Summarizes a reply in one fixed format, attention first, and can keep it as a footer on later long replies.
 ---
 
 # tldr
 
-`tldr` condenses a reply into a few bullets that separate decisions, open questions and next actions. Once invoked, it also adds a short TLDR footer to later long replies until you tell it to stop.
+`tldr` condenses a reply into a few labelled bullets, always in the same format. Once invoked, it also adds the same footer to later long replies until you tell it to stop.
 
 ## Why
 
-Long agent replies often bury what you need to decide or do in implementation detail and chronology. `tldr` leads with what needs your attention and distinguishes what is proposed, done and verified. The work and the full reply stay unchanged; only the summary is kept brief.
+Any model can summarize when asked, but a bare "TLDR" gets a different shape each time: two to four times too long, in chronological order, sometimes in another language, and a footer that drifts from a prose line to a list. Getting the same format every time takes a long instruction. `tldr` stands for that instruction: a few labelled bullets, what needs your attention first, proposed, done and verified kept apart, in the language of the conversation. The work and the full reply stay unchanged.
 
 ## Installation
 
@@ -20,7 +20,7 @@ This installs the same skill included in the `skills` plugin, under the name `tl
 
 ## Usage
 
-Send `TLDR`, `TL;DR`, `/tldr` or `$tldr` as a standalone prompt (or `/skills:tldr` when using the plugin in Claude Code). This summarizes the preceding reply:
+Send `TLDR`, `TL;DR`, "in short", `/tldr` or `$tldr` as a standalone prompt (or `/skills:tldr` when using the plugin in Claude Code). This summarizes the preceding reply:
 
 ```markdown
 **TLDR**
@@ -34,3 +34,4 @@ Send `TLDR`, `TL;DR`, `/tldr` or `$tldr` as a standalone prompt (or `/skills:tld
 - Name another message or topic to summarize it instead.
 - Any invocation also turns on the TLDR footer for the rest of the conversation unless you limit it (for example, "just this once"). Short replies, progress updates and tool calls get no footer.
 - Send "Stop TLDR" to turn the footer off.
+- Other ways of asking for a summary ("summarize this") do not trigger it: the agent answers them in its own way.

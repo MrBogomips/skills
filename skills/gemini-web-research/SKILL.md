@@ -8,9 +8,14 @@ license: MIT
 compatibility: >-
   Requires the agy CLI (Google Antigravity) installed and logged in, Python 3.9+ (standard library only) and
   network access. Any agent harness with a shell.
+metadata:
+  minimum-model: Sonnet class or above
+  minimum-effort: medium
 ---
 
 # Gemini Web Research
+
+Needs a model of Sonnet class or above, at effort medium or above. On a less capable model, tell the user before going on.
 
 You are the research lead. Gemini workers do the searching and reading; you split the request into questions, read
 their checked reports and write the answer. Do not search the web or fetch pages yourself, and do not fill gaps from

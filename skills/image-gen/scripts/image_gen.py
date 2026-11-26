@@ -1,12 +1,18 @@
 #!/usr/bin/env python3
-"""Generate or edit images with the Gemini API (Nano Banana models).
+"""Generate or edit images and write them to a path, through one of two backends.
 
-Needs an API key in GEMINI_API_KEY (or GOOGLE_API_KEY). The key is sent in the
-x-goog-api-key header only. Every call is billed to that key.
+  codex  (default) the codex CLI's built-in image tool, on the Codex login's quota.
+         `codex exec` has no "write the image here" flag: it saves under
+         `$CODEX_HOME/generated_images/<session id>/`, so this script runs one
+         non-interactive turn and collects only that session's images.
+  api    the Gemini API ("Nano Banana" models) with GEMINI_API_KEY (or
+         GOOGLE_API_KEY), sent in the x-goog-api-key header only. Every call is
+         billed to that key. Never chosen automatically.
 
-    google_image.py -p "a red bicycle in the rain" -o bike.png
-    google_image.py --edit v1.png -p "make the sky purple" -o v2.png
-    google_image.py -p "..." -o cover.png --aspect 9:16 --fit 1080x1920
+    image_gen.py -p "a red bicycle in the rain" -o bike.png
+    image_gen.py --edit v1.png -p "make the sky purple" -o v2.png
+    image_gen.py -p "..." -o cover.png --aspect 9:16 --fit 1080x1920
+    image_gen.py --backend api -p "a red bicycle in the rain" -o bike.png
 
 Standard library only; --fit additionally needs Pillow.
 """
@@ -17,26 +23,24 @@ import base64
 import json
 import os
 import re
+import shutil
 import socket
 import ssl
+import subprocess
 import sys
+import time
 import urllib.error
 import urllib.request
 from pathlib import Path
 
-ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/interactions"
-API_REVISION = "2026-05-20"          # sent as Api-Revision, as in the Gemini API docs
-DEFAULT_MODEL = "gemini-nano-banana-2.1"
-KEY_VARS = ("GEMINI_API_KEY", "GOOGLE_API_KEY")
-KEY_SHAPE_RE = re.compile(r"AIza[0-9A-Za-z_-]{20,}")
-
-EDIT_NOTE = ("The attached image is the edit target. Produce an updated version of it that "
-             "applies only the change described below and keeps everything else identical.")
+BACKENDS = ("codex", "api")
+DEFAULT_BACKEND = "codex"
+API_HINT = ("The api backend (--backend api) is an alternative billed to the user's Gemini key: "
+            "use it only if the user agrees.")
 REFERENCE_NOTE = "Use the attached image(s) as visual reference for the request below."
 
 # --------------------------------------------------------------------------- #
-# Shared helpers. Kept textually identical in codex_image.py and google_image.py
-# (each skill is installed on its own); tests/test_image_gen.py enforces that.
+# Shared helpers: input checks, format sniffing, --fit, output paths.
 # --------------------------------------------------------------------------- #
 MIME_KINDS = {"image/png": "png", "image/jpeg": "jpg", "image/webp": "webp"}
 ASPECT_RE = re.compile(r"^([1-9][0-9]?):([1-9][0-9]?)$")
@@ -164,7 +168,171 @@ def write_images(paths: list[Path], payloads: list[bytes]) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(raw)
         print(f"Wrote {path} ({len(raw):,} bytes)")
+
+
+def finish(args: argparse.Namespace, size: tuple[int, int] | None,
+           payloads: list[bytes], kinds: list[str]) -> None:
+    if size:
+        payloads = [fit_to_size(raw, size, args.fit_mode) for raw in payloads]
+        kinds = ["png"] * len(payloads)
+    write_images(output_paths(args.output, kinds), payloads)
+
+
 # --------------------------------------------------------------------------- #
+# Backend "codex": the codex CLI's built-in image tool, on the login's quota.
+# --------------------------------------------------------------------------- #
+# The model must be told, forcefully, to call its image tool; otherwise it
+# describes the image or draws one with ImageMagick and the run yields nothing.
+PREAMBLE = """You MUST actually generate a real image this turn with your built-in image generation tool (the `imagegen` skill / `image_gen` tool). Do not merely describe it or claim it is done - the run fails unless the tool genuinely runs and emits an image.
+
+Do NOT draw, composite, or edit the picture yourself with ImageMagick, Python, PIL, canvas, or SVG, and do NOT use the API-key CLI fallback. Do NOT save, copy, move, or rename the result yourself: it is collected automatically from where the tool puts it. Reply with one short line of confirmation and nothing else.
+
+If the built-in image generation tool is unavailable, say so explicitly and do nothing else."""
+
+CODEX_EDIT_NOTE = """The attached image is the edit target. Produce an UPDATED VERSION of it that applies the requested change while keeping everything else looking identical. This is an edit of the attached image, NOT a new image from scratch. Apply only the change described below."""
+ASPECT_NOTE = "Generate the image at a {aspect} aspect ratio, at the largest size available for that shape."
+VARIANTS_NOTE = """Produce {count} distinct variants of this image in this same turn, each from its own image-tool call. Vary the interpretation between them; do not return near-duplicates."""
+
+CODEX_TIMEOUT = 900
+IMAGE_SUFFIXES = (".png", ".jpg", ".jpeg", ".webp")
+SESSION_ID_RE = re.compile(r"session id:\s*([0-9a-fA-F-]{36})")
+TAIL_LINES = 12
+
+
+def codex_bin() -> str:
+    return os.environ.get("CODEX_BIN", "codex")
+
+
+def generated_images_dir() -> Path:
+    home = os.environ.get("CODEX_HOME")
+    return (Path(home) if home else Path.home() / ".codex") / "generated_images"
+
+
+def build_prompt(request: str, *, edit: bool, has_refs: bool,
+                 aspect: str | None, variants: int = 1) -> str:
+    parts = [PREAMBLE, ""]
+    if edit:
+        parts += [CODEX_EDIT_NOTE, ""]
+    elif has_refs:
+        parts += [REFERENCE_NOTE, ""]
+    if aspect:
+        parts += [ASPECT_NOTE.format(aspect=aspect), ""]
+    if variants > 1:
+        parts += [VARIANTS_NOTE.format(count=variants), ""]
+    parts += ["## Change to make" if edit else "## Image to generate", request.strip()]
+    return "\n".join(parts).strip() + "\n"
+
+
+def tail_of(transcript: str) -> str:
+    return "\n".join(transcript.strip().splitlines()[-TAIL_LINES:])
+
+
+def check_codex(binary: str) -> None:
+    """The binary exists and is logged in, checked before any quota is spent."""
+    if shutil.which(binary) is None:
+        die(f"codex CLI not found on PATH as '{binary}'. Install it and run `codex login`, "
+            f"or set CODEX_BIN. {API_HINT}")
+    try:
+        status = subprocess.run([binary, "login", "status"], capture_output=True,
+                                text=True, timeout=30)
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        die(f"could not run `{binary} login status`: {exc}")
+    if status.returncode != 0:
+        die(f"codex is not logged in. Run `codex login`, then retry. {API_HINT}")
+
+
+def run_codex(prompt: str, images: list[Path], timeout: int) -> tuple[float, str, str]:
+    """Run one `codex exec` turn. Returns (start time, session id, transcript)."""
+    binary = codex_bin()
+    cmd = [binary, "exec", "--skip-git-repo-check", "-s", "read-only",
+           "-c", "model_reasoning_effort=high", prompt]        # prompt before the variadic -i
+    for image in images:
+        cmd += ["-i", str(image)]
+    start = time.time()
+    print("codex: generating (usually 30-60 s)...", file=sys.stderr)
+    proc = subprocess.Popen(cmd, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                            stderr=subprocess.STDOUT, text=True)
+    try:
+        # codex prints its banner, session id included, on stderr: merged above.
+        transcript, _ = proc.communicate(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        proc.communicate()
+        die(f"codex exec timed out after {timeout}s; nothing was written.")
+    if proc.returncode != 0:
+        lowered = transcript.lower()
+        if "usage limit" in lowered:
+            die("the codex account is out of quota; no image was generated. "
+                f"Wait for the reset codex reports, or use another account. {API_HINT}")
+        if "not logged in" in lowered or "unauthorized" in lowered:
+            die(f"codex rejected the login. Run `codex login`, then retry. {API_HINT}")
+        die(f"codex exec failed (exit {proc.returncode}):\n{tail_of(transcript)}")
+    match = SESSION_ID_RE.search(transcript)
+    session_id = match.group(1) if match else None
+    if session_id is None:
+        die("codex did not report a session id, so this run's images cannot be "
+            f"identified; nothing was written.\n{tail_of(transcript)}")
+    return start, session_id, transcript
+
+
+def collect_images(session_id: str, start: float) -> list[bytes]:
+    """Images codex saved for exactly this session, oldest first."""
+    folder = generated_images_dir() / session_id
+    if not folder.is_dir():
+        return []
+    files = [p for p in folder.iterdir()
+             if p.is_file() and p.suffix.lower() in IMAGE_SUFFIXES
+             and p.stat().st_mtime >= start - 1]
+    files.sort(key=lambda p: p.stat().st_mtime)
+    return [p.read_bytes() for p in files]
+
+
+def main_codex(args: argparse.Namespace, request: str, images: list[Path],
+               size: tuple[int, int] | None) -> None:
+    if args.model:
+        die("--model applies only to --backend api.")
+    if args.variants < 1:
+        die("--variants must be at least 1.")
+    prompt = build_prompt(request, edit=bool(args.edit), has_refs=bool(args.reference),
+                          aspect=args.aspect, variants=args.variants)
+    if args.print_prompt:
+        print(prompt)
+        return
+    if size:
+        require_pillow()
+    check_output_dir(args.output)
+    check_codex(codex_bin())
+
+    start, session_id, transcript = run_codex(prompt, images, args.timeout or CODEX_TIMEOUT)
+    payloads = collect_images(session_id, start)
+    if not payloads:
+        die(f"codex produced no image in {generated_images_dir() / session_id}; nothing was "
+            f"written. It probably answered in text instead of calling its image tool. "
+            f"Re-run with a clearer picture request.\ncodex said:\n{tail_of(transcript)}")
+    kinds = []
+    for raw in payloads:
+        kind = sniff(raw)
+        if kind is None:
+            die(f"codex saved {len(raw)} bytes that are not PNG, JPEG or WebP; nothing was written.")
+        kinds.append(kind)
+    finish(args, size, payloads, kinds)
+
+
+# --------------------------------------------------------------------------- #
+# Backend "api": the Gemini API, billed to the user's key.
+# Transport and key handling are kept in step with skills/gemini-translate.
+# --------------------------------------------------------------------------- #
+ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/interactions"
+API_REVISION = "2026-05-20"          # sent as Api-Revision, as in the Gemini API docs
+DEFAULT_MODEL = "gemini-nano-banana-2.1"
+MODEL_VAR = "GOOGLE_IMAGE_MODEL"
+KEY_VARS = ("GEMINI_API_KEY", "GOOGLE_API_KEY")
+KEY_SHAPE_RE = re.compile(r"AIza[0-9A-Za-z_-]{20,}")
+API_TIMEOUT = 300
+API_MAX_VARIANTS = 8
+
+API_EDIT_NOTE = ("The attached image is the edit target. Produce an updated version of it that "
+                 "applies only the change described below and keeps everything else identical.")
 
 
 def api_key() -> str:
@@ -173,6 +341,10 @@ def api_key() -> str:
         if value:
             return value
     die("no API key: set GEMINI_API_KEY (or GOOGLE_API_KEY) to your Gemini API key.", 2)
+
+
+def api_model(cli_value: str | None) -> str:
+    return cli_value or os.environ.get(MODEL_VAR) or DEFAULT_MODEL
 
 
 def scrub(text: str, key: str = "") -> str:
@@ -195,7 +367,7 @@ def build_request(model: str, request: str, images: list[Path], *,
                   edit: bool, aspect: str | None) -> dict:
     text = request
     if edit:
-        text = f"{EDIT_NOTE}\n\n{request}"
+        text = f"{API_EDIT_NOTE}\n\n{request}"
     elif images:
         text = f"{REFERENCE_NOTE}\n\n{request}"
     body: dict = {"model": model,
@@ -322,39 +494,12 @@ def generate_one(body: dict, key: str, timeout: int) -> tuple[bytes, str]:
     return raw, kind
 
 
-def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
-    ap = argparse.ArgumentParser(
-        description="Generate or edit an image with the Gemini API (billed to your API key).")
-    ap.add_argument("-p", "--prompt", help="What to generate, or the change to make with --edit.")
-    ap.add_argument("--prompt-file", type=Path, help="Read the prompt from a file instead.")
-    ap.add_argument("-o", "--output", type=Path, required=True, help="Where to write the image.")
-    ap.add_argument("--edit", type=Path, help="Image to change; everything else is kept.")
-    ap.add_argument("-r", "--reference", type=Path, action="append", default=[],
-                    help="Reference image to attach (repeatable).")
-    ap.add_argument("--aspect", help="Aspect ratio sent to the API, e.g. 16:9, 9:16, 1:1.")
-    ap.add_argument("-n", "--variants", type=int, default=1,
-                    help="Number of images; each is a separate billed call, extras saved as <name>-2.png etc.")
-    ap.add_argument("--fit", metavar="WxH", help="Force the saved file to exactly WxH (needs Pillow).")
-    ap.add_argument("--fit-mode", choices=("pad", "crop"), default="pad",
-                    help="--fit reconciles the aspect by padding (default) or center-cropping.")
-    ap.add_argument("--model", default=os.environ.get("GOOGLE_IMAGE_MODEL") or DEFAULT_MODEL,
-                    help=f"Model id (default: $GOOGLE_IMAGE_MODEL or {DEFAULT_MODEL}).")
-    ap.add_argument("--timeout", type=int, default=300, help="Seconds per API call (default: 300).")
-    ap.add_argument("--print-prompt", action="store_true",
-                    help="Print the request that would be sent (no key) and exit without calling the API.")
-    return ap.parse_args(argv)
-
-
-def main(argv: list[str] | None = None) -> None:
-    args = parse_args(argv)
-    request = read_request(args.prompt, args.prompt_file)
-    images = check_images(args.edit, args.reference)
-    if not 1 <= args.variants <= 8:
-        die("--variants must be between 1 and 8.")
-    if args.aspect:
-        parse_aspect(args.aspect)
-    size = parse_size(args.fit) if args.fit else None
-    body = build_request(args.model, request, images, edit=bool(args.edit), aspect=args.aspect)
+def main_api(args: argparse.Namespace, request: str, images: list[Path],
+             size: tuple[int, int] | None) -> None:
+    if not 1 <= args.variants <= API_MAX_VARIANTS:
+        die(f"--variants must be between 1 and {API_MAX_VARIANTS} with --backend api.")
+    body = build_request(api_model(args.model), request, images,
+                         edit=bool(args.edit), aspect=args.aspect)
     if args.print_prompt:
         print(preview(body))
         return
@@ -363,15 +508,63 @@ def main(argv: list[str] | None = None) -> None:
     check_output_dir(args.output)
     key = api_key()
 
+    timeout = args.timeout or API_TIMEOUT
     payloads, kinds = [], []
     for _ in range(args.variants):
-        raw, kind = generate_one(body, key, args.timeout)
+        raw, kind = generate_one(body, key, timeout)
         payloads.append(raw)
         kinds.append(kind)
-    if size:
-        payloads = [fit_to_size(raw, size, args.fit_mode) for raw in payloads]
-        kinds = ["png"] * len(payloads)
-    write_images(output_paths(args.output, kinds), payloads)
+    finish(args, size, payloads, kinds)
+
+
+# --------------------------------------------------------------------------- #
+# Command line.
+# --------------------------------------------------------------------------- #
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    ap = argparse.ArgumentParser(
+        description="Generate or edit an image with the codex CLI (default) or the Gemini API "
+                    "(--backend api, billed to your API key).")
+    ap.add_argument("--backend", choices=BACKENDS, default=DEFAULT_BACKEND,
+                    help="codex: the Codex login's quota (default). api: the Gemini API, "
+                         "billed to GEMINI_API_KEY.")
+    ap.add_argument("-p", "--prompt", help="What to generate, or the change to make with --edit.")
+    ap.add_argument("--prompt-file", type=Path, help="Read the prompt from a file instead.")
+    ap.add_argument("-o", "--output", type=Path, required=True, help="Where to write the image.")
+    ap.add_argument("--edit", type=Path, help="Image to change; everything else is kept.")
+    ap.add_argument("-r", "--reference", type=Path, action="append", default=[],
+                    help="Reference image to attach (repeatable).")
+    ap.add_argument("--aspect", help="Aspect ratio, e.g. 16:9, 9:16, 1:1: a hint to the model "
+                                     "with codex, the API's own setting with api.")
+    ap.add_argument("-n", "--variants", type=int, default=1,
+                    help="Number of images, extras saved as <name>-2.png etc. codex: asked for "
+                         f"in one run. api: one billed call each, at most {API_MAX_VARIANTS}.")
+    ap.add_argument("--fit", metavar="WxH", help="Force the saved file to exactly WxH (needs Pillow).")
+    ap.add_argument("--fit-mode", choices=("pad", "crop"), default="pad",
+                    help="--fit reconciles the aspect by padding (default) or center-cropping.")
+    ap.add_argument("--model",
+                    help=f"api only: model id (default: ${MODEL_VAR} or {DEFAULT_MODEL}).")
+    ap.add_argument("--timeout", type=int,
+                    help=f"Seconds to wait: codex run (default {CODEX_TIMEOUT}), "
+                         f"api call (default {API_TIMEOUT}).")
+    ap.add_argument("--print-prompt", action="store_true",
+                    help="Print the prompt (codex) or the request without the key (api) and exit "
+                         "without spending anything.")
+    return ap.parse_args(argv)
+
+
+def main(argv: list[str] | None = None) -> None:
+    args = parse_args(argv)
+    request = read_request(args.prompt, args.prompt_file)
+    images = check_images(args.edit, args.reference)
+    if args.aspect:
+        parse_aspect(args.aspect)
+    size = parse_size(args.fit) if args.fit else None
+    if args.timeout is not None and args.timeout < 1:
+        die("--timeout must be at least 1 second.")
+    if args.backend == "api":
+        main_api(args, request, images, size)
+    else:
+        main_codex(args, request, images, size)
 
 
 if __name__ == "__main__":

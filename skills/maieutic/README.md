@@ -37,6 +37,10 @@ Nothing in the plan changes until you confirm the shared understanding.
 
 `maieutic` reads the plan under review along with your project's recorded decisions: `AGENTS.md`, `CLAUDE.md`, ADRs, and the specs of any spec-driven framework in use. It writes `<topic>-decisions.md` with **Decided** and **Discarded** sections, plus an **Open** section when anything stays unsettled. The file goes where your project's instructions place working documents. Otherwise, it goes to the session scratchpad or the system temporary directory, never to a new folder in the repository.
 
+## Requirements
+
+- Model: Sonnet class or above; a less capable model does not do this job well enough.
+
 ## Limitations
 
 `maieutic` does not generate ideas from scratch, review code, or check whether work is done. It changes nothing on its own. At the end of a session, it offers a next step, such as a revised plan or an ADR, and waits for you.

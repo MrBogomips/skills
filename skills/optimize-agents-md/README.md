@@ -42,9 +42,11 @@ Each run produces a single report containing the questions only you can answer, 
 
 ## Requirements
 
+- Model: Sonnet class or above, effort high or above; a less capable model does not do this job well enough.
+
 Requires an agent harness with shell and file access, bash, and the standard BSD or GNU tools. The skill uses git when present.
 
 ## Limitations
 
-- Does not create an initial `AGENTS.md` (use `init-agents-md`) or port a Claude Code setup to Codex (use `port-to-agents`).
+- Does not create an initial `AGENTS.md` (use your harness's `/init`) or port a Claude Code setup to Codex (Codex's `/import` does that).
 - Edits files in place because they must keep their names to load. When present, git keeps the previous version; without git, the skill saves a copy of each file before editing it.

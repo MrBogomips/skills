@@ -6,7 +6,6 @@
 - [ ] Every `plugin.json` and its `skills/` agree: `bash tests/validate.sh`
 - [ ] The kaizen Stop hook test passes: `bash tests/test-kaizen-stop-gate.sh`
 - [ ] Bundled-script tests pass: `python3 -m unittest discover -s tests -p 'test_*.py'`
-- [ ] The codex-port block passes under dash: `CODEX_PORT_SH=dash python3 -m unittest discover -s tests -p 'test_codex_port_block.py'`
 - [ ] Every manifest schema is valid: `for m in .claude-plugin/plugin.json */.claude-plugin/plugin.json; do claude plugin validate "$(dirname "$(dirname "$m")")" --strict || exit 1; done`
 - [ ] Every skill follows the rulebook and every README the contract: `python3 skill-maker/scripts/validate.py --no-claude --portable . && for m in */.claude-plugin/plugin.json; do python3 skill-maker/scripts/validate.py --no-claude "$(dirname "$(dirname "$m")")" || exit 1; done`
 - [ ] When the pull request changes a skill:

@@ -39,6 +39,7 @@ Pass `--via agy|api` to choose the backend for a single run, or `--print-prompt`
 
 ## Requirements
 
+- Model: Sonnet class or above; a less capable model does not do this job well enough.
 - Python 3.9 or later (standard library only).
 - Either the `agy` CLI (installed and logged in) or a Gemini API key in `GEMINI_API_KEY` or `GOOGLE_API_KEY` for a project with credit or billing enabled.
 - Default models: `gemini-4-neon-high` through agy and `gemini-4-neon` through the API. Override with `--model` or `GEMINI_EDITORIAL_MODEL`.

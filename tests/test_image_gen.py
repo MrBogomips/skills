@@ -1,4 +1,4 @@
-"""Offline tests for codex_image.py and google_image.py: no network, no codex, no API key.
+"""Offline tests for image_gen.py (codex and api backends): no network, no codex, no API key.
 
 Run from the repo root: python3 -m unittest discover -s tests -p 'test_*.py'
 """
@@ -24,8 +24,7 @@ except ImportError:
     Image = None
 
 ROOT = Path(__file__).resolve().parent.parent
-CODEX_PATH = ROOT / "skills" / "codex-image-gen" / "scripts" / "codex_image.py"
-GOOGLE_PATH = ROOT / "skills" / "google-image-gen" / "scripts" / "google_image.py"
+SCRIPT_PATH = ROOT / "skills" / "image-gen" / "scripts" / "image_gen.py"
 FAKE_KEY = "AIzaSyFAKEFAKEFAKEFAKEFAKEFAKE0123456789"
 PNG = b"\x89PNG\r\n\x1a\n" + b"0" * 32
 JPEG = b"\xff\xd8\xff\xe0" + b"0" * 32
@@ -38,8 +37,8 @@ def load(name, path):
     return module
 
 
-codex = load("codex_image", CODEX_PATH)
-google = load("google_image", GOOGLE_PATH)
+image_gen = load("image_gen", SCRIPT_PATH)
+API = ["--backend", "api"]
 
 
 def run_main(module, argv, env=None):
@@ -89,18 +88,8 @@ def http_error(code, message="boom"):
 
 
 class SharedHelpersTest(unittest.TestCase):
-    def test_shared_block_is_identical(self):
-        marker = "# Shared helpers."
-        blocks = []
-        for path in (CODEX_PATH, GOOGLE_PATH):
-            text = path.read_text(encoding="utf-8")
-            start = text.rindex("# " + "-" * 10, 0, text.index(marker))
-            end = text.index("# " + "-" * 10, text.index("def write_images"))
-            blocks.append(text[start:end].strip())
-        self.assertEqual(blocks[0], blocks[1])
-
     def both(self):
-        return (codex, google)
+        return (image_gen,)
 
     def test_output_paths_variants_and_extension(self):
         for mod in self.both():
@@ -169,6 +158,64 @@ class SharedHelpersTest(unittest.TestCase):
                     mod.check_images(Path("/no/such.png"), [])
 
 
+class BackendSelectionTest(unittest.TestCase):
+    """--backend picks one code path; api is never used unless asked for."""
+
+    def test_default_is_codex(self):
+        self.assertEqual(image_gen.parse_args(["-p", "x", "-o", "o.png"]).backend, "codex")
+        code, out, _ = run_main(image_gen, ["-p", "a cat", "-o", "o.png", "--print-prompt"])
+        self.assertIsNone(code)
+        self.assertIn("## Image to generate", out)          # codex prompt, not an API request
+        self.assertNotIn("POST ", out)
+
+    def test_api_print_prompt_shows_request(self):
+        code, out, _ = run_main(image_gen, [*API, "-p", "a cat", "-o", "o.png", "--print-prompt"])
+        self.assertIsNone(code)
+        self.assertIn("POST " + image_gen.ENDPOINT, out)
+        self.assertNotIn("## Image to generate", out)
+
+    def test_unknown_backend_rejected(self):
+        with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit) as ctx:
+            image_gen.parse_args(["--backend", "openai", "-p", "x", "-o", "o.png"])
+        self.assertEqual(ctx.exception.code, 2)
+
+    def test_codex_never_falls_back_to_api(self):
+        env = {"CODEX_BIN": "/no/such/codex", "GEMINI_API_KEY": FAKE_KEY}
+        with mock.patch("urllib.request.urlopen") as urlopen:
+            code, _, err = run_main(image_gen, ["-p", "x", "-o", "/tmp/never.png"], env)
+        self.assertEqual(code, 1)
+        self.assertIn("not found", err)
+        self.assertIn("--backend api", err)                 # the hint, not the call
+        self.assertIn("only if the user agrees", err)
+        urlopen.assert_not_called()
+
+    def test_model_is_api_only(self):
+        code, _, err = run_main(image_gen, ["-p", "x", "-o", "o.png", "--model", "m", "--print-prompt"])
+        self.assertEqual(code, 1)
+        self.assertIn("--backend api", err)
+
+    def test_variant_limits_per_backend(self):
+        code, out, _ = run_main(image_gen, ["-p", "x", "-o", "o.png", "-n", "9", "--print-prompt"])
+        self.assertIsNone(code)
+        self.assertIn("9 distinct variants", out)
+        code, _, err = run_main(image_gen, [*API, "-p", "x", "-o", "o.png", "-n", "9", "--print-prompt"])
+        self.assertEqual(code, 1)
+        self.assertIn("between 1 and 8", err)
+        code, _, _ = run_main(image_gen, ["-p", "x", "-o", "o.png", "-n", "0", "--print-prompt"])
+        self.assertEqual(code, 1)
+
+    def test_timeout_defaults_per_backend(self):
+        self.assertIsNone(image_gen.parse_args(["-p", "x", "-o", "o.png"]).timeout)
+        with mock.patch.object(image_gen, "post_once", return_value=ok_response()) as post, \
+                tempfile.TemporaryDirectory() as tmp:
+            code, _, _ = run_main(image_gen, [*API, "-p", "x", "-o", str(Path(tmp) / "o.png")],
+                                  {"GEMINI_API_KEY": FAKE_KEY})
+        self.assertIsNone(code)
+        self.assertEqual(post.call_args[0][2], image_gen.API_TIMEOUT)
+        code, _, _ = run_main(image_gen, ["-p", "x", "-o", "o.png", "--timeout", "0"])
+        self.assertEqual(code, 1)
+
+
 class GoogleRequestTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -177,69 +224,70 @@ class GoogleRequestTest(unittest.TestCase):
         self.ref.write_bytes(PNG)
 
     def test_plain_request(self):
-        body = google.build_request("m", "a cat", [], edit=False, aspect=None)
+        body = image_gen.build_request("m", "a cat", [], edit=False, aspect=None)
         self.assertEqual(body, {"model": "m", "input": [{"type": "text", "text": "a cat"}]})
 
     def test_aspect_uses_native_field(self):
-        body = google.build_request("m", "a cat", [], edit=False, aspect="16:9")
+        body = image_gen.build_request("m", "a cat", [], edit=False, aspect="16:9")
         self.assertEqual(body["response_format"], {"type": "image", "aspect_ratio": "16:9"})
         self.assertNotIn("16:9", body["input"][0]["text"])
 
     def test_edit_and_references(self):
-        body = google.build_request("m", "make it blue", [self.ref, self.ref], edit=True, aspect=None)
+        body = image_gen.build_request("m", "make it blue", [self.ref, self.ref], edit=True, aspect=None)
         self.assertIn("edit target", body["input"][0]["text"])
         self.assertTrue(body["input"][0]["text"].endswith("make it blue"))
         self.assertEqual([p["type"] for p in body["input"]], ["text", "image", "image"])
         self.assertEqual(base64.b64decode(body["input"][1]["data"]), PNG)
         self.assertEqual(body["input"][1]["mime_type"], "image/png")
-        refs = google.build_request("m", "a cat", [self.ref], edit=False, aspect=None)
+        refs = image_gen.build_request("m", "a cat", [self.ref], edit=False, aspect=None)
         self.assertIn("visual reference", refs["input"][0]["text"])
 
     def test_non_image_reference_rejected(self):
         bad = Path(self.tmp.name) / "x.png"
         bad.write_bytes(b"not an image")
         with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
-            google.image_part(bad)
+            image_gen.image_part(bad)
 
     def test_model_default_and_env_override(self):
         env = {"GOOGLE_IMAGE_MODEL": ""}
-        code, out, _ = run_main(google, ["-p", "x", "-o", "o.png", "--print-prompt"], env)
-        self.assertIn(google.DEFAULT_MODEL, out)
+        code, out, _ = run_main(image_gen, [*API, "-p", "x", "-o", "o.png", "--print-prompt"], env)
+        self.assertIn(image_gen.DEFAULT_MODEL, out)
         with mock.patch.dict(os.environ, {"GOOGLE_IMAGE_MODEL": "env-model"}):
-            args = google.parse_args(["-p", "x", "-o", "o.png"])
-            self.assertEqual(args.model, "env-model")
-            args = google.parse_args(["-p", "x", "-o", "o.png", "--model", "cli-model"])
-            self.assertEqual(args.model, "cli-model")
+            self.assertEqual(image_gen.api_model(None), "env-model")
+            self.assertEqual(image_gen.api_model("cli-model"), "cli-model")
+            code, out, _ = run_main(image_gen, [*API, "-p", "x", "-o", "o.png", "--print-prompt",
+                                                "--model", "cli-model"])
+            self.assertIn('"model": "cli-model"', out)
 
 
 class GoogleKeyTest(unittest.TestCase):
     def clean_env(self, **extra):
-        env = {k: "" for k in google.KEY_VARS}
+        env = {k: "" for k in image_gen.KEY_VARS}
         env.update(extra)
         return env
 
     def test_lookup_order(self):
         with mock.patch.dict(os.environ, self.clean_env(GEMINI_API_KEY="g1", GOOGLE_API_KEY="g2")):
-            self.assertEqual(google.api_key(), "g1")
+            self.assertEqual(image_gen.api_key(), "g1")
         with mock.patch.dict(os.environ, self.clean_env(GOOGLE_API_KEY="g2")):
-            self.assertEqual(google.api_key(), "g2")
+            self.assertEqual(image_gen.api_key(), "g2")
 
     def test_missing_key_exits_2_with_one_line(self):
-        code, _, err = run_main(google, ["-p", "x", "-o", "o.png"], self.clean_env())
+        code, _, err = run_main(image_gen, [*API, "-p", "x", "-o", "o.png"], self.clean_env())
         self.assertEqual(code, 2)
         self.assertEqual(len(err.strip().splitlines()), 1)
         self.assertIn("GEMINI_API_KEY", err)
 
     def test_key_never_in_print_prompt(self):
-        code, out, err = run_main(google, ["-p", "x", "-o", "o.png", "--print-prompt"],
+        code, out, err = run_main(image_gen, [*API, "-p", "x", "-o", "o.png", "--print-prompt"],
                                   self.clean_env(GEMINI_API_KEY=FAKE_KEY))
         self.assertIsNone(code)
         self.assertNotIn(FAKE_KEY, out + err)
         self.assertNotIn("AIza", out + err)
 
     def test_scrub(self):
-        self.assertNotIn(FAKE_KEY, google.scrub(f"bad key {FAKE_KEY} here"))
-        self.assertNotIn("sekret", google.scrub("key sekret leaked", "sekret"))
+        self.assertNotIn(FAKE_KEY, image_gen.scrub(f"bad key {FAKE_KEY} here"))
+        self.assertNotIn("sekret", image_gen.scrub("key sekret leaked", "sekret"))
 
 
 class GoogleApiTest(unittest.TestCase):
@@ -251,7 +299,7 @@ class GoogleApiTest(unittest.TestCase):
 
     def run_with(self, side_effect, extra=()):
         with mock.patch("urllib.request.urlopen", side_effect=side_effect) as urlopen:
-            result = run_main(google, ["-p", "x", "-o", str(self.out), *extra], self.env)
+            result = run_main(image_gen, [*API, "-p", "x", "-o", str(self.out), *extra], self.env)
         return result, urlopen
 
     def test_success_extension_follows_mime(self):
@@ -345,25 +393,25 @@ class GoogleApiTest(unittest.TestCase):
 
 class CodexTest(unittest.TestCase):
     def test_prompt_assembly(self):
-        plain = codex.build_prompt("a cat", edit=False, has_refs=False, aspect=None)
+        plain = image_gen.build_prompt("a cat", edit=False, has_refs=False, aspect=None)
         self.assertIn("## Image to generate\na cat", plain)
         self.assertNotIn("aspect ratio", plain)
-        edit = codex.build_prompt("make it blue", edit=True, has_refs=False, aspect="16:9", variants=3)
+        edit = image_gen.build_prompt("make it blue", edit=True, has_refs=False, aspect="16:9", variants=3)
         self.assertIn("edit target", edit)
         self.assertIn("## Change to make\nmake it blue", edit)
         self.assertIn("16:9 aspect ratio", edit)
         self.assertIn("3 distinct variants", edit)
-        refs = codex.build_prompt("a cat", edit=False, has_refs=True, aspect=None)
+        refs = image_gen.build_prompt("a cat", edit=False, has_refs=True, aspect=None)
         self.assertIn("visual reference", refs)
 
     def test_print_prompt_runs_nothing(self):
-        code, out, _ = run_main(codex, ["-p", "a cat", "-o", "o.png", "--print-prompt"],
+        code, out, _ = run_main(image_gen, ["-p", "a cat", "-o", "o.png", "--print-prompt"],
                                 {"CODEX_BIN": "/no/such/codex"})
         self.assertIsNone(code)
         self.assertIn("a cat", out)
 
     def test_missing_binary(self):
-        code, _, err = run_main(codex, ["-p", "x", "-o", "/tmp/never.png"], {"CODEX_BIN": "/no/such/codex"})
+        code, _, err = run_main(image_gen, ["-p", "x", "-o", "/tmp/never.png"], {"CODEX_BIN": "/no/such/codex"})
         self.assertEqual(code, 1)
         self.assertIn("not found", err)
 
@@ -389,7 +437,7 @@ if [ "$1" = login ]; then exit {login_rc}; fi
         return {"CODEX_BIN": str(self.fake), "CODEX_HOME": str(self.home)}
 
     def run_it(self, env, extra=()):
-        return run_main(codex, ["-p", "a cat", "-o", str(self.out), *extra], env)
+        return run_main(image_gen, ["-p", "a cat", "-o", str(self.out), *extra], env)
 
     def test_success_writes_with_real_extension(self):
         d = self.home / "generated_images" / self.SESSION

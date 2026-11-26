@@ -5,15 +5,20 @@ description: >-
   .claude/rules) without changing what they tell agents: removes history, resolves conflicts with the project's
   skills, and moves detail that only some folders or tasks need into files that load on demand. Use when the user
   asks to optimize, slim, shrink, clean up, restructure, split or modularize CLAUDE.md or AGENTS.md, or says the
-  instruction file is too long. Not for creating a first AGENTS.md (init-agents-md) or porting a Claude Code setup
-  to Codex (port-to-agents).
+  instruction file is too long. Not for creating a first AGENTS.md (the harness's /init) or porting a Claude Code
+  setup to Codex (Codex's /import).
 license: MIT
 compatibility: >-
   Any agent harness with a shell and file access. scripts/inventory.sh needs bash and standard BSD/GNU tools; git is
   used when present.
+metadata:
+  minimum-model: Sonnet class or above
+  minimum-effort: high
 ---
 
 # Optimize AGENTS.md / CLAUDE.md
+
+Needs a model of Sonnet class or above, at effort high or above. On a less capable model, tell the user before going on.
 
 Make the instruction files cost less context on every run and tell agents the same things, or better ones the
 user approves. "Instruction file" means `AGENTS.md` and `CLAUDE.md` alike. Every change is proposed as a diff the
@@ -40,10 +45,9 @@ optimize-agents-md [--check] [--threshold N] [path]
    the first question; until it is answered, project the case the signals indicate and give the other in one line.
    - Layout `symlink`: the layer is done; say so.
    - Several harnesses and any other layout: the target is one real `AGENTS.md`, `CLAUDE.md` a relative symlink
-     to it, Claude Code-only lines in `.claude/CLAUDE.md`. Recommend the `port-to-agents` skill to get there; if it
-     is not installed, give `npx skills add MrBogomips/skills --skill port-to-agents`. Do not redo its work here
-     (that includes sharing `.claude/skills/` with other agents): classify the content as it will be after the
-     merge. If the user declines, list the drift, ask which side is
+     to it, Claude Code-only lines in `.claude/CLAUDE.md`. Propose the move as diffs the user approves (merge the
+     two files into `AGENTS.md`, then `ln -s AGENTS.md CLAUDE.md`), and classify the content as it will be after
+     the merge. Converting skills, agents, MCP or hooks for another harness is out of scope (Codex's `/import`). If the user declines, list the drift, ask which side is
      right, and treat `AGENTS.md` as primary, warning that the copies will keep drifting.
    - Only Claude Code: optimize `CLAUDE.md` where it is.
    - Never propose `CLAUDE.md` = `@AGENTS.md`, and never split with `@import`: see "Red flags".
