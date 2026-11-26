@@ -5,15 +5,20 @@ description: >-
   .claude/rules) without changing what they tell agents: removes history, resolves conflicts with the project's
   skills, and moves detail that only some folders or tasks need into files that load on demand. Use when the user
   asks to optimize, slim, shrink, clean up, restructure, split or modularize CLAUDE.md or AGENTS.md, or says the
-  instruction file is too long. Not for creating a first AGENTS.md (init-agents-md) or porting a Claude Code setup
-  to Codex (port-to-agents).
+  instruction file is too long. Not for creating a first AGENTS.md (the harness's /init) or porting a Claude Code
+  setup to Codex (Codex's /import).
 license: MIT
 compatibility: >-
   Any agent harness with a shell and file access. scripts/inventory.sh needs bash and standard BSD/GNU tools; git is
   used when present.
+metadata:
+  minimum-model: Sonnet class or above
+  minimum-effort: high
 ---
 
 # Optimize AGENTS.md / CLAUDE.md
+
+Needs a model of Sonnet class or above, at effort high or above. On a less capable model, tell the user before going on.
 
 Make the instruction files cost less context on every run and tell agents the same things, or better ones the
 user approves. "Instruction file" means `AGENTS.md` and `CLAUDE.md` alike. Every change is proposed as a diff the
@@ -40,13 +45,20 @@ optimize-agents-md [--check] [--threshold N] [path]
    the first question; until it is answered, project the case the signals indicate and give the other in one line.
    - Layout `symlink`: the layer is done; say so.
    - Several harnesses and any other layout: the target is one real `AGENTS.md`, `CLAUDE.md` a relative symlink
-     to it, Claude Code-only lines in `.claude/CLAUDE.md`. Recommend the `port-to-agents` skill to get there; if it
-     is not installed, give `npx skills add MrBogomips/skills --skill port-to-agents`. Do not redo its work here
-     (that includes sharing `.claude/skills/` with other agents): classify the content as it will be after the
-     merge. If the user declines, list the drift, ask which side is
-     right, and treat `AGENTS.md` as primary, warning that the copies will keep drifting.
+     to it, Claude Code-only lines in `.claude/CLAUDE.md`. Propose the move as diffs the user approves (merge the
+     two files into `AGENTS.md`, then `ln -s AGENTS.md CLAUDE.md`), and classify the content as it will be after
+     the merge. Converting skills, agents, MCP or hooks for another harness is out of scope (Codex's `/import`).
+     If the user declines, list the drift, ask which side is right, and treat `AGENTS.md` as primary, warning that
+     the copies will keep drifting.
+   - Windows clones without `core.symlinks` get the link as a one-line text file. If anyone clones the project
+     on Windows without symlinks, `CLAUDE.md` is instead a real file starting with `@AGENTS.md`, followed by the
+     Claude Code-only lines. Record the cost in the project's instruction file: sessions started in a subfolder or
+     a nested repository, and headless runs, skip the import silently.
+   - After changing the layer, ask the user to run `/context all` in a new Claude Code session and check that
+     `AGENTS.md` appears among the memory files.
    - Only Claude Code: optimize `CLAUDE.md` where it is.
-   - Never propose `CLAUDE.md` = `@AGENTS.md`, and never split with `@import`: see "Red flags".
+   - Propose `CLAUDE.md` = `@AGENTS.md` only for the Windows case above, and never split with `@import`: see
+     "Red flags".
 3. **Classify every block** with `references/content-rules.md`. Move a block only if it is needed for some
    folders or tasks **and**, after its safety rules are taken out (they stay in the root file), it still reaches
    the threshold. If the root file is already small and nothing qualifies, say that it is already lean and
@@ -84,7 +96,7 @@ optimize-agents-md [--check] [--threshold N] [path]
 
 | Thought | Instead |
 |---|---|
-| "`CLAUDE.md` with `@AGENTS.md` keeps one source" | A symlink does it in every launch folder; an import is external from a subfolder, skipped by headless runs, and Codex ignores `@`. |
+| "`CLAUDE.md` with `@AGENTS.md` keeps one source" | A symlink does it in every launch folder; an import is external from a subfolder, skipped by headless runs, and Codex ignores `@`. Use the import only for Windows clones without symlinks. |
 | "Split the long file into `@docs/x.md` imports" | Imports load at start: zero context saved. Use nested files, pointers or skills. |
 | "This 6-line block is only about `api/`, move it too" | Under the threshold a pointer costs almost as much as the block. Keep it. |
 | "The skill and the file disagree, the skill looks newer" | Ask. Never pick a side silently. |

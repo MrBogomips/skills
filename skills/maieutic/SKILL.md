@@ -10,9 +10,13 @@ license: MIT
 compatibility: >-
   Any agent harness. Uses subagents for fact lookups and the harness's question tool when they exist, and falls
   back to plain-text rounds.
+metadata:
+  minimum-model: Sonnet class or above
 ---
 
 # Maieutic
+
+Needs a model of Sonnet class or above. On a less capable model, tell the user before going on.
 
 Draw the decisions out of the user through questions, the way Socrates did: the user decides, you find the
 facts, recommend, and keep the record. The work is a **design tree**: every decision branches into the decisions

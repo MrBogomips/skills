@@ -19,6 +19,7 @@ major release of either tool.
 
 - `AGENTS.md` is read only when no `CLAUDE.md`, `.claude/CLAUDE.md` or `CLAUDE.local.md` exists from the launch folder up, under a per-user setting a project cannot enforce. A `CLAUDE.md` symlink to `AGENTS.md` loads everywhere.
 - An `@import` that resolves outside the launch folder is external: it waits for a per-person approval and headless runs (`claude -p`, CI) skip it silently.
+- The docs (checked 2026-11-26) give three ways to share one file: `AGENTS.md` alone, a `CLAUDE.md` symlink "if you don't need Claude-specific content", and a `CLAUDE.md` with `@AGENTS.md` for Claude-specific content and for Windows, where Git checks a symlink out as a one-line text file unless `core.symlinks` is on. A symlink plus `.claude/CLAUDE.md` gives both files from every launch folder; the import is the fallback only for Windows clones without symlinks. Verify with `/context all`.
 - Path-scoped rule syntax:
   ```markdown
   ---

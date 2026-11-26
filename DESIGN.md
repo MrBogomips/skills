@@ -29,7 +29,8 @@ A new skill, or a change of scope to an existing one, passes all five or does no
    memory, plan mode, settings), the skill reads, configures or drives it. It does not build a parallel
    one.
 4. **Thin.** The skill holds only what the baseline lacks. Whatever the model does unaided is cut. A
-   difference that fits in one line of a prompt does not need a skill.
+   difference that a request of five to seven meaningful words already conveys does not need a skill;
+   a longer one may (see [Shortcut skills](#shortcut-skills)).
 5. **Revisited.** The gate is run again at every official drift and at major harness releases. A skill
    that the native features have absorbed becomes a candidate for retirement.
 
@@ -43,6 +44,26 @@ The gate ends in one of three outcomes:
 
 For **go** and **reshape**, the outcome and the reason are recorded at the top of
 `tests/scenarios/<skill>/baseline.md`.
+
+## Shortcut skills
+
+A skill also earns its place by sparing the human the typing. The model may be able to do the work
+unaided, but getting the same result every time can take a request of ten or twenty words: a report
+format, a structure of questions, labels, length limits. When that request needs more than five to seven
+meaningful words, a skill that stands for it simplifies the human's work. That counts as value under
+tests 1 and 2, even though the model has the capability.
+
+The value changes how such a skill is built, not whether it exists:
+
+- **Invoked by the human**: by name, or by a few exact trigger words the human types (for example `TLDR`).
+  The description names those words and nothing broader, so the model never picks the skill on its own
+  judgement. With no such words, set `disable-model-invocation: true` in Claude Code and say in the
+  description that the skill runs only when invoked.
+- **A short description and a thin body.** Rely on the model's own skill (summarising, asking good
+  questions, writing a report) and record only the standard behaviour the user wants every time: the
+  format of a report, the structure of questions, the labels, the limits.
+- **Baseline**: a plain short request (a few words) does not produce that standard behaviour reliably, or
+  it takes the long wording to get it.
 
 ## Minimum model and effort
 

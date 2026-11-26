@@ -10,9 +10,13 @@ compatibility: >-
   Needs Python 3.9+ (standard library only) and either the agy CLI (Google Antigravity) logged in, or network
   access and a Gemini API key in GEMINI_API_KEY or GOOGLE_API_KEY (billed to that key).
 argument-hint: "[technical|marketing|professional|essay|blog|creative] <text-or-file> | config"
+metadata:
+  minimum-model: Sonnet class or above
 ---
 
 # Editorial review with Gemini
+
+Needs a model of Sonnet class or above. On a less capable model, tell the user before going on.
 
 `scripts/gemini_editorial_review.py` sends the text to Gemini with an editor's instruction (from
 `references/editorial-guide.md`, plus `references/languages/<code>.md` for the text's language when present) and

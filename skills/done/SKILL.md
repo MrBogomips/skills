@@ -10,10 +10,13 @@ license: MIT
 compatibility: >-
   Any agent harness with a shell. Uses git when the work is in a repository and the GitHub CLI (gh) when it is
   installed; without them the related checks are reported as not verifiable.
-model: sonnet
+metadata:
+  minimum-model: Sonnet class or above
 ---
 
 # Done
+
+Needs a model of Sonnet class or above. On a less capable model, tell the user before going on.
 
 Decide whether the session's work is done, prove it, leave the workspace tidy, report in a fixed format. Every
 criterion is checked with a command or a file, never from memory. Cleanup removes only what is provably

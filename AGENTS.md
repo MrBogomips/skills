@@ -58,14 +58,6 @@ A top-level plugin folder is for work that needs Claude Code plugin features: ho
 - **Version**: each plugin has its own `version` in its own `plugin.json`, bumped per pull request with the same patch/minor/major rule as above. The root `skills` version does not change for plugin work.
 - **Tests**: a plugin's automated tests live in `tests/` and run in CI; its manual scenarios live in `tests/scenarios/<skill>/` (see `tests/scenarios/README.md`).
 
-## The AGENTS.md skills must agree
-
-`init-agents-md` (create), `optimize-agents-md` (slim and restructure) and `port-to-agents` (port a Claude Code setup to Codex) work on the same files and must stay coherent. When you change one, check the other two in the same pull request:
-
-- **Instruction layer**: all three target one real `AGENTS.md`, `CLAUDE.md` as a relative symlink to it, and Claude Code-only lines in `.claude/CLAUDE.md`. None proposes an `@AGENTS.md` import or a generated copy.
-- **Loading facts**: how each harness loads instruction files and skills is written in `skills/port-to-agents/references/instruction-files.md` and `skills/optimize-agents-md/references/loading-and-limits.md`. A skill can't read another skill's files, so each keeps its own copy: update both copies together, with the date and versions checked.
-- **Scope and names**: each skill hands off to the others by their current names and never does their work.
-
 ## Verification
 
 After any change, run from the repo root (requires `jq`):
@@ -74,7 +66,6 @@ After any change, run from the repo root (requires `jq`):
 bash tests/validate.sh                             # every plugin.json and its skills/ agree (CI runs this)
 bash tests/test-kaizen-stop-gate.sh                # the kaizen Stop hook (CI runs this; needs git)
 python3 -m unittest discover -s tests -p 'test_*.py'  # unit tests of bundled scripts (CI runs this)
-CODEX_PORT_SH=dash python3 -m unittest discover -s tests -p 'test_codex_port_block.py'  # the POSIX block under dash too
 claude plugin validate . --strict                  # plugin.json schema of the root plugin
 claude plugin validate ./kaizen --strict           # ... and of each plugin folder
 claude plugin validate ./personal-voice --strict

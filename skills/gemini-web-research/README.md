@@ -30,6 +30,7 @@ Your agent splits the request into questions (one per worker) and scales the res
 
 ## Requirements
 
+- Model: Sonnet class or above, effort medium or above; a less capable model does not do this job well enough.
 - The `agy` CLI (Google Antigravity), installed and logged in.
 - Python 3.9 or later (standard library only).
 - Network access.
