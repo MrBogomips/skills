@@ -20,6 +20,7 @@ There is no build step. The repository is Markdown skills plus one JSON manifest
 - `<plugin>/` (today `kaizen/`, `personal-voice/` and `skill-maker/`): a Claude Code plugin with its own `.claude-plugin/plugin.json`, `skills/`, and optionally `agents/`, `hooks/` and shared files. The root plugin loads only the root `skills/`, and the `skills` CLI lists only the root `skills/` for `npx skills add MrBogomips/skills`, so plugin skills stay out of both.
 - `tests/`: `validate.sh` (repository checks), `selftest.sh` (the validator's own tests) and `test-kaizen-stop-gate.sh` (the kaizen Stop hook), all run by `.github/workflows/validate.yml` on pushes and pull requests to `main`; `scenarios/` holds manual scenario checklists for the plugins.
 - `skill-maker/shared/rules/`: the authoring rulebook every skill here follows. `skill-maker/shared/official-baseline.json` records the official sources it rests on; `.github/scripts/official_drift.py`, run monthly by `.github/workflows/official-drift.yml`, opens an `official-drift` issue when one changes (see [Official drift](#official-drift)).
+- `DESIGN.md`: the value gate a skill or plugin must pass to be added, and how a skill declares its minimum model and effort.
 - `DoD.md`: the Definition of Done that the `done` skill checks a session against.
 - `README.md` keeps the public skill and plugin lists and install instructions; update it whenever a skill or plugin is added, renamed or removed.
 - **Component READMEs**: every plugin and every distributed skill has a short `README.md` that follows the `skill-maker` contract (`skill-maker/skills/skill-readme/references/contract.md`): what it does and why, never a retelling of `SKILL.md`. The `skills` plugin's README is `skills/README.md`, because the root `README.md` is the repository page. Write or revise them with `/skill-maker:skill-readme`.
@@ -39,6 +40,7 @@ A skill in `skills/` has to work in every harness the `skills` CLI targets, not 
 
 ## Adding, changing, removing a skill
 
+- **Value gate first**: a new skill or plugin, or a change of scope to one, must pass the value gate in [`DESIGN.md`](DESIGN.md). It adds what frontier models and harnesses do not already do well, as a method or process, never as a copy of a native capability. The gate also says how a skill declares its minimum model and effort.
 - **Add**: run `npx skills init <name>` from inside `skills/` (it writes `<name>/SKILL.md`). The plugin picks it up with no manifest change.
 - **Baseline first** (rule T1): before writing a skill, run its task on a fresh agent without it and record how it fails in `tests/scenarios/<skill>/baseline.md`. Required for a skill that enforces a discipline (approvals, checks before claiming done), recommended for the others.
 - **Version**: every pull request that changes what a skill does bumps `version` in `.claude-plugin/plugin.json`, once per pull request: patch for a fix, minor for a new skill or a compatible extension, major when a skill is renamed or removed or its behavior changes incompatibly. Claude Code updates installed plugins only when the version changes.
