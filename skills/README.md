@@ -20,6 +20,7 @@ They follow the [Agent Skills](https://agentskills.io) format and do not depend 
 | [`done`](done/README.md) | Verifies with evidence whether the session's work meets its Definition of Done, then cleans up temporary files and merged branches. |
 | [`pause`](pause/README.md) | Stops background work and writes a checkpoint so you can leave and resume later in the same session. |
 | [`tldr`](tldr/README.md) | Summarizes a reply in a fixed format and optionally keeps the same footer on later long replies. |
+| [`pr-status`](pr-status/README.md) | Prints the live status of several pull requests, one line each with a status emoji, read from GitHub when you invoke it. |
 | [`maieutic`](maieutic/README.md) | Interviews you about a plan or decision in short rounds of questions with recommended answers, and logs what was decided and discarded. |
 | [`optimize-agents-md`](optimize-agents-md/README.md) | Slims down and restructures `AGENTS.md` and `CLAUDE.md` without changing what they tell agents. |
 | [`gemini-web-research`](gemini-web-research/README.md) | Delegates web research to parallel Gemini workers and checks every claim against the pages they read. |
