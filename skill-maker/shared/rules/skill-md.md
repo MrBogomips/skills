@@ -66,7 +66,14 @@ path relative to the skill directory (`python3 scripts/check.py`, `bash scripts/
 not always keep the executable bit. A helper that test runs keep rewriting is a script waiting to be
 bundled.
 
-Checked by: both (the validator warns on a bundled script run without an interpreter)
+The limit: no script for what one sentence of the skill lets the model do with the harness's own tools,
+such as copying a result to the clipboard, opening a file or calling a CLI the user has. Such a script
+costs code, tests and one case per platform, and it fixes a single way of doing what the model would
+fit to the user's request, the context and its memory. Script what must come out the same on every run,
+or what the baseline run (T1) shows the model getting wrong; state the rest in a sentence.
+
+Checked by: both (the validator warns on a bundled script run without an interpreter; the reviewer judges
+whether a script earns its place)
 
 ### S8. No skill for what a tool can enforce
 
